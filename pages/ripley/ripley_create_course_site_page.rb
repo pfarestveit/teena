@@ -91,6 +91,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   end
 
   def select_sections(sections)
+    sections.sort_by! &:id
     sections.each do |section|
       if section_checkbox(section.id).selected?
         logger.debug "Section ID #{section.id} is already selected"
@@ -106,6 +107,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   end
 
   def section_checkbox(section_id)
+    scroll_to_top
     checkbox_element(xpath: section_cbx_xpath(section_id))
   end
 

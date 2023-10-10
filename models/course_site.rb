@@ -7,6 +7,7 @@ class CourseSite
                 :is_copy,
                 :manual_members,
                 :sections,
+                :test_teacher,
                 :site_id,
                 :term,
                 :title

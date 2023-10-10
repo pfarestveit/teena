@@ -34,16 +34,16 @@ describe 'bCourses Official Sections tool' do
       it('cannot be tested using the given course site, since it already has all sections') { fail }
     else
       RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
-      teacher = site.course.teachers.find { |t| t.role_code == 'PI' }
+      teacher = site.test_teacher
       term_courses = RipleyUtils.get_instructor_term_courses(teacher, test.current_term)
-      site.sections.keep_if &:primary unless ENV['SITE']
+      site.sections.select! &:primary unless ENV['SITE']
       if site.sections == site.course.sections
         sections_to_add_delete = if site.sections.all?(&:primary) || site.sections.none?(&:primary)
                                    site.sections[1..-1]
                                  else
                                    site.sections.select { |s| !s.primary }
                                  end
-        site.sections.delete_if { |s| sections_to_add_delete.include? s }
+        site.sections.reject! { |s| sections_to_add_delete.include? s }
       else
         sections_to_add_delete = site.course.sections - site.sections
       end

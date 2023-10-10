@@ -169,7 +169,7 @@ class RipleyUtils < Utils
         instructor_uid: r['instructor_uid'],
         instructor_role_code: r['instructor_role_code'],
         label: "#{r['format']} #{r['number']} #{mode}",
-        location: location,
+        location: location.gsub(/\s+/, ' '),
         primary: (r['is_primary'] == 't'),
         primary_assoc_id: r['primary_associated_section_id'],
         schedule: schedule,
