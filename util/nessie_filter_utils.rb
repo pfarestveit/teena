@@ -42,6 +42,13 @@ class NessieFilterUtils < NessieUtils
   ### WHERE ###
   #############
 
+  def self.academic_career_cond(filter, conditions_list)
+    if filter.academic_careers&.any?
+      careers = filter.academic_careers.map { |c| CohortFilter.colleges_per_career c }.flatten
+      conditions_list << "student.student_majors.college IN(#{in_op careers})"
+    end
+  end
+
   def self.academic_division_cond(filter, conditions_list)
     conditions_list << "student.student_majors.division IN(#{in_op filter.academic_divisions})" if filter.academic_divisions&.any?
   end
@@ -279,6 +286,7 @@ class NessieFilterUtils < NessieUtils
     conditions_list = []
 
     # GLOBAL FILTERS
+    academic_career_cond(filter, conditions_list)
     academic_division_cond(filter, conditions_list)
     academic_standing_cond(filter, conditions_list)
     career_status_cond(filter, conditions_list)
@@ -337,7 +345,8 @@ class NessieFilterUtils < NessieUtils
     holds_join = "JOIN student.student_holds ON #{sid} = student.student_holds.sid"
     joins << holds_join if filter.holds
 
-    if filter.college&.any? || filter.major&.any? || filter.academic_divisions&.any? || filter.graduate_plans&.any? || filter.minor&.any?
+    if filter.college&.any? || filter.major&.any? || filter.academic_divisions&.any? || filter.graduate_plans&.any? ||
+      filter.minor&.any? || filter.academic_careers&.any?
       major_join = "LEFT JOIN student.student_majors ON #{sid} = student.student_majors.sid"
       joins << major_join
     end

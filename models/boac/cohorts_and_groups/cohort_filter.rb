@@ -2,7 +2,8 @@ class CohortFilter
 
   include Logging
 
-  attr_accessor :academic_divisions,
+  attr_accessor :academic_careers,
+                :academic_divisions,
                 :academic_standing,
                 :asc_inactive,
                 :asc_intensive,
@@ -48,6 +49,7 @@ class CohortFilter
   # @param dept [BOACDepartments]
   def set_test_filters(test_data, dept)
     # Global
+    @academic_careers = (test_data['academic_careers'] && test_data['academic_careers'].map { |a| a['academic_career'] })
     @academic_divisions = (test_data['academic_divs'] && test_data['academic_divs'].map { |a| a['academic_div'] })
     @academic_standing = (test_data['academic_standings'] && test_data['academic_standings'].map { |a| a['academic_standing'] })
     @career_statuses = (test_data['career_statuses']&.map { |c| c['career_status'] })
@@ -217,6 +219,27 @@ class CohortFilter
         'Permanent Resident'
       else
         'Other'
+    end
+  end
+
+  def self.colleges_per_career(career)
+    if career == 'Undergraduate'
+      [
+        'Rausser Clg Natural Resources',
+        'Undergrad Business',
+        'Undergrad Chemistry',
+        'Undergrad Engineering',
+        'Undergrad Environmental Design',
+        'Undergrad Letters & Science',
+        'Undergrad Non-Degree/NonFinAid'
+      ]
+    elsif career == 'Graduate'
+      [
+        'Graduate Academic Programs',
+        'Graduate Non-Degree/Non-FinAid',
+        'Graduate Professional Programs',
+        'Graduate Self-Supporting Pgms'
+      ]
     end
   end
 
