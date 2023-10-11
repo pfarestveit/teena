@@ -2,6 +2,18 @@
     "filters": {
         "students": [
             {
+                "academic_careers": [
+                    {
+                        "academic_career": "Undergraduate"
+                    }
+                ],
+                "visa_types": [
+                    {
+                        "visa_type": "J1"
+                    }
+                ]
+            },
+            {
                 "levels": [
                     {
                         "level": "30"

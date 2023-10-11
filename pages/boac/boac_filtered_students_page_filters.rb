@@ -153,6 +153,7 @@ module BOACFilteredStudentsPageFilters
     end
 
     # Global
+    cohort.search_criteria.academic_careers&.each { |c| select_new_filter('Academic Career', c) }
     cohort.search_criteria.academic_divisions&.each { |d| select_new_filter('Academic Division', d) }
     cohort.search_criteria.academic_standing.each { |a| select_new_filter('Academic Standing', a) } if cohort.search_criteria.academic_standing
     cohort.search_criteria.career_statuses.each { |s| select_new_filter('Career Status', s) } if cohort.search_criteria.career_statuses
