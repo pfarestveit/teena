@@ -76,9 +76,7 @@ module Page
     end
 
     def masquerade_as(user, course = nil)
-      load_homepage
-      sleep 2
-      stop_masquerading if stop_masquerading_link?
+      stop_masquerading
       logger.info "Masquerading as #{user.role} UID #{user.uid}, Canvas ID #{user.canvas_id}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}/masquerade"
       wait_for_load_and_click masquerade_link_element
@@ -89,8 +87,9 @@ module Page
     # Quits masquerading as another user
     def stop_masquerading
       logger.debug 'Ending masquerade'
-      load_homepage unless stop_masquerading_link?
-      wait_for_update_and_click stop_masquerading_link_element
+      load_homepage
+      sleep 2
+      stop_masquerading_link if stop_masquerading_link?
       stop_masquerading_link_element.when_not_visible(Utils.medium_wait) rescue Selenium::WebDriver::Error::StaleElementReferenceError
     rescue Selenium::WebDriver::Error::NoSuchElementError, Selenium::WebDriver::Error::TimeoutError
       logger.warn 'Not in masquerade mode'
@@ -143,7 +142,7 @@ module Page
 
     link(:create_site_link, xpath: '//a[contains(text(),"Create a Site")]')
     link(:create_site_settings_link, xpath: '//div[contains(@class, "profile-tray")]//a[contains(text(),"Create a Site")]')
-    link(:ripley_create_site_settings_link, xpath: "//div[contains(@class, 'profile-tray')]//a[contains(text(), '#{RipleyTool::CREATE_SITE.name}')]")
+    link(:ripley_create_site_settings_link, xpath: "//div[contains(@class, 'profile-tray')]//a[contains(text(), '#{RipleyTool::MANAGE_SITE.name}')]")
 
     button(:add_new_course_button, xpath: '//button[@aria-label="Create new course"]')
     text_area(:course_name_input, xpath: '(//form[@aria-label="Add a New Course"]//input)[1]')
@@ -662,6 +661,14 @@ module Page
       wait_for_load_and_click link_element(text: 'more options')
       hide_grade_distrib_cbx_element.when_visible Utils.short_wait
       hide_grade_distrib_cbx_checked?
+    end
+
+    select_list(:course_account, id: 'course_account_id')
+
+    def selected_course_sub_account(site)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{site.site_id}/settings"
+      course_account_element.when_visible Utils.short_wait
+      course_account
     end
 
     # MESSAGES

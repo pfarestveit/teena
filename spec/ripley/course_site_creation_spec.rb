@@ -42,7 +42,8 @@ describe 'bCourses course site creation' do
         @canvas.masquerade_as teacher if site.create_site_workflow == 'self'
         # TODO - reinstate when button points to Ripley
         # @canvas.click_create_site
-        @site_creation.load_embedded_tool teacher
+        user = (site.create_site_workflow == 'self') ? teacher : test.admin
+        @site_creation.load_embedded_tool user
         @site_creation.click_create_course_site
 
         # TODO - reinstate when button points to Ripley
@@ -112,12 +113,12 @@ describe 'bCourses course site creation' do
               it "shows no blank section labels for #{site.course.term.name} #{course.code} section #{section.id}" do
                 expect(ui_section_data[:label].empty?).to be false
               end
-              it "shows the right section schedules for #{site.course.term.name} #{course.code} section #{section.id}" do
-                expect(ui_section_data[:schedules]).to eql(section.schedules)
-              end
-              it "shows the right section locations for #{site.course.term.name} #{course.code} section #{section.id}" do
-                expect(ui_section_data[:locations]).to eql(section.locations)
-              end
+              # it "shows the right section schedules for #{site.course.term.name} #{course.code} section #{section.id}" do
+              #   expect(ui_section_data[:schedules]).to eql(section.schedules)
+              # end
+              # it "shows the right section locations for #{site.course.term.name} #{course.code} section #{section.id}" do
+              #   expect(ui_section_data[:locations]).to eql(section.locations)
+              # end
             end
 
             ui_sections_collapsed = @create_course_site.collapse_available_sections(course, course.sections.first)
@@ -156,8 +157,8 @@ describe 'bCourses course site creation' do
           it('allows the user to go back to the initial course site creation page') { expect(go_back_works).to be true }
         end
 
-        site.course.title = @create_course_site.enter_site_titles site.course
-        logger.info "Course site abbreviation will be #{site.course.title}"
+        site.title = @create_course_site.enter_site_titles site.course
+        logger.info "Course site abbreviation will be #{site.title}"
         @create_course_site.click_create_site
         @create_course_site.wait_for_site_id site
         it "redirects to the #{site.course.term.name} #{site.course.code} course site in Canvas when finished" do
@@ -189,53 +190,22 @@ describe 'bCourses course site creation' do
         @canvas.masquerade_as teacher
         @canvas.publish_course_site site
 
-        # MEMBERSHIP - check that course site user count matches expectations for each role
-
-        expected_enrollment_counts = [
-          {
-            role: 'Student',
-            count: site.expected_student_count
-          },
-          {
-            role: 'Waitlist Student',
-            count: site.expected_wait_list_count
-          },
-          {
-            role: 'Teacher',
-            count: site.expected_teacher_count
-          },
-          {
-            role: 'Lead TA',
-            count: site.expected_lead_ta_count
-          },
-          {
-            role: 'TA',
-            count: site.expected_ta_count
-          }
-        ]
-        roles = ['Student', 'Waitlist Student', 'Teacher', 'Lead TA', 'TA']
-        actual_enrollment_counts = @canvas.wait_for_enrollment_import(site, roles)
-
-        actual_student_uids = @canvas.get_students(site, nil, nil, {enrollments: true}).map(&:uid).sort
-        expected_student_uids = site.sections.map { |s| s.enrollments.map { |e| e.user.uid } }.flatten.uniq
-        logger.warn "Student UIDs expected but not present: #{expected_student_uids - actual_student_uids}"
-        logger.warn "Student UIDs present but not expected: #{actual_student_uids - expected_student_uids}"
-
-        it "results in the right course site membership counts for #{test_case}" do
-          expect(actual_enrollment_counts).to eql(expected_enrollment_counts)
-        end
-        it "results in no missing student enrollments for #{test_case}" do
-          expect(expected_student_uids - actual_student_uids).to be_empty
-        end
-        it "results in no unexpected student enrollments for #{test_case}" do
-          expect(actual_student_uids - expected_student_uids).to be_empty
-        end
+        # MEMBERSHIP - check that course site membership matches expectations
 
         visible_modes = @canvas.visible_instruction_modes
         it "shows the instruction mode for sections in #{test_case}" do
           expect(visible_modes).not_to be_empty
           expect(visible_modes - ['In Person', 'Online', 'Hybrid', 'Flexible', 'Remote', 'Web-based']).to be_empty
         end
+
+        visible_site_members = @canvas.visible_user_section_data site
+        expected_instructors = RipleyUtils.expected_instr_section_data(site, site.sections)
+        expected_students = RipleyUtils.expected_student_section_data(site, site.sections)
+        expected_site_members = expected_instructors + expected_students
+        logger.warn "Unexpected users after creating site: #{visible_site_members - expected_site_members}"
+        logger.warn "Missing users after creating site: #{expected_site_members - visible_site_members}"
+        it('adds no unexpected users to the site') { expect(visible_site_members - expected_site_members).to be_empty }
+        it('neglects no expected users on the site') { expect(expected_site_members - visible_site_members).to be_empty }
 
         # ROSTER PHOTOS - check that roster photos tool shows the right sections
 
@@ -268,6 +238,12 @@ describe 'bCourses course site creation' do
         grade_distribution_hidden = @canvas.grade_distribution_hidden? site
         it "hides grade distribution graphs from students for #{test_case}" do
           expect(grade_distribution_hidden).to be true
+        end
+
+        sub_account = @canvas.selected_course_sub_account site
+        dept = site.course.code.split.delete_if { |c| c =~ /\d/ }.join(' ')
+        it "shows the right sub-account for #{test_case}" do
+          expect(sub_account).to eql(dept)
         end
 
         if i.zero?

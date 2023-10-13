@@ -69,7 +69,8 @@ describe 'bCourses Official Sections tool' do
 
       # STATIC VIEW
 
-      @official_sections.load_embedded_tool site
+      @official_sections.load_embedded_tool teacher
+      @official_sections.select_site_and_manage site
 
       current_count = @official_sections.current_sections_count
       it('shows all the sections currently on the course site') { expect(current_count).to eql(site.sections.length) }

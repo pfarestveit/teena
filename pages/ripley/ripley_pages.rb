@@ -56,8 +56,8 @@ module RipleyPages
 
   # Daily maintenance notice
 
-  span(:maintenance_notice, xpath: '//div[contains(text(), "From 8 - 9 AM, you may experience delays of up to 10 minutes")]')
-  div(:maintenance_detail, xpath: '//div[contains(., "bCourses performs scheduled maintenance every day between 8 - 9AM")]')
+  span(:maintenance_notice, xpath: '//div[contains(., "you may experience delays of up to 10 minutes")]')
+  div(:maintenance_detail, xpath: '//div[contains(., "bCourses performs scheduled maintenance every day")]')
   link(:bcourses_service_link, id: 'link-to-httpsrtlberkeleyeduservicesprogramsbcourses')
 
   def expand_maintenance_notice
