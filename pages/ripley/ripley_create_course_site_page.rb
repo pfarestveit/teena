@@ -34,16 +34,17 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   end
 
   def choose_term(course)
-    if term_button(course.term).exists? && term_button(course.term).attribute('class').include?('v-btn--active')
-      logger.debug "Term #{course.term.name} is already selected"
-    else
-      wait_for_update_and_click term_button(course.term)
+    wait_until(Utils.medium_wait) do
+      term_button(course.term).exists? || h2_element(xpath: "//h2[text()='#{course.term.name} Official Sections']").exists?
     end
-  rescue => e
-    if h2_element(xpath: "//h2[text()='#{course.term.name} Official Sections']").exists?
-      logger.warn 'Only one term exists'
+    if term_button(course.term).exists?
+      if term_button(course.term).attribute('class').include?('v-btn--active')
+        logger.debug "Term #{course.term.name} is already selected"
+      else
+        wait_for_update_and_click term_button(course.term)
+      end
     else
-      fail Utils.error e
+      logger.warn 'Only one term exists'
     end
   end
 
@@ -84,8 +85,8 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
       code: section_course_code(section_id),
       label: section_label(section_id),
       id: section_id,
-      schedules: section_schedules(section_id),
-      locations: section_locations(section_id),
+      # schedules: section_schedules(section_id),
+      # locations: section_locations(section_id),
       instructors: section_instructors(section_id)
     }
   end
@@ -118,30 +119,30 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   end
 
   def section_label(section_id)
-    el = cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-label')]")
+    el = cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-name')]")
     el.when_present Utils.short_wait
     el.text.strip
   end
 
   def section_schedules(section_id)
-    els = div_elements(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-timestamps')]/*")
+    els = div_elements(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'schedule')]/*")
     wait_until(Utils.short_wait) { els.any? }
     els.map { |el| el.text.strip.upcase }
   end
 
   def section_locations(section_id)
-    els = div_elements(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-locations')]/*")
+    els = div_elements(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'meeting-location')]/*")
     wait_until(Utils.short_wait) { els.any? }
     els.map { |el| el.text.strip }
   end
 
   def section_instructors(section_id)
-    els = div_elements(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-instructors')]/*")
+    els = div_elements(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'instructors')]/*")
     wait_until(Utils.short_wait) { els.any? }
     els.map { |el| el.text.strip }
   end
 
-  elements(:section_id, :cell, xpath: '//td[@class="cell-section-id"]')
+  elements(:section_id, :cell, xpath: '//td[@class="td-section-id"]')
 
   def all_section_ids
     wait_until(3) { section_id_elements.any? }
@@ -152,7 +153,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
 
   def course_section_ids(course)
     identifier = "#{course.code.downcase.split.join('-')}-#{course.term.code}"
-    cell_elements(xpath: "//div[@id='sections-course-#{identifier}']//td[@class='cell-section-id']").map &:text
+    cell_elements(xpath: "//div[@id='sections-course-#{identifier}']//td[@class='td-section-id']").map &:text
   end
 
   def click_next

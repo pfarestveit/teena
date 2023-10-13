@@ -1,6 +1,6 @@
 require_relative '../../util/spec_helper'
 
-class RipleyOfficialSectionsPage
+class RipleyOfficialSectionsPage < RipleySiteCreationPage
 
   include PageObject
   include Logging
@@ -19,22 +19,6 @@ class RipleyOfficialSectionsPage
   h2(:updating_sections_msg, xpath: '//*[contains(., "Updating Official Sections in Course Site")]')
   div(:sections_updated_msg, xpath: '//div[text()="The sections in this course site have been updated successfully."]')
   button(:update_msg_close_button, xpath: '//button[@aria-label="Hide notice"]')
-
-  def embedded_tool_path(course)
-    "/courses/#{course.site_id}/external_tools/#{RipleyTool::OFFICIAL_SECTIONS.tool_id}"
-  end
-
-  def hit_embedded_tool_url(course)
-    navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path course}"
-  end
-
-  def load_embedded_tool(course)
-    load_tool_in_canvas embedded_tool_path(course)
-  end
-
-  def load_standalone_tool(course)
-    navigate_to "#{RipleyUtils.base_url}/official_sections/#{course.site_id}"
-  end
 
   def click_edit_sections
     logger.debug 'Clicking edit sections button'
@@ -73,7 +57,7 @@ class RipleyOfficialSectionsPage
   end
 
   def list_section_label(section)
-    cell_element(xpath: "#{list_section_row_xpath(section)}//td[contains(@class,\"section-label\")]").text
+    cell_element(xpath: "#{list_section_row_xpath(section)}//td[contains(@class,\"section-name\")]").text
   end
 
 
@@ -114,7 +98,7 @@ class RipleyOfficialSectionsPage
   end
 
   def current_section_label(section)
-    cell_element(xpath: "#{current_section_row_xpath(section)}//td[contains(@class,\"section-label\")]").text
+    cell_element(xpath: "#{current_section_row_xpath(section)}//td[contains(@class,\"section-name\")]").text
   end
 
   def section_update_button(section)
@@ -181,23 +165,23 @@ class RipleyOfficialSectionsPage
   end
 
   def available_section_label(course, section)
-    cell_element(xpath: "#{available_section_cell_xpath(course, section)}/preceding-sibling::td[contains(@class,\"section-label\")]").text
+    cell_element(xpath: "#{available_section_cell_xpath(course, section)}/preceding-sibling::td[contains(@class,\"section-name\")]").text
   end
 
   def available_section_schedules(course, section)
-    sched = cell_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"section-timestamps\")]").text.to_s
+    sched = cell_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"schedule\")]").text.to_s
     sched = sched.upcase.split("\n") unless sched.empty?
     sched
   end
 
   def available_section_locations(course, section)
-    loc = cell_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"section-locations\")]").text.to_s
+    loc = cell_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"meeting-location\")]").text.to_s
     loc = loc.split("\n") unless loc.empty?
     loc
   end
 
   def available_section_instructors(course, section)
-    cell_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"section-instructors\")]").text
+    cell_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"instructors\")]").text
   end
 
   def section_add_button(section)

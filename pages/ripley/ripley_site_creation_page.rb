@@ -8,10 +8,11 @@ class RipleySiteCreationPage
   include RipleyPages
 
   h1(:page_heading, xpath: '//h1[text()="Create a Site"]')
+  button(:go_next_button, id: 'go-next-btn')
 
   def load_embedded_tool(user)
     logger.info 'Loading embedded version of Create Course Site tool'
-    load_tool_in_canvas"/users/#{user.canvas_id}/external_tools/#{RipleyTool::CREATE_SITE.tool_id}"
+    load_tool_in_canvas"/users/#{user.canvas_id}/external_tools/#{RipleyTool::MANAGE_SITE.tool_id}"
   end
 
   def load_standalone_tool
@@ -38,12 +39,13 @@ class RipleySiteCreationPage
   # Course site
 
   radio_button(:create_course_site_link, id: 'create-course-site')
-  paragraph(:course_sites_msg, xpath: '//div[text()=" Set up course sites to communicate with and manage the work of students enrolled in your classes. "]')
-  paragraph(:no_course_sites_msg, id: 'TBD "It appears that you do not have permissions to create a Course Site in the current or upcoming terms."')
-  link(:bcourses_support_link, id: 'TBD "bCourses support"')
+  div(:course_sites_msg, xpath: '//div[text()=" Set up course sites to communicate with and manage the work of students enrolled in your classes. "]')
+  div(:no_course_sites_msg, div: '//div[contains(text(), "To create a course site, you will need to be the official instructor of record for a course.")]')
 
   def click_create_course_site
+    logger.info 'Selecting create course site and continue'
     wait_for_load_and_click create_course_site_link_element
+    wait_for_update_and_click go_next_button_element
   end
 
   # Project site
@@ -53,6 +55,30 @@ class RipleySiteCreationPage
   link(:projects_learn_more_link, id: 'berkeley-collaboration-services-information')
 
   def click_create_project_site
+    logger.info 'Selecting create project site and continue'
     wait_for_update_and_click create_project_site_link_element
+    wait_for_update_and_click go_next_button_element
+  end
+
+  # Manage official sections
+
+  link(:manage_sections_link, id: 'manage-official-sections')
+  span(:no_managing_sections_msg, xpath: '//span[contains(text(), "Sorry, we found neither")]')
+  text_field(:manage_sections_site_input, id: 'canvas-site-id-input')
+  select_list(:manage_sections_site_select, id: 'course-sections')
+
+  def select_site_and_manage(site)
+    logger.info "Selecting site ID #{site.site_id} in #{site.course.term.name} and continuing"
+    wait_for_update_and_click manage_sections_link_element
+    # TODO - select a term
+    wait_for_element_and_select(manage_sections_site_select_element, site.site_id)
+    wait_for_update_and_click go_next_button_element
+  end
+
+  def enter_site_and_manage(site)
+    logger.info "Entering site ID #{site.site_id} and continuing"
+    wait_for_update_and_click manage_sections_link_element
+    wait_for_textbox_and_type(manage_sections_site_input_element, site.site_id)
+    wait_for_update_and_click go_next_button_element
   end
 end
