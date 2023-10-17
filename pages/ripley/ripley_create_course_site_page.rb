@@ -85,8 +85,8 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
       code: section_course_code(section_id),
       label: section_label(section_id),
       id: section_id,
-      # schedules: section_schedules(section_id),
-      # locations: section_locations(section_id),
+      schedules: section_schedules(section_id),
+      locations: section_locations(section_id),
       instructors: section_instructors(section_id)
     }
   end
@@ -103,41 +103,36 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     end
   end
 
-  def section_cbx_xpath(section_id)
-    "//input[@id='template-canvas-manage-sections-checkbox-#{section_id}']"
-  end
-
   def section_checkbox(section_id)
-    scroll_to_top
-    checkbox_element(xpath: section_cbx_xpath(section_id))
+    checkbox_element(id: "template-canvas-manage-sections-checkbox-#{section_id}")
   end
 
   def section_course_code(section_id)
-    el = cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'course-code')]")
+    el = cell_element(xpath: "//td[contains(@id, '#{section_id}-course')]")
     el.when_present Utils.short_wait
     el.text.strip
   end
 
   def section_label(section_id)
-    el = cell_element(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'section-name')]")
+    el = cell_element(xpath: "//td[contains(@id, '#{section_id}-name')]")
     el.when_present Utils.short_wait
     el.text.strip
   end
 
   def section_schedules(section_id)
-    els = div_elements(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'schedule')]/*")
+    els = div_elements(xpath: "//td[contains(@id, '#{section_id}-schedule')]/*")
     wait_until(Utils.short_wait) { els.any? }
     els.map { |el| el.text.strip.upcase }
   end
 
   def section_locations(section_id)
-    els = div_elements(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'meeting-location')]/*")
+    els = div_elements(xpath: "//td[contains(@id, '#{section_id}-location')]/*")
     wait_until(Utils.short_wait) { els.any? }
     els.map { |el| el.text.strip }
   end
 
   def section_instructors(section_id)
-    els = div_elements(xpath: "#{section_cbx_xpath(section_id)}/ancestor::tbody//td[contains(@class, 'instructors')]/*")
+    els = div_elements(xpath: "//td[contains(@id, '#{section_id}-instructors')]/*")
     wait_until(Utils.short_wait) { els.any? }
     els.map { |el| el.text.strip }
   end

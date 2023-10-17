@@ -26,9 +26,9 @@ class RipleyAddUserPage
   link(:bcourses_help_link, id: 'link-to-httpsberkeleyservicenowcomkb_viewdosysparm_articleKB0010842')
 
   table(:results_table, xpath: '//h2[text()="User Search Results"]/following-sibling::div//table')
-  elements(:result_name, :span, xpath: '//td[contains(@id, "user-search-result-row-name")]')
-  elements(:result_uid, :span, xpath: '//td[contains(@id, "user-search-result-row-ldap-uid")]')
-  elements(:result_email, :span, xpath: '//td[contains(@id, "user-search-result-row-email")]')
+  elements(:result_name, :cell, xpath: '//td[contains(@id, "user-search-result-row-select")]')
+  elements(:result_uid, :cell, xpath: '//td[contains(@id, "user-search-result-row-ldap-uid")]')
+  elements(:result_email, :cell, xpath: '//td[contains(@id, "user-search-result-row-email")]')
 
   select_list(:user_role, id: 'user-role')
   select_list(:course_section, id: 'course-section')

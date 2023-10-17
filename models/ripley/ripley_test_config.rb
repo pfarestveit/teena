@@ -94,7 +94,7 @@ class RipleyTestConfig < TestConfig
           s.primary && s.instructors.map(&:user).include?(site.test_teacher)
         end.map &:id
         site.course.sections.keep_if do |s|
-          primary_ids.include?(s.id) || primary_ids.include?(s.primary_assoc_id)
+          primary_ids.include?(s.id) || (primary_ids & s.primary_assoc_ids).any?
         end
       end
     end
@@ -236,7 +236,6 @@ class RipleyTestConfig < TestConfig
     instructors = (primaries[0].instructors.map(&:user) + primaries[1].instructors.map(&:user)).uniq
     multi_course = Course.new code: primaries[0].course,
                               multi_course: true,
-                              title: primaries[0].course,
                               term: @current_term,
                               sections: primaries[0..1],
                               teachers: instructors
