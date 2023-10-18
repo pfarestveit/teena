@@ -220,7 +220,7 @@ class RipleyUtils < Utils
                   label: v[0][:label],
                   locations: (v.map { |l| l[:location] }).compact.uniq,
                   primary: v[0][:primary],
-                  primary_assoc_id: v[0][:primary_assoc_id],
+                  primary_assoc_ids: (v.map { |p| p[:primary_assoc_id] }).uniq,
                   schedules: (v.map { |s| s[:schedule] }).uniq
     end
     teachers = sections.select(&:primary).map { |prim| prim.instructors.map &:user }
@@ -286,7 +286,7 @@ class RipleyUtils < Utils
           section.primary && (section.instructors.map { |i| i.user.uid }.include?(instructor.uid))
         end.map &:id
         secondary_ids = course.sections.select do |section|
-          !section.primary && primary_ids.include?(section.primary_assoc_id)
+          !section.primary && (primary_ids & section.primary_assoc_ids).any?
         end.map &:id
         course.sections.keep_if { |section| (primary_ids + secondary_ids).include? section.id }
       else

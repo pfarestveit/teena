@@ -71,6 +71,7 @@ module CanvasPeoplePage
   # Returns all the visible instruction modes in section labels
   # @return [Array<String>]
   def visible_instruction_modes
+    wait_until(Utils.medium_wait) { section_label_elements.any? }
     modes = section_label_elements.map { |el| el.text.split('(').last.gsub(')', '') }
     modes.uniq
   end

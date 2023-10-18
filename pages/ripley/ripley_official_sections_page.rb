@@ -44,6 +44,10 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
 
   # LIST VIEW - CURRENT SECTIONS
 
+  def list_view_sections_table
+    table_element(id: 'template-sections-table-preview')
+  end
+
   def list_section_row(section)
     row_element(id: "template-sections-table-row-preview-#{section.id}")
   end

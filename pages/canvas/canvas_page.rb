@@ -663,12 +663,13 @@ module Page
       hide_grade_distrib_cbx_checked?
     end
 
-    select_list(:course_account, id: 'course_account_id')
+    span(:course_account_link, xpath: '//span[@id="course_account_id"]/a')
+    select_list(:course_account_select, xpath: '//select[@id="course_account_id"]')
 
     def selected_course_sub_account(site)
       navigate_to "#{Utils.canvas_base_url}/courses/#{site.site_id}/settings"
-      course_account_element.when_visible Utils.short_wait
-      course_account
+      wait_until(Utils.short_wait) { course_account_link? || course_account_select? }
+      course_account_select? ? course_account_select : course_account_link_element.text
     end
 
     # MESSAGES
@@ -713,20 +714,20 @@ module Page
       users.each do |user|
         unless user.canvas_id
           logger.info "Getting Canvas ID for #{user.uid}"
-          begin
-            wait_for_textbox_and_type(user_search_input_element, user.email)
-            user_result_link_by_email(user).when_present Utils.short_wait
-            user.canvas_id = user_result_link_by_email(user).attribute('href').split('/').last
-          rescue => e
-            logger.error e.message
-            string = user.sis_id || user.uid
-            wait_for_textbox_and_type(user_search_input_element, string)
-            user_result_link_by_uid(user).when_present Utils.short_wait
-            user.canvas_id = user_result_link_by_uid(user).attribute('href').split('/').last
+          [user.email, user.sis_id, user.uid].each do |string|
+            begin
+              wait_for_textbox_and_type(user_search_input_element, string)
+              el = (string == user.email) ? user_result_link_by_email(user) : user_result_link_by_uid(user)
+              el.when_present Utils.short_wait
+              user.canvas_id = el.attribute('href').split('/').last
+              break if user.canvas_id
+            rescue => e
+              logger.error Utils.error(e)
+            end
           end
+          fail("Unable to find Canvas ID for UID #{user.uid}") unless user.canvas_id
         end
       end
     end
-
   end
 end

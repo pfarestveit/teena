@@ -70,7 +70,6 @@ class RipleySiteCreationPage
   def select_site_and_manage(site)
     logger.info "Selecting site ID #{site.site_id} in #{site.course.term.name} and continuing"
     wait_for_update_and_click manage_sections_link_element
-    # TODO - select a term
     wait_for_element_and_select(manage_sections_site_select_element, site.site_id)
     wait_for_update_and_click go_next_button_element
   end
