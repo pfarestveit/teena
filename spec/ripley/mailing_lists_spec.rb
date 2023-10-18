@@ -135,8 +135,8 @@ unless ENV['STANDALONE']
           end
         end
 
-        it('shows the membership count') { expect(@mailing_lists_page.list_membership_count).to eql('No members') }
-        it('shows the most recent membership update') { expect(@mailing_lists_page.list_update_time).to eql('Never.') }
+        it('shows the membership count') { expect(@mailing_lists_page.list_membership_count).to eql('0 members') }
+        it('shows the most recent membership update') { expect(@mailing_lists_page.list_update_time).to eql('Never') }
         it('shows the course site code') { expect(@mailing_lists_page.list_site_link_element.text).to eql(course_site_1.title) }
         it('shows the course site title and term') { expect(@mailing_lists_page.list_site_desc).to eql("#{course_site_1.abbreviation}, #{course_site_1.term.name}") }
         it('shows the course site ID') { expect(@mailing_lists_page.list_site_id).to eql(course_site_1.site_id) }

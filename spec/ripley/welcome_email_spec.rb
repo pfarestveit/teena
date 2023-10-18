@@ -109,7 +109,6 @@ describe 'bCourses welcome email', order: :defined do
       @canvas2.stop_masquerading
 
       # Update membership
-      RipleyUtils.clear_cache # TODO @ripley2
       @mailing_lists.load_embedded_tool
       @mailing_lists.search_for_list @site.site_id
       @mailing_lists.click_update_memberships
@@ -135,7 +134,6 @@ describe 'bCourses welcome email', order: :defined do
       @canvas2.stop_masquerading
 
       # Update membership
-      RipleyUtils.clear_cache # TODO @ripley2
       @mailing_lists.load_embedded_tool
       @mailing_lists.search_for_list @site.site_id
       @mailing_lists.click_update_memberships

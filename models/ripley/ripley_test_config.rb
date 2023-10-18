@@ -107,7 +107,7 @@ class RipleyTestConfig < TestConfig
   end
 
   def get_single_test_site(section_ids = nil)
-    course_site = if ENV['SITE'] && !ENV['STANDALONE']
+    course_site = if ENV['SITE']
                     CourseSite.new site_id: ENV['SITE'].to_s
                   else
                     get_multiple_test_sites
@@ -118,6 +118,7 @@ class RipleyTestConfig < TestConfig
     get_existing_site_data(course_site, section_ids) if section_ids
     course_site.course.sections.select(&:primary).each { |s| s.include_in_site = true }
     course_site.create_site_workflow = 'self'
+    course_site.test_teacher = RipleyUtils.get_primary_instructor course_site
     course_site
   end
 
@@ -195,8 +196,9 @@ class RipleyTestConfig < TestConfig
 
   def get_welcome_email_site
     site = CourseSite.new title: "#{@id} Welcome",
-                          code: "#{@id} Welcome Email"
-    set_real_test_course_users site
+                          abbreviation: "#{@id} Welcome Email"
+    set_test_user_data ripley_test_data_file
+    site.manual_members = set_fake_test_users 'mailing_lists'
     site
   end
 

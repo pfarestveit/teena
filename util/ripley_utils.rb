@@ -422,7 +422,7 @@ class RipleyUtils < Utils
              FROM sis_data.edo_basic_attributes
             WHERE affiliations = '#{affiliations}'
               AND email_address IS NOT NULL
-         ORDER BY RANDOM()
+         ORDER BY ldap_uid DESC
          #{'LIMIT ' + count.to_s if count}"
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     results.map do |r|

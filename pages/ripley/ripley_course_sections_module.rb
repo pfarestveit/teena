@@ -16,7 +16,7 @@ module RipleyCourseSectionsModule
   end
 
   def available_sections_course_title(course)
-    el = div_element(xpath: "#{available_course_heading_xpath(course)}/descendant::span[starts-with(text(), \" — \")]")
+    el = div_element(xpath: "#{available_course_heading_xpath(course)}/descendant::span[starts-with(text(), \"— \")]")
     el.when_visible Utils.short_wait
     el.text.gsub('—', '').strip
   rescue
