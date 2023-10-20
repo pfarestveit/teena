@@ -126,7 +126,7 @@ class BOACUtils < Utils
     {
       :note => note,
       :test_case => note_test_case,
-      :string => (search_string[0..23].strip if search_string)
+      :string => (search_string.split[0..4].join(' ') if search_string)
     }
   end
 
@@ -138,7 +138,7 @@ class BOACUtils < Utils
     {
       :appt => appt,
       :test_case => test_case,
-      :string => (search_string[0..23].strip if search_string)
+      :string => (search_string.split[0..4].join(' ') if search_string)
     }
   end
 

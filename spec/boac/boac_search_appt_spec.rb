@@ -123,6 +123,7 @@ unless ENV['NO_DEPS']
                 end
 
                 non_topic = Topic::TOPICS.find { |t| t.name == non_appt_topics.first }
+                @homepage.reopen_and_reset_adv_search
                 @homepage.select_note_topic non_topic
                 @homepage.enter_adv_search appt_search[:string]
                 @homepage.click_adv_search_button

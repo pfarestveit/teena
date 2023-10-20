@@ -10,6 +10,7 @@ module BOACPages
   ### PAGE LOADS ###
 
   div(:spinner, id: 'spinner-when-loading')
+  div(:div_lock, xpath: '//div[@data-lock]')
   image(:not_found, xpath: '//img[@alt="A silly boarding pass with the text, \'Error 404: Flight not found\'"]')
   div(:copyright_year_footer, xpath: '//div[contains(text(),"The Regents of the University of California")]')
   elements(:auto_suggest_option, :link, xpath: '//a[contains(@id, "suggestion")]')

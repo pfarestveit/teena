@@ -296,7 +296,7 @@ unless ENV['NO_DEPS']
       end
 
       it 'is updated when a student is removed from a new group' do
-        @group_page.click_sidebar_group_link @group_9
+        @group_page.load_page @group_9
         @group_page.remove_student_by_row_index(@group_9, @student)
         @group_page.wait_for_sidebar_group_member_count @group_9
       end
@@ -309,7 +309,7 @@ unless ENV['NO_DEPS']
       end
 
       it 'is updated when the same student is removed from yet another group' do
-        @student_page.click_sidebar_group_link @group_10
+        @group_page.load_page @group_10
         @group_page.remove_student_by_row_index(@group_10, @student)
         @search_page.wait_for_sidebar_group_member_count @group_10
         @search_page.wait_for_sidebar_group_member_count @group_9

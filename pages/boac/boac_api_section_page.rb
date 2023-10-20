@@ -17,15 +17,17 @@ class BOACApiSectionPage
   end
 
   def meetings
-    @parsed['meetings'] && @parsed['meetings'].map do |meet|
+    meetings = @parsed['meetings'] && @parsed['meetings'].map do |meet|
       {
         :instructors => (meet['instructors'].map { |i| i.gsub(/\s+/, ' ') }),
         :days => meet['days'],
         :time => meet['time'],
         :location => (meet['location'] && meet['location'].gsub(/\s+/, ' ')),
-        :mode => meet['instructionModeName']
+        :mode => meet['instructionModeName'],
+        :start_date => Date.parse(meet['startDate'])
       }
     end
+    meetings.sort_by { |m| m[:start_date] }
   end
 
   def students
