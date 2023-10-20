@@ -544,7 +544,8 @@ module BOACPagesCreateNoteModal
   def click_update_template
     logger.info 'Clicking the Update Template button'
     wait_for_update_and_click update_template_button_element
-    sleep 3
+    div_lock_element.when_not_present Utils.short_wait
+    sleep 1
   end
 
   # Rename

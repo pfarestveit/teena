@@ -46,7 +46,6 @@ class BOACGroupStudentsPage
     group.members.delete student
     sleep 2
     wait_until(Utils.short_wait) { list_view_uids.sort == group.members.map(&:uid).sort }
-    wait_for_sidebar_group_member_count group
   end
 
 end

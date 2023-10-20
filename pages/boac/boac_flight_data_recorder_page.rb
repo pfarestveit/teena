@@ -32,6 +32,7 @@ class BOACFlightDataRecorderPage
   def select_dept_report(dept)
     logger.info "Selecting report for #{dept.code}"
     wait_for_element_and_select(dept_select_element, dept.code)
+    sleep 3
   end
 
   # Returns the available departments in the advisor report filter
