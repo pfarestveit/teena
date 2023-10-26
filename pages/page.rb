@@ -131,6 +131,7 @@ module Page
     sleep(click_wait || Utils.click_wait)
     el = element_element(element.locator)
     begin
+      wait_until(Utils.short_wait) { el.enabled? }
       el.click
     rescue => e
       logger.warn e.message

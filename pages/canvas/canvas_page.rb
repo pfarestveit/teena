@@ -651,6 +651,10 @@ module Page
       url.delete '#'
     end
 
+    def conf_link_hidden?
+      conf_tool_link_element.attribute('title') == 'Disabled. Not visible to students'
+    end
+
     checkbox(:hide_grade_distrib_cbx, id: 'course_hide_distribution_graphs')
 
     # Returns whether or not the 'Hide grade distribution graphs from students' option is selected on a course site
@@ -718,11 +722,11 @@ module Page
             begin
               wait_for_textbox_and_type(user_search_input_element, string)
               el = (string == user.email) ? user_result_link_by_email(user) : user_result_link_by_uid(user)
-              el.when_present Utils.short_wait
+              el.when_present 3
               user.canvas_id = el.attribute('href').split('/').last
               break if user.canvas_id
             rescue => e
-              logger.error Utils.error(e)
+              logger.error e.message
             end
           end
           fail("Unable to find Canvas ID for UID #{user.uid}") unless user.canvas_id

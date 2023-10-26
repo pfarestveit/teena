@@ -11,14 +11,13 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
   link(:official_sections_link, text: 'Official Sections')
   button(:edit_sections_button, id: 'official-sections-edit-btn')
 
-  elements(:current_sections_table_row, :row, xpath: '//h3[text()=" Sections in this Course Site "]/../following-sibling::div//tbody/tr')
   div(:section_name_msg, xpath: '//div[contains(., "The section name in bCourses no longer matches the Student Information System.")]')
   button(:cancel_button, id: 'official-sections-cancel-btn')
   button(:save_changes_button, id: 'official-sections-save-btn')
 
   h2(:updating_sections_msg, xpath: '//*[contains(., "Updating Official Sections in Course Site")]')
   div(:sections_updated_msg, xpath: '//div[text()="The sections in this course site have been updated successfully."]')
-  button(:update_msg_close_button, xpath: '//button[@aria-label="Hide notice"]')
+  button(:update_msg_close_button, xpath: '//div[text()="The sections in this course site have been updated successfully."]/../following-sibling::div/button')
 
   def click_edit_sections
     logger.debug 'Clicking edit sections button'
@@ -42,49 +41,55 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
     wait_for_update_and_click update_msg_close_button_element
   end
 
-  # LIST VIEW - CURRENT SECTIONS
+  def expected_instructors(section)
+    section.instructors.any? ? (section.instructors.map { |i| i.user.full_name }) : ['—']
+  end
 
-  def list_view_sections_table
+  # STATIC VIEW - CURRENT SECTIONS
+
+  elements(:static_view_section_row, :row, xpath: '//tr[contains(@id, "template-sections-table-preview")]')
+
+  def static_view_sections_table
     table_element(id: 'template-sections-table-preview')
   end
 
-  def list_section_row(section)
-    row_element(id: "template-sections-table-row-preview-#{section.id}")
+  def static_sections_count
+    static_view_sections_table.when_visible Utils.medium_wait
+    wait_until(Utils.short_wait) { static_view_section_row_elements.any? }
+    static_view_section_row_elements.length
   end
 
-  def list_section_row_xpath(section)
-    "//tr[@id=\"template-sections-table-row-preview-#{section.id}\"]"
+  def static_section_row(section)
+    row_element(id: "template-sections-table-preview-#{section.id}")
   end
 
-  def list_section_course(section)
-    cell_element(xpath: "#{list_section_row_xpath(section)}//td[contains(@class,\"course-code\")]").text
+  def static_section_data(section)
+    course_el = cell_element(id: "template-sections-table-preview-#{section.id}-course")
+    label_el = cell_element(id: "template-sections-table-preview-#{section.id}-name")
+    id_el = cell_element(id: "template-sections-table-preview-#{section.id}-id")
+    schedule_els = div_elements(xpath: "//td[contains(@id, '#{section.id}-schedule')]/*")
+    location_els = div_elements(xpath: "//td[contains(@id, '#{section.id}-location')]/*")
+    instructor_els = div_elements(xpath: "//td[contains(@id, '#{section.id}-instructors')]/*")
+    {
+      course: course_el&.text.to_s,
+      label: label_el&.text.to_s,
+      id: id_el&.text.to_s,
+      schedules: (schedule_els.map { |el| el.text.strip.upcase } if schedule_els.any?),
+      locations: (location_els.map { |el| el.text.strip } if location_els.any?),
+      instructors: (instructor_els.map { |el| el.text.strip } if instructor_els.any?)
+    }
   end
-
-  def list_section_label(section)
-    cell_element(xpath: "#{list_section_row_xpath(section)}//td[contains(@class,\"section-name\")]").text
-  end
-
 
   # EDIT MODE - CURRENT SECTIONS
 
-  def current_sections_table_xpath
-    "//h3[text()=\" Sections in this Course Site \"]/../following-sibling::div//table"
-  end
-
-  def current_section_row(section)
-    row_element(id: "template-sections-table-row-currentstaging-#{section.id}")
-  end
-
-  def current_section_row_xpath(section)
-    "//tr[@id=\"template-sections-table-row-currentstaging-#{section.id}\"]"
-  end
-
-  def current_section_id_cell_xpath(section)
-    "#{current_section_row_xpath section}//td[contains(@class, \"section-id\")]"
-  end
+  elements(:current_sections_table_row, :row, xpath: '//table[@id="template-sections-table"]/tbody/tr')
 
   def current_sections_table
-    table_element(xpath: current_sections_table_xpath)
+    table_element(id: 'template-sections-table')
+  end
+
+  def current_sections_table_xpath
+    '//table[@id="template-sections-table"]'
   end
 
   def current_sections_count
@@ -93,16 +98,25 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
     current_sections_table_row_elements.length
   end
 
-  def current_section_id_element(section)
-    cell_element(xpath: current_section_id_cell_xpath(section))
+  def current_section_row(section)
+    row_element(id: "template-sections-table-#{section.id}")
   end
 
-  def current_section_course(section)
-    cell_element(xpath: "#{current_section_row_xpath(section)}//td[contains(@class,\"course-code\")]").text
-  end
-
-  def current_section_label(section)
-    cell_element(xpath: "#{current_section_row_xpath(section)}//td[contains(@class,\"section-name\")]").text
+  def current_section_data(section)
+    course_el = cell_element(id: "template-sections-table-#{section.id}-course")
+    label_el = cell_element(id: "template-sections-table-#{section.id}-name")
+    id_el = cell_element(id: "template-sections-table-#{section.id}-id")
+    schedule_els = div_elements(xpath: "#{current_sections_table_xpath}//td[contains(@id, '#{section.id}-schedule')]/*")
+    location_els = div_elements(xpath: "#{current_sections_table_xpath}//td[contains(@id, '#{section.id}-location')]/*")
+    instructor_els = div_elements(xpath: "#{current_sections_table_xpath}//td[contains(@id, '#{section.id}-instructors')]/*")
+    {
+      course: course_el&.text.to_s,
+      label: label_el&.text.to_s,
+      id: id_el&.text.to_s,
+      schedules: (schedule_els.map { |el| el.text.strip.upcase } if schedule_els.any?),
+      locations: (location_els.map { |el| el.text.strip } if location_els.any?),
+      instructors: (instructor_els.map { |el| el.text.strip } if instructor_els.any?)
+    }
   end
 
   def section_update_button(section)
@@ -131,7 +145,7 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
   end
 
   def section_undo_add_button(section)
-    button_element(id: "section-#{section.id}-undo-unlink-btn")
+    button_element(id: "section-#{section.id}-undo-link-btn")
   end
 
   def click_undo_add_section(section)
@@ -142,50 +156,29 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
 
   # EDIT MODE - AVAILABLE SECTIONS
 
-  def available_section_cell_xpath(course, section)
-    "#{available_sections_table_xpath(course, section)}//td[contains(.,\"#{section.id}\")]"
+  def available_sections_count(course, section)
+    div_elements(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(@id, '-course')]").length
   end
 
-  def available_sections_count(course, section)
-    div_elements(xpath: "#{available_sections_table_xpath(course, section)}/tbody").length
+  def available_section_row(course, section)
+    row_element(xpath: "#{available_sections_table_xpath(course, section)}//tr[contains(@id, \"#{section.id}\")]")
   end
 
   def available_section_data(course, section)
+    course_el = cell_element(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(@id, \"#{section.id}-course\")]")
+    label_el = cell_element(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(@id, \"#{section.id}-name\")]")
+    id_el = cell_element(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(@id, \"#{section.id}-id\")]")
+    schedule_els = div_elements(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(@id, '#{section.id}-schedule')]/*")
+    location_els = div_elements(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(@id, '#{section.id}-location')]/*")
+    instructor_els = div_elements(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(@id, '#{section.id}-instructors')]/*")
     {
-      code: available_section_course(course, section),
-      label: available_section_label(course, section),
-      schedules: available_section_schedules(course, section),
-      locations: available_section_locations(course, section),
-      instructors: available_section_instructors(course, section)
+      course: course_el&.text.to_s,
+      label: label_el&.text.to_s,
+      id: id_el&.text.to_s,
+      schedules: (schedule_els.map { |el| el.text.strip.upcase } if schedule_els.any?),
+      locations: (location_els.map { |el| el.text.strip } if location_els.any?),
+      instructors: (instructor_els.map { |el| el.text.strip } if instructor_els.any?)
     }
-  end
-
-  def available_section_id_element(course, section)
-    cell_element(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(.,\"#{section.id}\")]")
-  end
-
-  def available_section_course(course, section)
-    cell_element(xpath: "#{available_section_cell_xpath(course, section)}/preceding-sibling::td[contains(@class,\"course-code\")]").text
-  end
-
-  def available_section_label(course, section)
-    cell_element(xpath: "#{available_section_cell_xpath(course, section)}/preceding-sibling::td[contains(@class,\"section-name\")]").text
-  end
-
-  def available_section_schedules(course, section)
-    sched = cell_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"schedule\")]").text.to_s
-    sched = sched.upcase.split("\n") unless sched.empty?
-    sched
-  end
-
-  def available_section_locations(course, section)
-    loc = cell_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"meeting-location\")]").text.to_s
-    loc = loc.split("\n") unless loc.empty?
-    loc
-  end
-
-  def available_section_instructors(course, section)
-    cell_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"instructors\")]").text
   end
 
   def section_add_button(section)
@@ -204,7 +197,7 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
   end
 
   def section_added_element(course, section)
-    div_element(xpath: "#{available_section_cell_xpath(course, section)}/following-sibling::td[contains(@class,\"section-action-option\")]//div[contains(.,'Linked')]")
+    div_element(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(@id, '#{section.id}-actions')]/div[contains(.,'Linked')]")
   end
 
   def section_undo_delete_button(section)

@@ -122,7 +122,7 @@ module Page
     # GRADEBOOK UI
 
     text_area(:student_search_input, xpath: '//input[@placeholder="Search Students"]')
-    link(:e_grades_export_link, xpath: '//a[contains(.,"E-Grades")]')
+    link(:e_grades_export_link, xpath: '//a[text()="  E-Grades"]')
     button(:actions_button, xpath: '//button[contains(., "Actions")]')
     text_field(:individual_view_input, xpath: '//input[@value="Individual View"]')
 
@@ -244,7 +244,7 @@ module Page
         grade = gradebook_grade_elements.first.text
         {
             student: user,
-            grade: grade
+            grade: grade&.gsub('−', '-')
         }
       rescue => e
         Utils.log_error e

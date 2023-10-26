@@ -236,7 +236,7 @@ describe 'bCourses course site creation' do
           manage_sections_access = @official_sections.verify_block do
             @site_creation.load_embedded_tool teacher
             @site_creation.select_site_and_manage site
-            @official_sections.list_view_sections_table.when_visible Utils.medium_wait
+            @official_sections.static_view_sections_table.when_visible Utils.medium_wait
             @official_sections.edit_sections_button_element.when_visible 1
           end
           it "grants a Teacher TA the right to manage sections on #{test_case}" do
@@ -247,8 +247,8 @@ describe 'bCourses course site creation' do
 
         # -- Customizations --
 
-        conf_nav_present = @canvas.conf_tool_link?
-        it("shows no Conferences tool link in course site navigation for #{test_case}") { expect(conf_nav_present).to be false }
+        conf_nav_hidden = @canvas.conf_link_hidden?
+        it("shows no Conferences tool link in course site navigation for #{test_case}") { expect(conf_nav_hidden).to be true }
 
         grade_distribution_hidden = @canvas.grade_distribution_hidden? site
         it("hides grade distribution graphs from students for #{test_case}") { expect(grade_distribution_hidden).to be true }
