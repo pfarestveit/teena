@@ -55,6 +55,10 @@ class RipleyUtils < Utils
     @config['e_grades_student_count']
   end
 
+  def self.grade_distribution_site_ids
+    @config['newt_site_ids']
+  end
+
   def self.test_data_file
     File.join(Utils.config_dir, 'test-data-ripley.json')
   end

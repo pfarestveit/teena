@@ -136,6 +136,7 @@ ripley:
   course_prefixes: ['ECON C', 'CHEM 1A', 'LEGALST']
   e_grades_site_ids: ['123', '456', '789']
   e_grades_student_count: 10
+  newt_site_ids: ['987', '654', '321']
   db_host: secret
   db_port: secret
   db_name: secret

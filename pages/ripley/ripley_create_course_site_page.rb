@@ -122,19 +122,19 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
   def section_schedules(section_id)
     els = div_elements(xpath: "//td[contains(@id, '#{section_id}-schedule')]/*")
     wait_until(Utils.short_wait) { els.any? }
-    els.map { |el| el.text.strip.upcase }
+    els.map { |el| el.text.strip.upcase }.delete_if &:empty?
   end
 
   def section_locations(section_id)
     els = div_elements(xpath: "//td[contains(@id, '#{section_id}-location')]/*")
     wait_until(Utils.short_wait) { els.any? }
-    els.map { |el| el.text.strip }
+    els.map { |el| el.text.strip }.delete_if &:empty?
   end
 
   def section_instructors(section_id)
     els = div_elements(xpath: "//td[contains(@id, '#{section_id}-instructors')]/*")
     wait_until(Utils.short_wait) { els.any? }
-    els.map { |el| el.text.strip }
+    els.map { |el| el.text.strip }.delete_if &:empty?
   end
 
   elements(:section_id, :cell, xpath: '//td[@class="td-section-id"]')

@@ -18,7 +18,7 @@ describe 'bCourses E-Grades Export' do
     @e_grades_export_page = RipleyEGradesPage.new @driver
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-    RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
+    RipleyTool::TOOLS.select(&:account).each { |t| @canvas.add_ripley_tool t }
 
     test.course_sites.each_with_index do |site, i|
 
