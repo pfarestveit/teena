@@ -27,7 +27,7 @@ describe 'bCourses E-Grades Export' do
     @course_add_user_page = RipleyAddUserPage.new @driver
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-    RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
+    RipleyTool::TOOLS.select(&:account).each { |t| @canvas.add_ripley_tool t }
     section_ids = @canvas_api.get_course_site_sis_section_ids site.site_id
     test.get_existing_site_data(site, section_ids)
     @teacher = RipleyUtils.get_primary_instructor(site) || site.course.teachers.first

@@ -33,7 +33,7 @@ describe 'bCourses Official Sections tool' do
     if ENV['SITE'] && site.course.sections == site.sections
       it('cannot be tested using the given course site, since it already has all sections') { fail }
     else
-      RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
+      RipleyTool::TOOLS.select(&:account).each { |t| @canvas.add_ripley_tool t }
       teacher = site.test_teacher
       term_courses = RipleyUtils.get_instructor_term_courses(teacher, test.current_term)
       site.sections = site.sections.select &:primary unless ENV['SITE']

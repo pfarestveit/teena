@@ -28,7 +28,7 @@ unless ENV['STANDALONE']
       @create_project_site_page = RipleyCreateProjectSitePage.new @driver
 
       @canvas_page.log_in(@cal_net_page, test.admin.username, Utils.super_admin_password)
-      RipleyTool::TOOLS.each { |t| @canvas_page.add_ripley_tool t }
+      RipleyTool::TOOLS.select(&:account).each { |t| @canvas_page.add_ripley_tool t }
       @canvas_page.create_ripley_mailing_list_site course_site_1
       @canvas_page.create_ripley_mailing_list_site course_site_2
       @canvas_page.create_ripley_mailing_list_site course_site_3

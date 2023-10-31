@@ -30,7 +30,7 @@ describe 'bCourses course site creation' do
     @roster_photos = RipleyRosterPhotosPage.new @driver
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-    RipleyTool::TOOLS.each { |t| @canvas.add_ripley_tool t }
+    RipleyTool::TOOLS.select(&:account).each { |t| @canvas.add_ripley_tool t }
     @canvas.set_canvas_ids non_teachers
 
     test.course_sites.reverse.each do |site|
@@ -243,15 +243,14 @@ describe 'bCourses course site creation' do
             expect(manage_sections_access).to be true
           end
         end
-        @canvas.switch_to_main_content
 
         # -- Customizations --
 
-        conf_nav_hidden = @canvas.conf_link_hidden?
-        it("shows no Conferences tool link in course site navigation for #{test_case}") { expect(conf_nav_hidden).to be true }
-
         grade_distribution_hidden = @canvas.grade_distribution_hidden? site
         it("hides grade distribution graphs from students for #{test_case}") { expect(grade_distribution_hidden).to be true }
+
+        conf_nav_hidden = @canvas.conf_link_hidden?
+        it("shows no Conferences tool link in course site navigation for #{test_case}") { expect(conf_nav_hidden).to be true }
 
         sub_account = @canvas.selected_course_sub_account site
         dept = site.course.code.split.delete_if { |c| c =~ /\d/ }.join(' ')

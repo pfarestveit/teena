@@ -30,6 +30,10 @@ class RipleyTestConfig < TestConfig
     get_e_grades_test_sites
   end
 
+  def grade_distribution
+    get_grade_distribution_sites
+  end
+
   def mailing_lists
     get_mailing_list_sites
   end
@@ -150,6 +154,11 @@ class RipleyTestConfig < TestConfig
   def get_e_grades_export_site
     get_e_grades_test_sites
     @course_sites.first
+  end
+
+  def get_grade_distribution_sites
+    @course_sites = RipleyUtils.grade_distribution_site_ids.map { |id| CourseSite.new site_id: id }
+    @course_sites.each { |s| set_real_test_course_users s }
   end
 
   def get_mailing_list_sites

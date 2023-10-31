@@ -28,7 +28,7 @@ module Page
     link(:honor_code_link, text: 'UC Berkeley Honor Code')
     link(:student_resources_link, text: 'Student Resources')
     link(:user_prov_link, text: RipleyTool::USER_PROVISIONING.name)
-    link(:conf_tool_link, text: 'BigBlueButton')
+    link(:conf_tool_link, xpath: '//a[text()="BigBlueButton"]')
 
     button(:submit_button, xpath: '//button[contains(.,"Submit")]')
     button(:save_button, xpath: '//button[text()="Save"]')
@@ -610,9 +610,9 @@ module Page
       hide_canvas_footer_and_popup
     end
 
-    def ripley_tool_installed?(tool)
+    def ripley_tool_installed?(tool, site)
       logger.info "Checking if Ripley's #{tool.name} is installed"
-      load_account_apps tool.account
+      site ? load_tools_adding_page(site) : load_account_apps(tool.account)
       verify_block { cell_element(xpath: "//td[text()='#{tool.name}']").when_present Utils.short_wait }
     end
 
@@ -624,22 +624,23 @@ module Page
       tool.dev_key = el.text
     end
 
-    def add_ripley_tool(tool)
-      if ripley_tool_installed? tool
+    def add_ripley_tool(tool, site = nil)
+      if ripley_tool_installed?(tool, site)
         logger.info "Tool #{tool.name} is already installed"
       else
         logger.info "Tool #{tool.name} is not installed, installing"
         get_ripley_tool_dev_key tool
-        load_account_apps tool.account
+        site ? load_tools_adding_page(site) : load_account_apps(tool.account)
         wait_for_update_and_click add_app_link_element
         wait_for_element_and_select(config_type_element, 'By Client ID')
         wait_for_element_and_type(client_id_input_element, tool.dev_key)
         wait_for_update_and_click submit_button_element
         wait_for_update_and_click button_element(xpath: '//button[contains(., "Install")]')
         wait_for_update_and_click add_tool_button_element rescue Selenium::WebDriver::Error::TimeoutError
+        enable_tool(tool, site) if site
       end
       api = CanvasAPIPage.new @driver
-      api.get_tool_id tool
+      api.get_tool_id(tool, site)
     end
 
     def click_tool_link(tool)
@@ -652,6 +653,7 @@ module Page
     end
 
     def conf_link_hidden?
+      conf_tool_link_element.when_present Utils.short_wait
       conf_tool_link_element.attribute('title') == 'Disabled. Not visible to students'
     end
 

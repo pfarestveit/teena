@@ -93,7 +93,7 @@ class RipleyAddUserPage
   end
 
   def add_user_by_uid(user, section = nil)
-    logger.info "Adding UID #{user.uid} with role '#{user.role}'"
+    logger.info "Adding UID #{user.uid} with role '#{user.role}'#{' to section ' + section.label if section}"
     user_checkbox(user).when_present Utils.medium_wait
     user_checkbox(user).check
     if section

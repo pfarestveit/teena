@@ -9,7 +9,7 @@ class CanvasAPIPage
     logger.info "Hitting #{url}"
     navigate_to url
     parse_json
-    @parsed.map { |s| s['sis_section_id'].gsub('SEC:', '') }
+    @parsed.map { |s| s['sis_section_id']&.gsub('SEC:', '') }.compact
   end
 
   def get_course_site_section_ccns(site_id)
@@ -17,10 +17,12 @@ class CanvasAPIPage
     ids.map { |i| i.split('-')[2] }
   end
 
-  def get_tool_id(tool)
+  def get_tool_id(tool, site = nil)
     tries ||= Utils.short_wait
-    logger.info "Getting #{tool.name} id from #{Utils.canvas_base_url}/api/v1/accounts/#{tool.account}/external_tools"
-    navigate_to "#{Utils.canvas_base_url}/api/v1/accounts/#{tool.account}/external_tools?per_page=50"
+    path = site ? "courses/#{site.site_id}" : "accounts/#{tool.account}"
+    url = "#{Utils.canvas_base_url}/api/v1/#{path}/external_tools?per_page=50"
+    logger.info "Getting #{tool.name} id from #{url}"
+    navigate_to url
     parse_json
     tool.tool_id = (@parsed.find { |i| i['name'] == tool.name })['id']
     logger.info "Tool id is #{tool.tool_id}"
