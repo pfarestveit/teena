@@ -39,6 +39,30 @@ class RipleyUtils < Utils
     end
   end
 
+  def self.previous_term(current_term)
+    term = Term.new sis_id: previous_term_sis_id(current_term),
+                    name: previous_term_name(current_term)
+    term.code = Utils.term_name_to_hyphenated_code(term.name)
+    term
+  end
+
+  def self.previous_term_sis_id(current_term)
+    current_code = current_term.sis_id.to_i
+    (current_code - ((current_code % 10 == 2) ? 4 : 3)).to_s
+  end
+
+  def self.previous_term_name(current_term)
+    parts = current_term.name.split
+    case parts[0]
+    when 'Spring'
+      "Fall #{parts[1].to_i - 1}"
+    when 'Summer'
+      "Spring #{parts[1]}"
+    else
+      "Summer #{parts[1]}"
+    end
+  end
+
   def self.mailing_list_suffix
     base_url.include?('-qa') ? '-cc-ets-qa' : '-cc-ets-dev'
   end
