@@ -6,7 +6,8 @@ class RipleyTestConfig < TestConfig
                 :course_sites,
                 :current_term,
                 :manual_teacher,
-                :next_term
+                :next_term,
+                :previous_term
 
   CONFIG = RipleyUtils.config
 
@@ -15,6 +16,7 @@ class RipleyTestConfig < TestConfig
     @base_url = RipleyUtils.base_url
     @current_term = RipleyUtils.current_term
     @next_term = RipleyUtils.next_term @current_term
+    @previous_term = RipleyUtils.previous_term @current_term
   end
 
   def add_user
@@ -176,11 +178,18 @@ class RipleyTestConfig < TestConfig
       (
         CourseSite.new title: "List 3 #{@id}",
                        abbreviation: "Instructor #{@id}"
+      ),
+      (
+        CourseSite.new title: "Old List 4 #{@id}",
+                       abbreviation: "Old List #{@id}",
+                       term: RipleyUtils.previous_term(@previous_term)
       )
     ]
     set_test_user_data ripley_test_data_file
     @course_sites.each { |s| s.manual_members = set_fake_test_users 'mailing_lists' }
-    @course_sites[1].manual_members = [@course_sites[1].manual_members.find { |m| m.role == 'Teacher' }]
+    @course_sites[1, 3].each do |site|
+      site.manual_members = [site.manual_members.find { |m| m.role == 'Teacher' }]
+    end
   end
 
   def get_refresh_recent_sites

@@ -14,6 +14,7 @@ unless ENV['STANDALONE']
     course_site_1 = test.course_sites[0]
     course_site_2 = test.course_sites[1]
     course_site_3 = test.course_sites[2]
+    course_site_4 = test.course_sites[3]
     RipleyUtils.drop_existing_mailing_lists
 
     before(:all) do
@@ -32,6 +33,7 @@ unless ENV['STANDALONE']
       @canvas_page.create_ripley_mailing_list_site course_site_1
       @canvas_page.create_ripley_mailing_list_site course_site_2
       @canvas_page.create_ripley_mailing_list_site course_site_3
+      @canvas_page.create_ripley_mailing_list_site course_site_4
     end
 
     after(:all) { Utils.quit_browser @driver }
@@ -239,6 +241,25 @@ unless ENV['STANDALONE']
           @jobs_page.run_job RipleyJob::REFRESH_MAILING_LIST
           updated = RipleyUtils.get_mailing_list_member_email test.students[0]
           expect(updated).not_to eql('foo@bar.com')
+        end
+
+        it 'does not update mailing list memberships for lists from two terms past' do
+          @mailing_lists_page.load_embedded_tool
+          @mailing_lists_page.search_for_list course_site_4.site_id
+          @mailing_lists_page.enter_custom_list_name @mailing_lists_page.default_list_name(course_site_4)
+          @mailing_lists_page.wait_until(timeout) do
+            @mailing_lists_page.list_address == "#{@mailing_lists_page.default_list_name course_site_4}@bcourses-mail.berkeley.edu"
+          end
+
+          @canvas_page.masquerade_as(test.teachers.first, course_site_4)
+          @canvas_page.stop_masquerading
+          @splash_page.load_page
+          @splash_page.click_jobs_link
+          @jobs_page.run_job RipleyJob::REFRESH_MAILING_LIST
+          @mailing_lists_page.load_embedded_tool
+          @mailing_lists_page.search_for_list course_site_4.site_id
+          @mailing_lists_page.list_membership_count_element.when_present Utils.short_wait
+          expect(@mailing_lists_page.list_membership_count).to eql('0 members')
         end
       end
     end
