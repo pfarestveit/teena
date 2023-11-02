@@ -5,7 +5,7 @@ describe 'bCourses E-Grades Export' do
   include Logging
 
   test = RipleyTestConfig.new
-  site = test.get_e_grades_export_site
+  site = test.e_grades_export
   non_teachers = [
     test.lead_ta,
     test.ta,
@@ -27,11 +27,7 @@ describe 'bCourses E-Grades Export' do
     @course_add_user_page = RipleyAddUserPage.new @driver
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-    RipleyTool::TOOLS.select(&:account).each { |t| @canvas.add_ripley_tool t }
-    section_ids = @canvas_api.get_course_site_sis_section_ids site.site_id
-    test.get_existing_site_data(site, section_ids)
-    @teacher = RipleyUtils.get_primary_instructor(site) || site.course.teachers.first
-    @canvas.set_canvas_ids([@teacher] + non_teachers)
+    site, @teacher = test.configure_single_site(@canvas, @canvas_api, non_teachers, site)
 
     @primary_enrollments = site.course.sections.select(&:primary).map(&:enrollments).flatten
     @primary_section = site.sections.find &:primary

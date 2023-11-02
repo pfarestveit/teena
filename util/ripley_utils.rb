@@ -4,11 +4,57 @@ class RipleyUtils < Utils
 
   include Logging
 
+  # SETTINGS
+
   @config = Utils.config['ripley']
 
   def self.base_url
     @config['base_url']
   end
+
+  def self.background_job_attempts
+    @config['background_job_attempts']
+  end
+
+  def self.db_credentials
+    {
+      host: @config['db_host'],
+      port: @config['db_port'],
+      name: @config['db_name'],
+      user: @config['db_user'],
+      password: @config['db_password']
+    }
+  end
+
+  def self.dev_auth_password
+    @config['dev_auth_password']
+  end
+
+  def self.e_grades_site_ids
+    @config['e_grades_site_ids']
+  end
+
+  def self.e_grades_student_count
+    @config['e_grades_student_count']
+  end
+
+  def self.grade_distribution_site_ids
+    @config['newt_site_ids']
+  end
+
+  def self.mailing_list_suffix
+    base_url.include?('-qa') ? '-cc-ets-qa' : '-cc-ets-dev'
+  end
+
+  def self.recent_refresh_days_past
+    @config['recent_refresh_days_past']
+  end
+
+  def self.test_data_file
+    File.join(Utils.config_dir, 'test-data-ripley.json')
+  end
+
+  # TERMS
 
   def self.current_term
     Term.new code: @config['term_code'],
@@ -63,68 +109,11 @@ class RipleyUtils < Utils
     end
   end
 
-  def self.mailing_list_suffix
-    base_url.include?('-qa') ? '-cc-ets-qa' : '-cc-ets-dev'
-  end
+  # SQL
 
-  def self.dev_auth_password
-    @config['dev_auth_password']
-  end
+  # Course data
 
-  def self.e_grades_site_ids
-    @config['e_grades_site_ids']
-  end
-
-  def self.e_grades_student_count
-    @config['e_grades_student_count']
-  end
-
-  def self.grade_distribution_site_ids
-    @config['newt_site_ids']
-  end
-
-  def self.test_data_file
-    File.join(Utils.config_dir, 'test-data-ripley.json')
-  end
-
-  def self.background_job_attempts
-    @config['background_job_attempts']
-  end
-
-  def self.recent_refresh_days_past
-    @config['recent_refresh_days_past']
-  end
-
-  def self.initialize_test_output(spec, column_headers)
-    output_file = "#{Utils.get_test_script_name spec}.csv"
-    logger.info "Initializing test output CSV named #{output_file}"
-    test_output = File.join(Utils.initialize_test_output_dir, output_file)
-    CSV.open(test_output, 'wb') { |heading| heading << column_headers }
-    test_output
-  end
-
-  def self.db_credentials
-    {
-      host: @config['db_host'],
-      port: @config['db_port'],
-      name: @config['db_name'],
-      user: @config['db_user'],
-      password: @config['db_password']
-    }
-  end
-
-  def self.drop_existing_mailing_lists
-    Utils.query_pg_db(db_credentials, 'DELETE FROM canvas_site_mailing_lists')
-  end
-
-  def self.set_last_sync_timestamps
-    sql = "UPDATE canvas_synchronization
-              SET last_enrollment_sync = NOW() - INTERVAL '#{recent_refresh_days_past} DAY',
-                  last_instructor_sync = NOW() - INTERVAL '#{recent_refresh_days_past} DAY';"
-    Utils.query_pg_db(db_credentials, sql)
-  end
-
-  def self.get_test_cs_course_id_from_catalog_id(term, catalog_id_prefix)
+  def self.get_cs_course_id_from_catalog_id(term, catalog_id_prefix)
     sql = "SELECT cs_course_id
              FROM sis_data.edo_sections
             WHERE sis_term_id = '#{term.sis_id}'
@@ -136,13 +125,71 @@ class RipleyUtils < Utils
     Utils.query_pg_db_field(NessieUtils.nessie_pg_db_credentials, sql, 'cs_course_id').first
   end
 
-  def self.get_test_cs_course_id_from_ccn(term, ccn)
+  def self.get_cs_course_id_from_ccn(term, ccn)
     sql = "SELECT cs_course_id
              FROM sis_data.edo_sections
             WHERE sis_term_id = '#{term.sis_id}'
               AND sis_section_id = '#{ccn}';"
     Utils.query_pg_db_field(NessieUtils.nessie_pg_db_credentials, sql, 'cs_course_id').first
   end
+
+  def self.get_course(term, cs_course_id)
+    instr = get_course_instructors(term, cs_course_id)
+    section_data = get_test_course_section_data(term, cs_course_id)
+    grouped = section_data.group_by { |s| s[:id] }
+    sections = grouped.map do |k, v|
+      instructors = []
+      v.each do |u|
+        instructor = instr.find { |i| i.uid.to_s == u[:instructor_uid].to_s }
+        if instructor
+          instructor_role = InstructorRole.new(instructor, u[:instructor_role_code])
+          instructors << instructor_role
+        end
+      end
+      instructors.uniq! { |i| [i.user, i.role_code] }
+      instructors.compact!
+      Section.new id: k,
+                  course: v[0][:code],
+                  cs_course_id: v[0][:cs_course_id],
+                  instruction_mode: v[0][:instruction_mode],
+                  instructors: instructors,
+                  label: v[0][:label],
+                  locations: (v.map { |l| l[:location] }).compact.uniq,
+                  primary: v[0][:primary],
+                  primary_assoc_ids: (v.map { |p| p[:primary_assoc_id] }).uniq,
+                  schedules: (v.map { |s| s[:schedule] }).uniq
+    end
+    teachers = sections.select(&:primary).map { |prim| prim.instructors.map &:user }
+    teachers.flatten!
+    teachers.compact!
+    teachers.uniq!
+    codes = sections.map(&:course).uniq
+    codes.sort!
+    logger.debug "Course #{codes.first} in #{term.name} has #{sections.length} sections"
+    Course.new code: codes.first,
+               sections: sections,
+               teachers: teachers,
+               term: term,
+               title: (section_data[0][:title])
+  end
+
+  def self.get_test_course(term, catalog_id_prefix)
+    id = get_cs_course_id_from_catalog_id(term, catalog_id_prefix)
+    if id
+      course = get_course(term, id)
+      if course.teachers.any?
+        course
+      else
+        logger.warn "Course code '#{catalog_id_prefix}' in term #{term.sis_id} has no teachers"
+        nil
+      end
+    else
+      logger.warn "No test course found matching course code '#{catalog_id_prefix}' in term #{term.sis_id}"
+      nil
+    end
+  end
+
+  # Sections
 
   def self.get_test_course_section_data(term, cs_course_id)
     sql = "SELECT sis_section_id AS id,
@@ -206,7 +253,55 @@ class RipleyUtils < Utils
     end
   end
 
-  def self.get_test_course_instructors(term, cs_course_id)
+  def self.expected_instr_section_data(site, sections = nil)
+    instructor_data = []
+    site_has_primaries = site.sections.select(&:primary).any?
+    secs = sections || site.sections
+    secs.each do |section|
+      section.instructors.each do |instr|
+        instr.user.role = if section.primary
+                            if %w(PI ICNT INVT).include? instr.role_code
+                              'Teacher'
+                            elsif instr.role_code == 'APRX'
+                              'Lead TA'
+                            else
+                              nil
+                            end
+                          else
+                            if %w(PI TNIC).include? instr.role_code
+                              site_has_primaries ? 'TA' : 'Teacher'
+                            else
+                              nil
+                            end
+                          end
+        instructor_data << {
+          uid: instr.user.uid,
+          role: instr.user.role&.downcase,
+          section_id: section.id
+        }
+      end
+    end
+    instructor_data.sort_by { |h| [h[:uid], h[:section_id]] }
+  end
+
+  def self.expected_student_section_data(site, sections = nil)
+    student_data = []
+    secs = sections || site.sections
+    secs.each do |section|
+      section.enrollments.each do |enroll|
+        student_data << {
+          uid: enroll.user.uid,
+          role: (enroll.status == 'E' ? 'student' : 'waitlist student'),
+          section_id: enroll.section_id
+        }
+      end
+    end
+    student_data.sort_by { |h| [h[:uid], h[:section_id]] }
+  end
+
+  # Course instructors
+
+  def self.get_course_instructors(term, cs_course_id)
     sql = "SELECT DISTINCT sis_data.edo_sections.instructor_uid,
                   sis_data.edo_sections.instructor_name,
                   sis_data.edo_basic_attributes.email_address,
@@ -218,66 +313,10 @@ class RipleyUtils < Utils
               AND sis_data.edo_sections.cs_course_id = '#{cs_course_id}';"
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     results.map do |r|
-      User.new full_name: r['instructor_name'],
-               uid: r['instructor_uid'],
-               sis_id: r['sid'],
-               email: r['email_address']
-    end
-  end
-
-  def self.get_course(term, cs_course_id)
-    instr = get_test_course_instructors(term, cs_course_id)
-    section_data = get_test_course_section_data(term, cs_course_id)
-    grouped = section_data.group_by { |s| s[:id] }
-    sections = grouped.map do |k, v|
-      instructors = []
-      v.each do |u|
-        instructor = instr.find { |i| i.uid.to_s == u[:instructor_uid].to_s }
-        if instructor
-          instructor_role = InstructorRole.new(instructor, u[:instructor_role_code])
-          instructors << instructor_role
-        end
-      end
-      instructors.uniq! { |i| [i.user, i.role_code] }
-      instructors.compact!
-      Section.new id: k,
-                  course: v[0][:code],
-                  cs_course_id: v[0][:cs_course_id],
-                  instruction_mode: v[0][:instruction_mode],
-                  instructors: instructors,
-                  label: v[0][:label],
-                  locations: (v.map { |l| l[:location] }).compact.uniq,
-                  primary: v[0][:primary],
-                  primary_assoc_ids: (v.map { |p| p[:primary_assoc_id] }).uniq,
-                  schedules: (v.map { |s| s[:schedule] }).uniq
-    end
-    teachers = sections.select(&:primary).map { |prim| prim.instructors.map &:user }
-    teachers.flatten!
-    teachers.compact!
-    teachers.uniq!
-    codes = sections.map(&:course).uniq
-    codes.sort!
-    logger.debug "Course #{codes.first} in #{term.name} has #{sections.length} sections"
-    Course.new code: codes.first,
-               title: (section_data[0][:title]),
-               term: term,
-               sections: sections,
-               teachers: teachers
-  end
-
-  def self.get_test_course(term, catalog_id_prefix)
-    id = get_test_cs_course_id_from_catalog_id(term, catalog_id_prefix)
-    if id
-      course = get_course(term, id)
-      if course.teachers.any?
-        course
-      else
-        logger.warn "Course code '#{catalog_id_prefix}' in term #{term.sis_id} has no teachers"
-        nil
-      end
-    else
-      logger.warn "No test course found matching course code '#{catalog_id_prefix}' in term #{term.sis_id}"
-      nil
+      User.new uid: r['instructor_uid'],
+               email: r['email_address'],
+               full_name: r['instructor_name'],
+               sis_id: r['sid']
     end
   end
 
@@ -326,6 +365,8 @@ class RipleyUtils < Utils
     end
     courses
   end
+
+  # Course enrollment
 
   def self.get_course_enrollment(course)
     sql = "SELECT enrollment.sis_section_id,
@@ -378,15 +419,15 @@ class RipleyUtils < Utils
   def self.results_to_enrollments(course, results)
     enrollments = results.map do |r|
       student = User.new uid: r['uid'],
-                         sis_id: r['sid'],
+                         email: r['email_address'],
                          first_name: r['first_name'],
-                         last_name: r['last_name'],
                          full_name: "#{r['first_name']} #{r['last_name']}",
-                         email: r['email_address']
+                         last_name: r['last_name'],
+                         sis_id: r['sid']
       SectionEnrollment.new user: student,
-                            section_id: r['sis_section_id'],
                             grade: r['grade'],
                             grading_basis: r['grading_basis'],
+                            section_id: r['sis_section_id'],
                             status: r['status']
     end
     enrollments.uniq!
@@ -395,51 +436,7 @@ class RipleyUtils < Utils
     end
   end
 
-  def self.expected_instr_section_data(site, sections = nil)
-    instructor_data = []
-    site_has_primaries = site.sections.select(&:primary).any?
-    secs = sections || site.sections
-    secs.each do |section|
-      section.instructors.each do |instr|
-        instr.user.role = if section.primary
-                            if %w(PI ICNT INVT).include? instr.role_code
-                              'Teacher'
-                            elsif instr.role_code == 'APRX'
-                              'Lead TA'
-                            else
-                              nil
-                            end
-                          else
-                            if %w(PI TNIC).include? instr.role_code
-                              site_has_primaries ? 'TA' : 'Teacher'
-                            else
-                              nil
-                            end
-                          end
-        instructor_data << {
-          uid: instr.user.uid,
-          section_id: section.id,
-          role: instr.user.role&.downcase
-        }
-      end
-    end
-    instructor_data.sort_by { |h| [h[:uid], h[:section_id]] }
-  end
-
-  def self.expected_student_section_data(site, sections = nil)
-    student_data = []
-    secs = sections || site.sections
-    secs.each do |section|
-      section.enrollments.each do |enroll|
-        student_data << {
-          uid: enroll.user.uid,
-          section_id: enroll.section_id,
-          role: (enroll.status == 'E' ? 'student' : 'waitlist student')
-        }
-      end
-    end
-    student_data.sort_by { |h| [h[:uid], h[:section_id]] }
-  end
+  # Test users
 
   def self.get_users_of_affiliations(affiliations, count = nil)
     sql = "SELECT ldap_uid AS uid,
@@ -455,11 +452,20 @@ class RipleyUtils < Utils
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     results.map do |r|
       User.new uid: r['uid'],
-               sis_id: r['sid'],
+               email: r['email'],
                first_name: r['first_name'],
                last_name: r['last_name'],
-               email: r['email']
+               sis_id: r['sid']
     end
+  end
+
+  # Incremental updates
+
+  def self.set_last_sync_timestamps
+    sql = "UPDATE canvas_synchronization
+              SET last_enrollment_sync = NOW() - INTERVAL '#{recent_refresh_days_past} DAY',
+                  last_instructor_sync = NOW() - INTERVAL '#{recent_refresh_days_past} DAY';"
+    Utils.query_pg_db(db_credentials, sql)
   end
 
   def self.get_instructor_update_uids(term, section_ids)
@@ -494,6 +500,12 @@ class RipleyUtils < Utils
                        '#{section_enrollment.user.sis_id}', '#{section_enrollment.status}', 'UGRD', NOW();"
     result = query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     logger.warn "Command status: #{result.cmd_status}. Result status: #{result.result_status}"
+  end
+
+  # Mailing lists
+
+  def self.drop_existing_mailing_lists
+    Utils.query_pg_db(db_credentials, 'DELETE FROM canvas_site_mailing_lists')
   end
 
   def self.set_mailing_list_member_email(member, email_address)
