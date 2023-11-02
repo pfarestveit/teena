@@ -19,6 +19,8 @@ class RipleyTestConfig < TestConfig
     @previous_term = RipleyUtils.previous_term @current_term
   end
 
+  # TEST SCRIPT CONFIGURATION
+
   def add_user
     set_real_test_course_users
   end
@@ -28,16 +30,47 @@ class RipleyTestConfig < TestConfig
     set_real_test_course_users
   end
 
+  def e_grades_export
+    get_e_grades_test_sites
+    @course_sites.first
+  end
+
   def e_grades_validation
     get_e_grades_test_sites
   end
 
   def grade_distribution
-    get_grade_distribution_sites
+    @course_sites = RipleyUtils.grade_distribution_site_ids.map { |id| CourseSite.new site_id: id }
+    @course_sites.each { |s| set_real_test_course_users s }
   end
 
   def mailing_lists
-    get_mailing_list_sites
+    @course_sites = [
+      (
+        CourseSite.new abbreviation: "Admin #{@id}",
+                       term: @current_term,
+                       title: "List 1 #{@id}"
+      ),
+      (
+        CourseSite.new abbreviation: "Admin #{@id}",
+                       term: @current_term,
+                       title: "List 2 #{@id}"
+      ),
+      (
+        CourseSite.new abbreviation: "Instructor #{@id}",
+                       title: "List 3 #{@id}"
+      ),
+      (
+        CourseSite.new abbreviation: "Old List #{@id}",
+                       term: RipleyUtils.previous_term(@previous_term),
+                       title: "Old List 4 #{@id}"
+      )
+    ]
+    set_test_user_data ripley_test_data_file
+    @course_sites.each { |s| s.manual_members = set_fake_test_users 'mailing_lists' }
+    @course_sites[1, 3].each do |site|
+      site.manual_members = [site.manual_members.find { |m| m.role == 'Teacher' }]
+    end
   end
 
   def official_sections
@@ -51,7 +84,23 @@ class RipleyTestConfig < TestConfig
   end
 
   def refresh_canvas_recent
-    get_refresh_recent_sites
+    # TODO - replace the info from the test data file with Nessie + newly created course site data
+    test_data = JSON.parse(File.read(File.join(Utils.config_dir, 'test-data-bcourses.json')))['courses']
+    test_data.keep_if { |d| d['tests']['refresh_recent'] }
+    @course_sites = test_data.map do |d|
+      course = Course.new d
+      course.sections.map! { |s| Section.new s }
+      course.teachers.map! { |u| User.new u }
+      course.term = Term.new code: Utils.term_name_to_hyphenated_code(course.term),
+                             name: course.term,
+                             sis_id: Utils.term_name_to_sis_code(course.term)
+      site = CourseSite.new course: course,
+                            sections: course.sections,
+                            site_id: d['site_id']
+      set_real_test_course_users site
+      logger.info "Course site: #{site.inspect}"
+      site
+    end
   end
 
   def rosters
@@ -62,10 +111,61 @@ class RipleyTestConfig < TestConfig
     set_real_test_course_users
   end
 
+  def welcome_email
+    site = CourseSite.new abbreviation: "#{@id} Welcome Email",
+                          title: "#{@id} Welcome"
+    set_test_user_data ripley_test_data_file
+    site.manual_members = set_fake_test_users 'mailing_lists'
+    site
+  end
+
   ### GLOBAL CONFIG ###
 
   def ripley_test_data_file
     File.join(Utils.config_dir, 'test-data-bcourses.json')
+  end
+
+  # SIS COURSE DATA
+
+  def set_sis_courses
+    prefixes = CONFIG['course_prefixes']
+    current_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(@current_term, p) }
+    next_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(@next_term, p) }
+    courses = current_term_courses + next_term_courses
+    courses.compact!
+
+    # Test site with only secondary sections
+    ta_course = nil
+    courses.find do |c|
+      secondaries = c.sections.reject &:primary
+      ta_section = secondaries.find { |s| s.instructors.any? && (c.teachers & s.instructors).empty? }
+      if ta_section
+        ta = ta_section.instructors.first.user
+        sections = secondaries.select { |s| s.instructors.map(&:user).include? ta }
+        ta_course = Course.new code: ta_section.course,
+                               sections: sections,
+                               teachers: [ta],
+                               term: c.term,
+                               title: c.title
+      end
+    end
+    courses << ta_course if ta_course
+
+    courses.each { |c| RipleyUtils.get_course_enrollment c }
+
+    # Test site with multiple courses
+    prim = courses.select { |c| c.sections.any?(&:primary) && c.term == @current_term }
+    primaries = prim.map(&:sections).flatten.select(&:primary)
+    primaries.sort_by! { |p| p.enrollments.length }
+    logger.info "#{primaries.map &:course}"
+    instructors = (primaries[0].instructors.map(&:user) + primaries[1].instructors.map(&:user)).uniq
+    multi_course = Course.new code: primaries[0].course,
+                              multi_course: true,
+                              sections: primaries[0..1],
+                              teachers: instructors,
+                              term: @current_term
+    courses << multi_course
+    courses
   end
 
   # COURSE SITES
@@ -79,11 +179,11 @@ class RipleyTestConfig < TestConfig
                  else
                    'ccn'
                  end
-      CourseSite.new title: "#{@id} #{c.term.name} #{c.code}",
-                     abbreviation: "#{@id} #{c.term.name} #{c.code}",
+      CourseSite.new abbreviation: "#{@id} #{c.term.name} #{c.code}",
                      course: c,
                      create_site_workflow: workflow,
-                     sections: c.sections
+                     sections: c.sections,
+                     title: "#{@id} #{c.term.name} #{c.code}"
     end
     instructor_workflow_sites = @course_sites.select { |s| s.create_site_workflow == 'uid' }
     instructor_workflow_sites.each_with_index { |s, i| s.create_site_workflow = 'self' if i.odd? }
@@ -136,7 +236,7 @@ class RipleyTestConfig < TestConfig
                     sis_id: Utils.term_name_to_sis_code(term_name)
 
     ccns = sis_section_ids.map { |s| s.split('-')[2] }
-    cs_course_id = RipleyUtils.get_test_cs_course_id_from_ccn(term, ccns.first)
+    cs_course_id = RipleyUtils.get_cs_course_id_from_ccn(term, ccns.first)
 
     site.term = term
     site.course = RipleyUtils.get_course(term, cs_course_id)
@@ -153,115 +253,21 @@ class RipleyTestConfig < TestConfig
     @course_sites.each { |s| set_real_test_course_users s }
   end
 
-  def get_e_grades_export_site
-    get_e_grades_test_sites
-    @course_sites.first
-  end
-
-  def get_grade_distribution_sites
-    @course_sites = RipleyUtils.grade_distribution_site_ids.map { |id| CourseSite.new site_id: id }
-    @course_sites.each { |s| set_real_test_course_users s }
-  end
-
-  def get_mailing_list_sites
-    @course_sites = [
-      (
-        CourseSite.new title: "List 1 #{@id}",
-                       abbreviation: "Admin #{@id}",
-                       term: @current_term
-      ),
-      (
-        CourseSite.new title: "List 2 #{@id}",
-                       abbreviation: "Admin #{@id}",
-                       term: @current_term
-      ),
-      (
-        CourseSite.new title: "List 3 #{@id}",
-                       abbreviation: "Instructor #{@id}"
-      ),
-      (
-        CourseSite.new title: "Old List 4 #{@id}",
-                       abbreviation: "Old List #{@id}",
-                       term: RipleyUtils.previous_term(@previous_term)
-      )
-    ]
-    set_test_user_data ripley_test_data_file
-    @course_sites.each { |s| s.manual_members = set_fake_test_users 'mailing_lists' }
-    @course_sites[1, 3].each do |site|
-      site.manual_members = [site.manual_members.find { |m| m.role == 'Teacher' }]
+  def configure_single_site(canvas_page, canvas_api_page, non_teachers, site=nil)
+    RipleyTool::TOOLS.select(&:account).each { |t| canvas_page.add_ripley_tool t }
+    site_id = ENV['SITE'] || site&.site_id
+    section_ids = canvas_api_page.get_course_site_sis_section_ids site_id if site_id
+    if site
+      get_existing_site_data(site, section_ids)
+    else
+      site = get_single_test_site section_ids
     end
+    teacher = RipleyUtils.get_primary_instructor(site) || site.course.teachers.first
+    canvas_page.set_canvas_ids([teacher] + non_teachers)
+    return site, teacher
   end
 
-  def get_refresh_recent_sites
-    # TODO - replace the info from the test data file with Nessie + newly created course site data
-    test_data = JSON.parse(File.read(File.join(Utils.config_dir, 'test-data-bcourses.json')))['courses']
-    test_data.keep_if { |d| d['tests']['refresh_recent'] }
-    @course_sites = test_data.map do |d|
-      course = Course.new d
-      course.sections.map! { |s| Section.new s }
-      course.teachers.map! { |u| User.new u }
-      course.term = Term.new code: Utils.term_name_to_hyphenated_code(course.term),
-                             name: course.term,
-                             sis_id: Utils.term_name_to_sis_code(course.term)
-      site = CourseSite.new site_id: d['site_id'],
-                            course: course,
-                            sections: course.sections
-      set_real_test_course_users site
-      logger.info "Course site: #{site.inspect}"
-      site
-    end
-  end
-
-  def get_welcome_email_site
-    site = CourseSite.new title: "#{@id} Welcome",
-                          abbreviation: "#{@id} Welcome Email"
-    set_test_user_data ripley_test_data_file
-    site.manual_members = set_fake_test_users 'mailing_lists'
-    site
-  end
-
-  # Courses
-
-  def set_sis_courses
-    prefixes = CONFIG['course_prefixes']
-    current_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(@current_term, p) }
-    next_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(@next_term, p) }
-    courses = current_term_courses + next_term_courses
-    courses.compact!
-
-    # Test site with only secondary sections
-    ta_course = nil
-    courses.find do |c|
-      secondaries = c.sections.reject &:primary
-      ta_section = secondaries.find { |s| s.instructors.any? && (c.teachers & s.instructors).empty? }
-      if ta_section
-        ta = ta_section.instructors.first.user
-        sections = secondaries.select { |s| s.instructors.map(&:user).include? ta }
-        ta_course = Course.new code: ta_section.course,
-                               title: c.title,
-                               term: c.term,
-                               sections: sections,
-                               teachers: [ta]
-      end
-    end
-    courses << ta_course if ta_course
-
-    courses.each { |c| RipleyUtils.get_course_enrollment c }
-
-    # Test site with multiple courses
-    prim = courses.select { |c| c.sections.any?(&:primary) && c.term == @current_term }
-    primaries = prim.map(&:sections).flatten.select(&:primary)
-    primaries.sort_by! { |p| p.enrollments.length }
-    logger.info "#{primaries.map &:course}"
-    instructors = (primaries[0].instructors.map(&:user) + primaries[1].instructors.map(&:user)).uniq
-    multi_course = Course.new code: primaries[0].course,
-                              multi_course: true,
-                              term: @current_term,
-                              sections: primaries[0..1],
-                              teachers: instructors
-    courses << multi_course
-    courses
-  end
+  # USERS
 
   def set_incremental_refresh_users(site)
     teachers = RipleyUtils.get_users_of_affiliations 'EMPLOYEE-TYPE-ACADEMIC'

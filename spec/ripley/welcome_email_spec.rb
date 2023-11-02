@@ -6,7 +6,7 @@ describe 'bCourses welcome email', order: :defined do
 
   before(:all) do
     @test = RipleyTestConfig.new
-    @site = @test.get_welcome_email_site
+    @site = @test.welcome_email
     @email = Email.new("Welcome Email #{@test.id}", "Teena welcomes you")
     @site_members = [@test.manual_teacher, @test.students.first]
 
