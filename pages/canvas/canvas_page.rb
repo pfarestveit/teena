@@ -46,26 +46,17 @@ module Page
     h1(:access_denied_msg, xpath: '//h1[text()="Access Denied"]')
     div(:flash_msg, xpath: '//div[@class="flashalert-message"]')
 
-    # Loads the Canvas homepage, optionally using a non-default Canvas base URL
-    # @param canvas_base_url [String]
     def load_homepage(canvas_base_url = nil)
       logger.debug "Canvas base url is #{canvas_base_url}" if canvas_base_url
       canvas_base_url ? navigate_to(canvas_base_url) : navigate_to("#{Utils.canvas_base_url}")
     end
 
-    # Loads the Canvas homepage and logs in to CalNet, optionally using a non-default Canvas base URL
-    # @param cal_net [Page::CalNetPage]
-    # @param username [String]
-    # @param password [String]
-    # @param canvas_base_url [String]
     def log_in(cal_net, username, password, canvas_base_url = nil)
       load_homepage canvas_base_url
       cal_net.log_in(username, password)
       profile_link_element.when_present Utils.short_wait
     end
 
-    # Shifts to default content, logs out, and waits for CalNet logout confirmation
-    # @param cal_net [Page::CalNetPage]
     def log_out(cal_net)
       @driver.switch_to.default_content
       wait_for_load_and_click profile_link_element
@@ -75,16 +66,15 @@ module Page
       cal_net.username_element.when_visible Utils.short_wait
     end
 
-    def masquerade_as(user, course = nil)
+    def masquerade_as(user, course_site = nil)
       stop_masquerading
       logger.info "Masquerading as #{user.role} UID #{user.uid}, Canvas ID #{user.canvas_id}"
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}/masquerade"
       wait_for_load_and_click masquerade_link_element
       stop_masquerading_link_element.when_visible Utils.short_wait
-      load_course_site course unless course.nil?
+      load_course_site course_site unless course_site.nil?
     end
 
-    # Quits masquerading as another user
     def stop_masquerading
       logger.debug 'Ending masquerade'
       load_homepage
@@ -95,7 +85,6 @@ module Page
       logger.warn 'Not in masquerade mode'
     end
 
-    # Loads a given sub-account page
     def load_sub_account(sub_account)
       logger.debug "Loading sub-account #{sub_account}"
       navigate_to "#{Utils.canvas_base_url}/accounts/#{sub_account}"
@@ -112,7 +101,6 @@ module Page
       switch_to_canvas_iframe
     end
 
-    # Clicks the 'save and publish' button using JavaScript rather than WebDriver
     def click_save_and_publish
       scroll_to_bottom
       wait_for_update_and_click save_and_publish_button_element
@@ -178,11 +166,11 @@ module Page
       switch_to_canvas_iframe
     end
 
-    def create_site(site)
+    def create_site(course_site)
       wait_for_load_and_click add_new_course_button_element
       course_name_input_element.when_visible Utils.short_wait
-      wait_for_element_and_type(course_name_input_element, "#{site.title}")
-      wait_for_element_and_type(ref_code_input_element, "#{site.abbreviation}")
+      wait_for_element_and_type(course_name_input_element, "#{course_site.title}")
+      wait_for_element_and_type(ref_code_input_element, "#{course_site.abbreviation}")
       wait_for_update_and_click create_course_button_element
       add_course_success_element.when_visible Utils.medium_wait
     end
@@ -228,57 +216,57 @@ module Page
       end
     end
 
-    def create_generic_course_site(sub_account, course, test_users, test_id)
-      if course.site_id.nil?
+    def create_generic_course_site(sub_account, course_site, test_users, test_id)
+      if course_site.site_id.nil?
         load_sub_account sub_account
         wait_for_load_and_click add_new_course_button_element
         course_name_input_element.when_visible Utils.short_wait
-        course.title = "QA Test - #{Time.at test_id.to_i}" if course.title.nil?
-        course.abbreviation = "QA #{Time.at test_id.to_i} LEC001" if course.abbreviation.nil?
-        wait_for_element_and_type(course_name_input_element, "#{course.title}")
-        wait_for_element_and_type(ref_code_input_element, "#{course.abbreviation}")
-        logger.info "Creating a course site named #{course.title} in #{course.term} semester"
+        course_site.title = "QA Test - #{Time.at test_id.to_i}" if course_site.title.nil?
+        course_site.abbreviation = "QA #{Time.at test_id.to_i} LEC001" if course_site.abbreviation.nil?
+        wait_for_element_and_type(course_name_input_element, "#{course_site.title}")
+        wait_for_element_and_type(ref_code_input_element, "#{course_site.abbreviation}")
+        logger.info "Creating a course site named #{course_site.title} in #{course_site.term} semester"
         wait_for_update_and_click create_course_button_element
         add_course_success_element.when_visible Utils.medium_wait
-        course.site_id = search_for_site(course, sub_account)
-        unless course.term.nil?
-          navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
-          wait_for_element_and_select(term_element, course.term)
+        course_site.site_id = search_for_site(course_site, sub_account)
+        unless course_site.term.nil?
+          navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
+          wait_for_element_and_select(term_element, course_site.term)
           wait_for_update_and_click update_course_button_element
           update_course_success_element.when_visible Utils.medium_wait
         end
       else
-        navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
+        navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
         course_details_link_element.when_visible Utils.medium_wait
-        course.title = course_title
-        course.abbreviation = course_code
+        course_site.title = course_title
+        course_site.abbreviation = course_code
       end
-      publish_course_site course
-      logger.info "Course ID is #{course.site_id}"
-      add_users(course, test_users)
+      publish_course_site course_site
+      logger.info "Course ID is #{course_site.site_id}"
+      add_users(course_site, test_users)
     end
 
-    def create_ripley_mailing_list_site(site)
-      if site.site_id
-        navigate_to "#{Utils.canvas_base_url}/courses/#{site.site_id}/settings"
+    def create_ripley_mailing_list_site(course_site)
+      if course_site.site_id
+        navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
         course_details_link_element.when_visible Utils.medium_wait
-        site.course.title = course_title
-        site.course.code = course_code
+        course_site.course.title = course_title
+        course_site.course.code = course_code
       else
         load_sub_account RipleyTool::MAILING_LIST.account
-        logger.info "Creating a course site named #{site.title}#{' in ' + site.term.name if site.term}"
-        create_site site
-        site.site_id = search_for_site(site, RipleyTool::MAILING_LIST.account)
-        if site.term
-          navigate_to "#{Utils.canvas_base_url}/courses/#{site.site_id}/settings"
-          wait_for_element_and_select(term_element, site.term.name)
+        logger.info "Creating a course site named #{course_site.title}#{' in ' + course_site.term.name if course_site.term}"
+        create_site course_site
+        course_site.site_id = search_for_site(course_site, RipleyTool::MAILING_LIST.account)
+        if course_site.term
+          navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
+          wait_for_element_and_select(term_element, course_site.term.name)
           wait_for_update_and_click update_course_button_element
           update_course_success_element.when_visible Utils.medium_wait
         end
       end
-      publish_course_site site
-      logger.info "Course ID is #{site.site_id}"
-      add_users(site, site.manual_members)
+      publish_course_site course_site
+      logger.info "Course ID is #{course_site.site_id}"
+      add_users(course_site, course_site.manual_members)
     end
 
     def click_create_site
@@ -297,11 +285,9 @@ module Page
       accept_course_invite_element.when_not_visible Utils.medium_wait
     end
 
-    # Loads a course site and handles prompts that can appear
-    # @param course [Course]
-    def load_course_site(course)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}"
-      wait_until(Utils.medium_wait) { current_url.include? "#{course.site_id}" }
+    def load_course_site(course_site)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}"
+      wait_until(Utils.medium_wait) { current_url.include? "#{course_site.site_id}" }
       course_site_sidebar_tab_element.when_present Utils.short_wait
       if updated_terms_heading?
         logger.info 'Accepting terms and conditions'
@@ -318,13 +304,13 @@ module Page
       end
     end
 
-    def search_for_site(site, sub_account)
+    def search_for_site(course_site, sub_account)
       tries ||= 6
-      logger.info "Searching for '#{site.title}'"
+      logger.info "Searching for '#{course_site.title}'"
       load_sub_account sub_account
-      wait_for_element_and_type(search_course_input_element, "#{site.title}")
+      wait_for_element_and_type(search_course_input_element, "#{course_site.title}")
       sleep 1
-      wait_for_update_and_click link_element(text: "#{site.title}")
+      wait_for_update_and_click link_element(text: "#{course_site.title}")
       publish_button_element.when_present Utils.short_wait
       current_url.sub("#{Utils.canvas_base_url}/courses/", '')
     rescue
@@ -343,38 +329,36 @@ module Page
     text_area(:section_sis_id, id: 'course_section_sis_source_id')
     button(:update_section_button, xpath: '//button[contains(.,"Update Section")]')
 
-    def set_course_sis_id(site)
-      load_course_settings site
+    def set_course_sis_id(course_site)
+      load_course_settings course_site
       course_sis_id_element.when_visible Utils.short_wait
-      if site.instance_of? CourseSite
-        site.course.sis_id = course_sis_id_element.attribute('value')
-        logger.debug "Course SIS ID is #{site.course.sis_id}"
-        site.course.sis_id
+      if course_site.instance_of? CourseSite
+        course_site.course.sis_id = course_sis_id_element.attribute('value')
+        logger.debug "Course SIS ID is #{course_site.course.sis_id}"
+        course_site.course.sis_id
       else
-        site.sis_id = course_sis_id_element.attribute('value')
-        logger.debug "Course SIS ID is #{site.sis_id}"
-        site.sis_id
+        course_site.sis_id = course_sis_id_element.attribute('value')
+        logger.debug "Course SIS ID is #{course_site.sis_id}"
+        course_site.sis_id
       end
     end
 
-    # Obtains the Canvas SIS IDs for the sections on the course site
-    # @param course [Course]
-    def set_section_sis_ids(course)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings#tab-sections"
+    def set_section_sis_ids(course_site)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings#tab-sections"
       wait_for_load_and_click sections_tab_element
       wait_until(Utils.short_wait) { section_data_elements.any? }
       sis_ids = section_data_elements.map do |el|
         el.when_visible(Utils.short_wait)
         el.text.split[-2]
       end
-      course.sections.each do |section|
+      course_site.sections.each do |section|
         section.sis_id = sis_ids.find { |id| id.include? section.id }
       end
     end
 
-    def add_section(site, section)
+    def add_section(course_site, section)
       logger.info "Adding section #{section.sis_id}"
-      load_course_settings site
+      load_course_settings course_site
       wait_for_update_and_click sections_tab_element
       wait_for_element_and_type(section_name_element, section.sis_id)
       wait_for_update_and_click add_section_button_element
@@ -386,22 +370,19 @@ module Page
       update_section_button_element.when_not_visible Utils.medium_wait
     end
 
-    def add_sections(site, sections)
-      sections.each { |s| add_section(site, s) }
+    def add_sections(course_site, sections)
+      sections.each { |s| add_section(course_site, s) }
     end
 
-    # Adds a section to a course site and assigns SIS IDs to both the course and the section
-    # @param course [Course]
-    # @param section [Section]
-    def add_sis_section_and_ids(course, section)
+    def add_sis_section_and_ids(course_site, section)
       # Add SIS id to course
-      load_course_settings course
+      load_course_settings course_site
       wait_for_load_and_click course_details_tab_element
-      wait_for_element_and_type(course_sis_id_element, course.sis_id)
+      wait_for_element_and_type(course_sis_id_element, course_site.sis_id)
       wait_for_update_and_click update_course_button_element
       update_course_success_element.when_visible Utils.short_wait
       # Add unique section
-      add_section(course, section)
+      add_section(course_site, section)
     end
 
     div(:publish_div, id: 'course_status_actions')
@@ -412,18 +393,16 @@ module Page
     radio_button(:activity_stream_radio, xpath: '//span[contains(.,"Course Activity Stream")]/ancestor::label')
     button(:choose_and_publish_button, xpath: '//span[contains(.,"Choose and Publish")]/ancestor::button')
 
-    # Publishes a course site
-    # @param course [Course]
-    def publish_course_site(course)
+    def publish_course_site(course_site)
       logger.info 'Publishing the course'
-      load_course_site course
+      load_course_site course_site
       published_status_element.when_visible Utils.short_wait
       if published_button?
         logger.debug 'The site is already published'
       else
         logger.debug 'The site is unpublished, publishing'
         js_click publish_button_element
-        unless course.create_site_workflow || course.is_copy
+        unless course_site.create_site_workflow || course_site.is_copy
           wait_for_update_and_click activity_stream_radio_element
           wait_for_update_and_click choose_and_publish_button_element
         end
@@ -431,11 +410,9 @@ module Page
       end
     end
 
-    # Edits the course site title
-    # @param course [Course]
-    def edit_course_name(course)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
-      wait_for_element_and_type(text_area_element(id: 'course_name'), course.title)
+    def edit_course_name(course_site)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
+      wait_for_element_and_type(text_area_element(id: 'course_name'), course_site.title)
       wait_for_update_and_click button_element(xpath: '//button[contains(.,"Update Course Details")]')
       list_item_element(xpath: '//*[contains(.,"Course was successfully updated")]').when_present Utils.short_wait
     end
@@ -461,20 +438,18 @@ module Page
 
     checkbox(:set_grading_scheme_cbx, id: 'course_course_grading_standard_enabled')
 
-    # Loads the course settings page
-    # @param course [Course]
-    def load_course_settings(course)
-      logger.info "Loading settings page for course ID #{course.site_id}"
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings#tab-details"
+    def load_course_settings(course_site)
+      logger.info "Loading settings page for course ID #{course_site.site_id}"
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings#tab-details"
       set_grading_scheme_cbx_element.when_present Utils.medium_wait
     end
 
     button(:official_sections_notice, xpath: '//button[contains(., "Need Help Adding a Section/Roster?")]')
     link(:official_sections_help_link, xpath: '//a[contains(., "add or delete a course roster from your bCourses site")]')
 
-    def load_course_sections(course)
-      logger.info "Loading sections settings page for course ID #{course.site_id}"
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings#tab-sections"
+    def load_course_sections(course_site)
+      logger.info "Loading sections settings page for course ID #{course_site.site_id}"
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings#tab-sections"
       official_sections_notice_element.when_present Utils.medium_wait
     end
 
@@ -504,26 +479,22 @@ module Page
       link_element(xpath: "//ul[@id='section-tabs']//a[text()='#{tool.name}']")
     end
 
-    # Loads the LTI tool configuration page for a course site
-    # @param course [Course]
-    def load_tools_config_page(course)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings/configurations"
+    def load_tools_config_page(course_site)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings/configurations"
     end
 
-    def load_tools_adding_page(course)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings/configurations#tab-tools"
+    def load_tools_adding_page(course_site)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings/configurations#tab-tools"
     end
 
-    # Loads the site navigation page
-    # @param course [Course]
-    def load_navigation_page(course)
-      load_tools_config_page course
+    def load_navigation_page(course_site)
+      load_tools_config_page course_site
       wait_for_update_and_click navigation_link_element
       hide_canvas_footer_and_popup
     end
 
-    def enable_tool(tool, site=nil)
-      site ? load_navigation_page(site) : load_sub_account(tool.account)
+    def enable_tool(tool, course_site = nil)
+      course_site ? load_navigation_page(course_site) : load_sub_account(tool.account)
       wait_for_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a")
       wait_for_update_and_click link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Enable this item']")
       list_item_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
@@ -531,11 +502,9 @@ module Page
       tool_nav_link(tool).when_visible Utils.medium_wait
     end
 
-    # Disables an LTI tool that is already installed
-    # @param course [Course]
-    def disable_tool(course, tool)
+    def disable_tool(course_site, tool)
       logger.info "Disabling #{tool.name}"
-      load_navigation_page course
+      load_navigation_page course_site
       if verify_block { link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a").when_present 2 }
         logger.debug "#{tool.name} is already installed but disabled, skipping"
       else
@@ -624,23 +593,23 @@ module Page
       tool.dev_key = el.text
     end
 
-    def add_ripley_tool(tool, site = nil)
-      if ripley_tool_installed?(tool, site)
+    def add_ripley_tool(tool, course_site = nil)
+      if ripley_tool_installed?(tool, course_site)
         logger.info "Tool #{tool.name} is already installed"
       else
         logger.info "Tool #{tool.name} is not installed, installing"
         get_ripley_tool_dev_key tool
-        site ? load_tools_adding_page(site) : load_account_apps(tool.account)
+        course_site ? load_tools_adding_page(course_site) : load_account_apps(tool.account)
         wait_for_update_and_click add_app_link_element
         wait_for_element_and_select(config_type_element, 'By Client ID')
         wait_for_element_and_type(client_id_input_element, tool.dev_key)
         wait_for_update_and_click submit_button_element
         wait_for_update_and_click button_element(xpath: '//button[contains(., "Install")]')
         wait_for_update_and_click add_tool_button_element rescue Selenium::WebDriver::Error::TimeoutError
-        enable_tool(tool, site) if site
+        enable_tool(tool, course_site) if course_site
       end
       api = CanvasAPIPage.new @driver
-      api.get_tool_id(tool, site)
+      api.get_tool_id(tool, course_site)
     end
 
     def click_tool_link(tool)
@@ -659,11 +628,8 @@ module Page
 
     checkbox(:hide_grade_distrib_cbx, id: 'course_hide_distribution_graphs')
 
-    # Returns whether or not the 'Hide grade distribution graphs from students' option is selected on a course site
-    # @param course [Course]
-    # @return [boolean]
-    def grade_distribution_hidden?(course)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/settings"
+    def grade_distribution_hidden?(course_site)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
       wait_for_load_and_click link_element(text: 'more options')
       hide_grade_distrib_cbx_element.when_visible Utils.short_wait
       hide_grade_distrib_cbx_checked?
@@ -672,8 +638,8 @@ module Page
     span(:course_account_link, xpath: '//span[@id="course_account_id"]/a')
     select_list(:course_account_select, xpath: '//select[@id="course_account_id"]')
 
-    def selected_course_sub_account(site)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{site.site_id}/settings"
+    def selected_course_sub_account(course_site)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
       wait_until(Utils.short_wait) { course_account_link? || course_account_select? }
       course_account_select? ? course_account_select : course_account_link_element.text
     end

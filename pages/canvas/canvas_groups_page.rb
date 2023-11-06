@@ -8,8 +8,8 @@ module Page
     include Logging
     include Page
 
-    def load_course_grps(course)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/groups"
+    def load_course_grps(course_site)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/groups"
     end
 
     def grp_link_el(group)

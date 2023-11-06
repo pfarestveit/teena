@@ -35,7 +35,7 @@ class RipleySplashPage
   text_field(:dev_auth_course_input, id: 'basic-auth-canvas-course-id')
   button(:dev_auth_log_in_button, id: 'basic-auth-submit-button')
 
-  def dev_auth(uid, course = nil, cal_net = nil)
+  def dev_auth(uid, course_site = nil, cal_net = nil)
     logger.info "Logging in as #{uid} using dev auth"
     load_page
     begin
@@ -50,7 +50,7 @@ class RipleySplashPage
     dev_auth_uid_input_element.when_present Utils.medium_wait
     dev_auth_uid_input_element.send_keys uid
     dev_auth_password_input_element.send_keys RipleyUtils.dev_auth_password
-    dev_auth_course_input_element.send_keys course.site_id if course
+    dev_auth_course_input_element.send_keys course_site.site_id if course_site
     wait_for_update_and_click dev_auth_log_in_button_element
     sleep 1
   end

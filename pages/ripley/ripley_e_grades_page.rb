@@ -21,25 +21,25 @@ class RipleyEGradesPage
 
   div(:non_teacher_msg, xpath: '//div[text()="You must be a teacher in this bCourses course to export to E-Grades CSV."]')
 
-  def embedded_tool_path(site)
-    "/courses/#{site.site_id}/external_tools/#{RipleyTool::E_GRADES.tool_id}"
+  def embedded_tool_path(course_site)
+    "/courses/#{course_site.site_id}/external_tools/#{RipleyTool::E_GRADES.tool_id}"
   end
 
-  def hit_embedded_tool_url(site)
-    navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path site}"
+  def hit_embedded_tool_url(course_site)
+    navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path course_site}"
   end
 
-  def load_embedded_tool(site)
-    load_tool_in_canvas embedded_tool_path(site)
+  def load_embedded_tool(course_site)
+    load_tool_in_canvas embedded_tool_path(course_site)
   end
 
-  def load_standalone_tool(site)
-    navigate_to "#{RipleyUtils.base_url} TBD #{site.site_id}"
+  def load_standalone_tool(course_site)
+    navigate_to "#{RipleyUtils.base_url} TBD #{course_site.site_id}"
   end
 
-  def click_course_settings_button(site)
+  def click_course_settings_button(course_site)
     wait_for_load_and_click course_settings_button_element
-    wait_until(Utils.medium_wait) { current_url.include? "#{Utils.canvas_base_url}/courses/#{site.site_id}/settings" }
+    wait_until(Utils.medium_wait) { current_url.include? "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings" }
   end
 
   def set_cutoff(cutoff)
@@ -58,23 +58,23 @@ class RipleyEGradesPage
     wait_for_element_and_select(sections_select_element, section_name)
   end
 
-  def download_current_grades(site, section, cutoff = nil)
-    logger.info "Downloading current grades for #{site.course.code} #{section.label}"
-    file_name = "egrades-current-#{section.id}-#{site.course.term.name.gsub(' ', '-')}-*.csv"
-    download_grades(site, section, file_name, {cutoff: cutoff, final: false})
+  def download_current_grades(course_site, section, cutoff = nil)
+    logger.info "Downloading current grades for #{course_site.course.code} #{section.label}"
+    file_name = "egrades-current-#{section.id}-#{course_site.course.term.name.gsub(' ', '-')}-*.csv"
+    download_grades(course_site, section, file_name, {cutoff: cutoff, final: false})
   end
 
-  def download_final_grades(site, section, cutoff = nil)
-    logger.info "Downloading final grades for #{site.course.code} #{section.label}"
-    file_name = "egrades-final-#{section.id}-#{site.course.term.name.gsub(' ', '-')}-*.csv"
-    download_grades(site, section, file_name, {cutoff: cutoff, final: true})
+  def download_final_grades(course_site, section, cutoff = nil)
+    logger.info "Downloading final grades for #{course_site.course.code} #{section.label}"
+    file_name = "egrades-final-#{section.id}-#{course_site.course.term.name.gsub(' ', '-')}-*.csv"
+    download_grades(course_site, section, file_name, {cutoff: cutoff, final: true})
   end
 
-  def download_grades(site, section, file_name, opts={})
-    load_embedded_tool site
+  def download_grades(course_site, section, file_name, opts={})
+    load_embedded_tool course_site
     click_continue
     set_cutoff opts[:cutoff]
-    choose_section section if site.course.sections.length > 1
+    choose_section section if course_site.course.sections.length > 1
     sleep 1
     el = opts[:final] ? download_final_grades_element : download_current_grades_element
     parse_downloaded_csv(el, file_name)

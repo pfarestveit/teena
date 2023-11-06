@@ -1,17 +1,12 @@
 class Course
 
   attr_accessor :code,
-                :create_site_workflow,
                 :multi_course,
-                :roster,
-                :title,
-                :term,
-                :sis_id,
-                :site_id,
                 :sections,
-                :site_created_date,
+                :sis_id,
                 :teachers,
-                :tests
+                :term,
+                :title
 
   def initialize(test_data)
     test_data.each { |k, v| public_send("#{k}=", v) }

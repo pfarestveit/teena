@@ -40,7 +40,7 @@ describe 'bCourses course site creation' do
         # -- Authenticate and load tool --
 
         logger.info "Creating a course site for #{site.course.code} in #{site.course.term.name} using the '#{site.create_site_workflow}' workflow"
-        teacher = site.test_teacher
+        teacher = site.course.teachers.first
         @canvas.stop_masquerading
         @canvas.set_canvas_ids [teacher]
         @canvas.masquerade_as teacher if site.create_site_workflow == 'self'
@@ -107,7 +107,7 @@ describe 'bCourses course site creation' do
             ui_course_title = @create_course_site.available_sections_course_title course
             ui_sections_expanded = @create_course_site.expand_available_course_sections(course, course.sections.first)
 
-            it("shows the right course title for #{site.course.term.name} #{course.code}") { expect(ui_course_title).to include(course.title) }
+            it("shows the right course title for #{site.course.term.name} #{course.code}") { expect(ui_course_title).to include(course.title.gsub(':', '')) }
             it("shows no blank course title for #{site.course.term.name} #{course.code}") { expect(ui_course_title.empty?).to be false }
             it("allows the available sections to be expanded for #{site.course.term.name} #{course.code}") { expect(ui_sections_expanded).to be_truthy }
 
@@ -190,7 +190,7 @@ describe 'bCourses course site creation' do
     sites_created.each_with_index do |site, i|
 
       begin
-        teacher = site.test_teacher
+        teacher = site.course.teachers.first
         test_case = "#{site.course.term.name} #{site.course.code} site ID #{site.site_id}"
 
         logger.info "Verifying content of #{test_case}"

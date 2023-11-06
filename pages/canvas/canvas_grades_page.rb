@@ -15,26 +15,20 @@ module Page
     link(:select_another_scheme_link, xpath: '//a[@title="Find an Existing Grading Scheme"]')
     button(:done_button, xpath: '//button[text()="Done"]')
 
-    # Ensures that no grading scheme is set on a course site
-    # @param course [Course]
-    def disable_grading_scheme(course)
-      logger.info "Making sure grading scheme is disabled for course ID #{course.site_id}"
-      load_course_settings course
+    def disable_grading_scheme(course_site)
+      logger.info "Making sure grading scheme is disabled for course ID #{course_site.site_id}"
+      load_course_settings course_site
       scroll_to_bottom
       set_grading_scheme_cbx_checked? ?  toggle_grading_scheme : logger.info('Grading scheme already disabled')
     end
 
-    # Ensures that a grading scheme is set on a course site
-    # @param course [Course]
-    def enable_grading_scheme(course)
-      logger.info "Making sure grading scheme is enabled for course ID #{course.site_id}"
-      load_course_settings course
+    def enable_grading_scheme(course_site)
+      logger.info "Making sure grading scheme is enabled for course ID #{course_site.site_id}"
+      load_course_settings course_site
       scroll_to_bottom
       !set_grading_scheme_cbx_checked? ?  toggle_grading_scheme : logger.info('Grading scheme already enabled')
     end
 
-    # Sets a given grading scheme on a course site
-    # @param opts [Hash] - :scheme
     def set_grading_scheme(opts)
       logger.info "Setting grading scheme to #{opts[:scheme]}"
       option = case opts[:scheme]
@@ -54,15 +48,12 @@ module Page
       update_course_settings
     end
 
-    # Clicks the update button and waits for confirmation
     def update_course_settings
       wait_for_update_and_click update_course_button_element
       sleep 2
       update_course_success_element.when_visible Utils.medium_wait
     end
 
-    # Clicks the grading scheme checkbox and awaits confirmation of the update. Sometimes the confirmation does not appear, so
-    # retries once.
     def toggle_grading_scheme
       wait_for_update_and_click set_grading_scheme_cbx_element
       update_course_settings
@@ -78,7 +69,6 @@ module Page
     text_field(:gradebook_manual_posting_input, xpath: '//input[@name="postPolicy"][@value="manual"]/following-sibling::label/span')
     button(:gradebook_settings_update_button, id: 'gradebook-settings-update-button')
 
-    # Clicks the gradebook settings button, which can be a fickle button
     def click_gradebook_settings
       tries = 3
       begin
@@ -90,8 +80,6 @@ module Page
       end
     end
 
-    # Returns whether or not ungraded assignments are included in grades
-    # @return [Boolean]
     def grades_final?
       sleep Utils.click_wait
       click_gradebook_settings
@@ -99,11 +87,9 @@ module Page
       gradebook_include_ungraded_checked?
     end
 
-    # Ensures that new assignments will have a manual grading policy
-    # @param course [Course]
-    def set_grade_policy_manual(course)
-      logger.info "Setting manual posting policy for course ID #{course.site_id}"
-      load_gradebook course
+    def set_grade_policy_manual(course_site)
+      logger.info "Setting manual posting policy for course ID #{course_site.site_id}"
+      load_gradebook course_site
       click_gradebook_settings
       sleep 1
       wait_for_update_and_click grade_posting_policy_tab_element
@@ -139,10 +125,8 @@ module Page
     elements(:gradebook_total, :span, xpath: '//div[contains(@class, "total_grade")]//span[@class="percentage"]')
     elements(:gradebook_grade, :span, xpath: '//div[contains(@class, "total_grade")]//span[@class="letter-grade-points"]')
 
-    # Loads the Canvas Gradebook, switching to default view if necessary
-    # @param course [Course]
-    def load_gradebook(course)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/gradebook"
+    def load_gradebook(course_site)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/gradebook"
       e_grades_export_link_element.when_present Utils.short_wait
     rescue
       if title.include? 'Individual View'
@@ -158,23 +142,16 @@ module Page
       end
     end
 
-    # Mouses over an assignment's column header to reveal the settings button
-    # @param assignment [Assignment]
     def mouseover_assignment_header(assignment)
       xpath = "//div[contains(@id, 'slickgrid') and contains(@id, 'assignment_#{assignment.id}')]"
       wait_until(Utils.medium_wait) { div_element(xpath: xpath).exists? }
       mouseover(div_element(xpath: xpath))
     end
 
-    # Returns the settings button for a given assignment
-    # @param assignment [Assignment]
-    # @return [PageObject::Elements::Button]
     def assignment_settings_button(assignment)
       button_element(xpath: "//a[contains(@href, '/assignments/#{assignment.id}')]/ancestor::div[contains(@class, 'Gradebook__ColumnHeaderContent')]//button")
     end
 
-    # Sets a manual grading policy on a given assignment
-    # @param assignment [Assignment]
     def set_assign_grade_policy_manual(assignment)
       logger.info "Setting grade posting policy to manual on assignment #{assignment.id}"
       mouseover_assignment_header assignment
@@ -190,7 +167,6 @@ module Page
       end
     end
 
-    # Clicks the E-Grades export button
     def click_e_grades_export_button
       logger.info 'Clicking E-Grades Export button'
       wait_for_load_and_click e_grades_export_link_element
@@ -215,9 +191,6 @@ module Page
       end
     end
 
-    # Returns the Gradebook data for a given user. If the score cannot be found, log an error but do not fail.
-    # @param user [User]
-    # @return [Hash]
     def student_score(user)
       begin
         logger.debug "Searching for score for UID #{user.uid}"
@@ -265,7 +238,6 @@ module Page
     text_field(:grade_override_input, xpath: '//div[contains(@class, "total-grade-override")]//input')
     elements(:grid_row_cell, :div, xpath: '//div[@id="gradebook_grid"]//div[contains(@class, "first-row")]/div')
 
-    # Clicks the settings icon and switches to advanced settings
     def open_gradebook_adv_settings
       click_gradebook_settings
       sleep 1
@@ -273,7 +245,6 @@ module Page
       allow_grade_override_cbx_element.when_visible 1
     end
 
-    # Clicks the allow-override checkbox and saves
     def toggle_allow_grade_override
       js_click allow_grade_override_cbx_element
       wait_for_update_and_click update_gradebook_settings_element
@@ -281,7 +252,6 @@ module Page
       wait_until(1) { flash_msg_element.text.include? 'Gradebook Settings updated' }
     end
 
-    # Ensures that allow-override is selected on the gradebook
     def allow_grade_override
       open_gradebook_adv_settings
       if allow_grade_override_cbx_checked?
@@ -295,7 +265,6 @@ module Page
       end
     end
 
-    # Ensures that allow-override is not selected on the gradebook
     def disallow_grade_override
       open_gradebook_adv_settings
       if allow_grade_override_cbx_checked?
@@ -309,10 +278,9 @@ module Page
       end
     end
 
-    # Enters a given override grade for a given student
-    def enter_override_grade(course, student, grade)
+    def enter_override_grade(course_site, student, grade)
       logger.info "Entering override grade '#{grade}' for UID #{student.uid}"
-      load_gradebook course
+      load_gradebook course_site
       allow_grade_override
       search_for_gradebook_student student
       15.times do

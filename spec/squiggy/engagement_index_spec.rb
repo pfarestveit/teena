@@ -108,7 +108,7 @@ describe 'The Engagement Index' do
   # TEACHERS
 
   it 'allows teachers to see all users\' scores regardless of sharing preferences' do
-    expect(@engagement_index.visible_names.sort).to eql(test.course_site.roster.map(&:full_name).sort)
+    expect(@engagement_index.visible_names.sort).to eql(test.course_site.manual_members.map(&:full_name).sort)
   end
 
   it 'allows teachers to share their scores with students' do

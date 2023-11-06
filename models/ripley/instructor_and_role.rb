@@ -1,4 +1,4 @@
-class InstructorRole
+class InstructorAndRole
 
   attr_accessor :user,
                 :role_code

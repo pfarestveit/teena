@@ -30,16 +30,16 @@ module Page
     button(:religious_holiday_button, xpath: '//button[contains(., "Religious Holidays Policy")]')
     link(:religious_holiday_link, xpath: '//a[contains(., "Religious Holiday and Religious Creed Policy")]')
 
-    def load_new_assignment_page(course)
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/assignments/new"
+    def load_new_assignment_page(course_site)
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/assignments/new"
       assignment_name_element.when_visible Utils.medium_wait
     end
 
     # Begins creating a new assignment, entering title and scrolling to the submission types
-    # @param course [Course]
+    # @param course_site [Course]
     # @param assignment [Assignment]
-    def enter_new_assignment_title(course, assignment)
-      load_new_assignment_page course
+    def enter_new_assignment_title(course_site, assignment)
+      load_new_assignment_page course_site
       assignment_name_element.send_keys assignment.title
       wait_for_element_and_type_js(assignment_due_date_element, assignment.due_date.strftime("%b %-d %Y")) unless assignment.due_date.nil?
       scroll_to_element assignment_type_element
