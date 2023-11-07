@@ -23,10 +23,6 @@ class JunctionUtils < Utils
     @config['basic_auth_password']
   end
 
-  def self.junction_oec_user_uid
-    @config['oec_uid']
-  end
-
   def self.junction_test_data_file
     File.join(Utils.config_dir, 'test-data-bcourses.json')
   end
@@ -46,26 +42,12 @@ class JunctionUtils < Utils
     load_junction_test_data['users']
   end
 
-  # The number of times to poll for completed site creation when testing background tasks
-  def self.background_job_attempts
-    @config['background_job_attempts']
-  end
-
   def self.term_name
     @config['term_name']
   end
 
   def self.term_code
     @config['term']
-  end
-
-  # The number of times to multiply the test data when testing background tasks
-  def self.background_job_multiplier
-    @config['background_job_multiplier']
-  end
-
-  def self.sis_update_date
-    Time.parse @config['sis_update_date']
   end
 
   # Sets the site id for a course in the test data for course-driven bCourses tests
@@ -123,11 +105,6 @@ class JunctionUtils < Utils
   # Canvas ID of course captures tool
   def self.canvas_course_captures_tool
     Utils.config['canvas']['course_captures_tool']
-  end
-
-  # Canvas ID of roster photos tool
-  def self.canvas_rosters_tool
-    Utils.config['canvas']['rosters_tool']
   end
 
   # Canvas ID of course official sections tool

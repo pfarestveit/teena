@@ -76,7 +76,6 @@ canvas:
   create_site_tool: secret
   course_add_user_tool: secret
   course_captures_tool: secret
-  rosters_tool: secret
   official_sections_tool: secret
   mailing_lists_tool: secret
   mailing_list_tool: secret
@@ -86,28 +85,14 @@ canvas:
 junction:
   base_url: https://junction-qa.berkeley.edu
   basic_auth_password: secret
-  background_job_attempts: 500
-  background_job_multiplier: 1
   admin_uid: secret
-  oec_uid: secret
   term_name: 'Fall 2021'
   term: '2021-D'
-  sis_update_date: '2020-01-01'
   db_host: secret
   db_port: secret
   db_name: secret
   db_user: secret
   db_password: secret
-
-lrs:
-  base_url: https://app-qa.ets-berkeley-cloudlrs.net
-  db_host: secret
-  db_port: secret
-  db_name: secret
-  db_user: secret
-  db_password: secret
-  script_loops: 10
-  event_time_discrep_seconds: 2
 
 nessie:
   pg_db_host: secret
