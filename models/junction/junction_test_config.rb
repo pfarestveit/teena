@@ -69,14 +69,6 @@ class JunctionTestConfig < TestConfig
     set_project_site_roles 'create_project_site'
   end
 
-  def rosters
-    test = 'roster_photos'
-    set_global_configs
-    set_courses test
-    set_manual_users test
-    @courses.each { |c| c.create_site_workflow = 'self' }
-  end
-
   def user_prov
     set_global_configs
     set_manual_users 'user_prov'
