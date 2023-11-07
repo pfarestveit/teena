@@ -138,10 +138,10 @@ class RipleyTestConfig < TestConfig
     ta_course = nil
     courses.find do |c|
       secondaries = c.sections.reject &:primary
-      ta_section = secondaries.find { |s| s.instructors.any? && (c.teachers & s.instructors).empty? }
+      ta_section = secondaries.find { |s| s.instructors_and_roles.any? && (c.teachers & s.instructors_and_roles).empty? }
       if ta_section
-        ta = ta_section.instructors.first.user
-        sections = secondaries.select { |s| s.instructors.map(&:user).include? ta }
+        ta = ta_section.instructors_and_roles.first.user
+        sections = secondaries.select { |s| s.instructors_and_roles.map(&:user).include? ta }
         ta_course = Course.new code: ta_section.course,
                                sections: sections,
                                teachers: [ta],
@@ -158,7 +158,7 @@ class RipleyTestConfig < TestConfig
     primaries = prim.map(&:sections).flatten.select(&:primary)
     primaries.sort_by! { |p| p.enrollments.length }
     logger.info "#{primaries.map &:course}"
-    instructors = (primaries[0].instructors.map(&:user) + primaries[1].instructors.map(&:user)).uniq
+    instructors = (primaries[0].instructors_and_roles.map(&:user) + primaries[1].instructors_and_roles.map(&:user)).uniq
     multi_course = Course.new code: primaries[0].course,
                               multi_course: true,
                               sections: primaries[0..1],
@@ -189,15 +189,13 @@ class RipleyTestConfig < TestConfig
     instructor_workflow_sites.each_with_index { |s, i| s.create_site_workflow = 'self' if i.odd? }
     @course_sites.each do |site|
       # Only use a primary section instructor if testing primary sections
-      site.test_teacher = if instructor_workflow_sites.include?(site) && site.sections.find(&:primary)
-                           RipleyUtils.get_primary_instructor site
-                         else
-                           site.course.teachers.first
-                         end
+      if instructor_workflow_sites.include?(site) && site.sections.find(&:primary)
+        site.course.teachers = [RipleyUtils.get_primary_instructor(site)]
+      end
       # Ditch sections not associated with the instructor since they shouldn't appear
       if instructor_workflow_sites.include?(site) && site.sections.find(&:primary)
         primary_ids = site.course.sections.select do |s|
-          s.primary && s.instructors.map(&:user).include?(site.test_teacher)
+          s.primary && s.instructors_and_roles.map(&:user).include?(site.course.teachers.first)
         end.map &:id
         site.course.sections.keep_if do |s|
           primary_ids.include?(s.id) || (primary_ids & s.primary_assoc_ids).any?
@@ -206,7 +204,7 @@ class RipleyTestConfig < TestConfig
     end
 
     @course_sites.each do |site|
-      logger.info "#{site.course.term.name} #{site.course.code} workflow #{site.create_site_workflow}, instructor UID #{site.test_teacher.uid}"
+      logger.info "#{site.course.term.name} #{site.course.code} workflow #{site.create_site_workflow}, instructor UID #{site.course.teachers.first.uid}"
       logger.info "Course sections: #{site.course.sections.map &:id}"
       logger.info "Site sections: #{site.sections.map &:id}"
     end
@@ -224,7 +222,7 @@ class RipleyTestConfig < TestConfig
     get_existing_site_data(course_site, section_ids) if section_ids
     course_site.course.sections.select(&:primary).each { |s| s.include_in_site = true }
     course_site.create_site_workflow = 'self'
-    course_site.test_teacher = RipleyUtils.get_primary_instructor course_site
+    course_site.course.teachers = [RipleyUtils.get_primary_instructor(course_site)]
     course_site
   end
 
@@ -253,7 +251,7 @@ class RipleyTestConfig < TestConfig
     @course_sites.each { |s| set_real_test_course_users s }
   end
 
-  def configure_single_site(canvas_page, canvas_api_page, non_teachers, site=nil)
+  def configure_single_site(canvas_page, canvas_api_page, non_teachers, site = nil)
     RipleyTool::TOOLS.select(&:account).each { |t| canvas_page.add_ripley_tool t }
     site_id = ENV['SITE'] || site&.site_id
     section_ids = canvas_api_page.get_course_site_sis_section_ids site_id if site_id

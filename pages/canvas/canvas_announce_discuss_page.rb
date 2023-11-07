@@ -73,10 +73,10 @@ module Page
     button(:reply_prompt_dismiss_button, xpath: '//button[contains(., "No")]')
     button(:save_discuss_button, xpath: '//button[text()="Save"][@type="submit"]')
 
-    def create_course_discussion(course, discussion)
+    def create_course_discussion(course_site, discussion)
       logger.info "Creating discussion topic named '#{discussion.title}'"
-      load_course_site course
-      navigate_to "#{Utils.canvas_base_url}/courses/#{course.site_id}/discussion_topics"
+      load_course_site course_site
+      navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/discussion_topics"
       enter_and_save_discussion discussion
     end
 

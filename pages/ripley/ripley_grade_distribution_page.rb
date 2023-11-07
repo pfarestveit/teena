@@ -10,17 +10,17 @@ class RipleyGradeDistributionPage
   div(:tooltip_key, xpath: '//div[@class="chart-tooltip-key"]')
   div(:tooltip_name, xpath: '//div[@class="chart-tooltip-name"]')
 
-  def embedded_tool_path(site)
-    "/courses/#{site.site_id}/external_tools/#{RipleyTool::NEWT.tool_id}"
+  def embedded_tool_path(course_site)
+    "/courses/#{course_site.site_id}/external_tools/#{RipleyTool::NEWT.tool_id}"
   end
 
-  def hit_embedded_tool_url(site)
-    navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path site}"
+  def hit_embedded_tool_url(course_site)
+    navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path course_site}"
   end
 
-  def load_embedded_tool(site)
+  def load_embedded_tool(course_site)
     logger.info 'Loading embedded version of Grade Distribution tool'
-    load_tool_in_canvas embedded_tool_path(site)
+    load_tool_in_canvas embedded_tool_path(course_site)
   end
 
   # HIGHCHARTS
@@ -63,9 +63,9 @@ class RipleyGradeDistributionPage
   h2(:prior_enrollment_heading, xpath: '//h2[text()="Grade Distribution by Prior Enrollment"]')
   select_list(:prior_enrollment_select, id: 'grade-distribution-enrollment-select')
 
-  def select_prior_enrollment(course)
-    logger.info "Selecting prior enrollment '#{course}'"
-    wait_for_element_and_select(prior_enrollment_select_element, course)
+  def select_prior_enrollment(course_code)
+    logger.info "Selecting prior enrollment '#{course_code}'"
+    wait_for_element_and_select(prior_enrollment_select_element, course_code)
     sleep 2
   end
 

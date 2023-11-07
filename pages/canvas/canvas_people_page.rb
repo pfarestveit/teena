@@ -39,17 +39,13 @@ module CanvasPeoplePage
 
   text_area(:search_user_input, xpath: '//input[@placeholder="Search people"]')
 
-  # Loads the course users page, optionally using a non-default Canvas base URL
-  # @param course [Course]
-  def load_users_page(course, canvas_base_url = nil)
+  def load_users_page(course_site, canvas_base_url = nil)
     canvas_base_url ?
-        navigate_to("#{canvas_base_url}/courses/#{course.site_id}/users") :
-        navigate_to("#{Utils.canvas_base_url}/courses/#{course.site_id}/users")
+        navigate_to("#{canvas_base_url}/courses/#{course_site.site_id}/users") :
+        navigate_to("#{Utils.canvas_base_url}/courses/#{course_site.site_id}/users")
     div_element(xpath: '//div[@data-view="users"]').when_present Utils.medium_wait
   end
 
-  # Scrolls down the users table until a given set of users appear in the table
-  # @param users [Array<User>]
   def wait_for_users(users)
     scroll_to_bottom
     users.each do |user|
@@ -68,8 +64,6 @@ module CanvasPeoplePage
     end
   end
 
-  # Returns all the visible instruction modes in section labels
-  # @return [Array<String>]
   def visible_instruction_modes
     wait_until(Utils.medium_wait) { section_label_elements.any? }
     modes = section_label_elements.map { |el| el.text.split('(').last.gsub(')', '') }
@@ -103,12 +97,12 @@ module CanvasPeoplePage
     user_list_element.attribute('placeholder')
   end
 
-  def add_users(course, users_to_add, section = nil)
+  def add_users(course_site, users_to_add, section = nil)
     logger.info "Users needed for the site are #{users_to_add.map &:uid}"
 
     # Users already on the site with the right role do not need to be added again
     users_missing = []
-    load_users_page course
+    load_users_page course_site
     sleep 4
     if h2_element(xpath: '//h2[text()="No people found"]').exists?
       users_missing = users_to_add
@@ -138,7 +132,7 @@ module CanvasPeoplePage
           # Canvas add-user function is often flaky in test envs, so retry if it fails
           tries ||= 3
           logger.info "Adding users with role #{user_role}"
-          load_users_page course
+          load_users_page course_site
           wait_for_load_and_click add_people_button_element
           wait_for_update_and_click add_user_by_uid_element
           wait_for_element_and_type_js(user_list_element, users)
@@ -159,8 +153,8 @@ module CanvasPeoplePage
     end
   end
 
-  def add_users_by_section(course, users)
-    load_users_page course
+  def add_users_by_section(course_site, users)
+    load_users_page course_site
     users.each do |user|
       user.sections.each do |section|
         begin
@@ -199,23 +193,20 @@ module CanvasPeoplePage
     wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")
   end
 
-  # Removes users from a course site
-  # @param course [Course]
-  # @param users [Array<User>]
-  def remove_users_from_course(course, users)
-    load_users_page course
+  def remove_users_from_course(course_site, users)
+    load_users_page course_site
     hide_canvas_footer_and_popup
     wait_for_users users
     users.each do |user|
-      logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course.site_id}"
+      logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course_site.site_id}"
       click_edit_user user
       alert { wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
       remove_user_success_element.when_present Utils.short_wait
     end
   end
 
-  def remove_user_section(course, user, section)
-    load_users_page course
+  def remove_user_section(course_site, user, section)
+    load_users_page course_site
     hide_canvas_footer_and_popup
     wait_for_users [user]
     click_edit_user user
@@ -226,16 +217,11 @@ module CanvasPeoplePage
     user.sections.delete section
   end
 
-  # Searches for a user by Canvas user ID
-  # @param user [User]
   def search_user_by_canvas_id(user)
     wait_for_element_and_type(search_user_input_element, user.canvas_id)
     sleep 1
   end
 
-  # Changes users' Canvas email addresses to the email defined for each in test data. This enables SuiteC email testing.
-  # Also reactivates test user accounts that have been deactivated.
-  # @param test_users [Array<User>]
   def activate_user_and_reset_email(test_users)
     test_users.each do |user|
       navigate_to "#{Utils.canvas_base_url}/users/#{user.canvas_id}"
@@ -260,38 +246,22 @@ module CanvasPeoplePage
     end
   end
 
-  # Whether or not a user with a given Canvas ID is present on the Users roster
-  # @param canvas_id [String]
-  # @return [boolean]
   def roster_user?(canvas_id)
     cell_element(xpath: "//tr[contains(@id,'#{canvas_id}')]/td[3]").exists?
   end
 
-  # Returns the UID displayed for a user on a course site roster
-  # @param canvas_id [Integer]
-  # @return [String]
   def roster_user_uid(canvas_id)
     cell_element(xpath: "//tr[contains(@id,'#{canvas_id}')]/td[3]").text
   end
 
-  # Returns the text in the table cell containing a user's enrolled section codes
-  # @param canvas_id [Integer]
-  # @return [String]
   def roster_user_sections(canvas_id)
     cell_element(xpath: "//tr[contains(@id,'#{canvas_id}')]/td[5]").text
   end
 
-  # Returns the text in the table cell containing a user's roles
-  # @param canvas_id [Integer]
-  # @return [String]
   def roster_user_roles(canvas_id)
     cell_element(xpath: "//tr[contains(@id,'#{canvas_id}')]/td[6]").text
   end
 
-  # Returns the text in the table cell containing a user's last activity. If multiple sections exist, the text is repeated
-  # in separate divs in the cell, so returns the text in the first div.
-  # @param uid [Integer]
-  # @return [String]
   def roster_user_last_activity(uid)
     path = "//tr[contains(.,'#{uid}')]/td[7]"
     (cell = cell_element(xpath: path)).when_visible Utils.short_wait
@@ -299,7 +269,6 @@ module CanvasPeoplePage
     date_str unless date_str.empty?
   end
 
-  # Clicks the Canvas Add People button followed by the Find a Person to Add button and switches to the LTI tool
   def click_find_person_to_add(url=JunctionUtils.junction_base_url)
     logger.debug 'Clicking Find a Person to Add button'
     wait_for_update_and_click add_people_button_element
@@ -307,12 +276,8 @@ module CanvasPeoplePage
     switch_to_canvas_iframe url
   end
 
-  # Returns the number of users in a course site with a given set of roles, optionally using a non-default Canvas base URL
-  # @param course [Course]
-  # @param roles [Array<String>]
-  # @return [Array<Hash>]
-  def enrollment_count_by_roles(course, roles, canvas_base_url = nil)
-    load_users_page(course, canvas_base_url)
+  def enrollment_count_by_roles(course_site, roles, canvas_base_url = nil)
+    load_users_page(course_site, canvas_base_url)
     wait_for_load_and_click enrollment_roles_element
     roles.map do |role|
       role_option = enrollment_roles_options.find { |option| option.include? role }
@@ -322,16 +287,12 @@ module CanvasPeoplePage
     end
   end
 
-  # Waits for a course site's enrollment to finish updating for a given set of user roles and then returns the final count for each role
-  # @param course [Course]
-  # @param roles [Array<String>]
-  # @return [Array<Integer>]
-  def wait_for_enrollment_import(course, roles)
-    current_count = enrollment_count_by_roles(course, roles)
+  def wait_for_enrollment_import(course_site, roles)
+    current_count = enrollment_count_by_roles(course_site, roles)
     begin
       starting_count = current_count
       sleep Utils.medium_wait
-      current_count = enrollment_count_by_roles(course, roles)
+      current_count = enrollment_count_by_roles(course_site, roles)
     end while current_count != starting_count
     current_count
   end
@@ -340,12 +301,8 @@ module CanvasPeoplePage
   elements(:student_enrollment_row, :row, :xpath => '//table[contains(@class, "roster")]/tbody/tr[contains(@class, "StudentEnrollment")]')
   elements(:waitlist_enrollment_row, :row, :xpath => '//table[contains(@class, "roster")]/tbody/tr[contains(@class, "Waitlist")]')
 
-  # Determines the number of enrolled and waitlisted students on a course site and scrolls down on the users page until all have loaded. Optionally uses a non-default Canvas base URL.
-  # @param course [Course]
-  # @param canvas_base_url [String]
-  # @return [Integer]
-  def load_all_students(course, canvas_base_url = nil)
-    counts = enrollment_count_by_roles(course, ['Student', 'Waitlist Student'], canvas_base_url)
+  def load_all_students(course_site, canvas_base_url = nil)
+    counts = enrollment_count_by_roles(course_site, ['Student', 'Waitlist Student'], canvas_base_url)
     total_count = counts[0][:count] + counts[1][:count]
     logger.debug "Trying to load #{total_count} students and wait list students"
     wait_until(Utils.short_wait) { user_row_elements.any? }
@@ -371,10 +328,8 @@ module CanvasPeoplePage
     total_count
   end
 
-  # @param course [Course]
-  # @param section [Section]
-  def get_users_with_sections(course, section = nil)
-    load_all_students course
+  def get_users_with_sections(course_site, section = nil)
+    load_all_students course_site
     rows = if section
              user_row_elements.select { |row| row.text.include? "#{section.course} #{section.label}" }
            else
@@ -391,7 +346,7 @@ module CanvasPeoplePage
 
       # Combine a user object with a section object
       section_codes.each_with_index.map do |sec, i|
-        section = course.sections.find { |section| "#{section.course} #{section.label}" == sec }
+        section = course_site.sections.find { |section| "#{section.course} #{section.label}" == sec }
         role_str = role_strings[i]
         role = if %w(Teacher TA Student).include? role_str
                  role_str.downcase
@@ -411,8 +366,8 @@ module CanvasPeoplePage
     users_with_sections.flatten
   end
 
-  def visible_user_section_data(site)
-    users_with_sections = get_users_with_sections site
+  def visible_user_section_data(course_site)
+    users_with_sections = get_users_with_sections course_site
     user_data = users_with_sections.map do |h|
       {
         uid: h[:user].uid,
@@ -423,19 +378,13 @@ module CanvasPeoplePage
     user_data.compact.sort_by { |h| [h[:uid], h[:section_id]] }
   end
 
-  # Returns all the users on a course site or course site section with a Student or Waitlist Student role. Optionally
-  # accepts a Canvas base URL to support BOAC last activity testing in Prod.
-  # @param course [Course]
-  # @param section [Section]
-  # @param canvas_base_url [String]
-  # @return [Array<User>]
-  def get_students(course, section = nil, canvas_base_url = nil, opts = {})
+  def get_students(course_site, section = nil, canvas_base_url = nil, opts = {})
     if opts[:enrollments]
-      enrollments = course.sections.map(&:enrollments).flatten
+      enrollments = course_site.sections.map(&:enrollments).flatten
       course_students = enrollments.map(&:user).flatten if enrollments.any?
     end
 
-    load_all_students(course, canvas_base_url)
+    load_all_students(course_site, canvas_base_url)
     els = student_enrollment_row_elements + waitlist_enrollment_row_elements
 
     rows = section ?
@@ -456,5 +405,4 @@ module CanvasPeoplePage
     end
     students.compact
   end
-
 end

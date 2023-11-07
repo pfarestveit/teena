@@ -142,7 +142,7 @@ class RipleyUtils < Utils
       v.each do |u|
         instructor = instr.find { |i| i.uid.to_s == u[:instructor_uid].to_s }
         if instructor
-          instructor_role = InstructorRole.new(instructor, u[:instructor_role_code])
+          instructor_role = InstructorAndRole.new(instructor, u[:instructor_role_code])
           instructors << instructor_role
         end
       end
@@ -152,14 +152,14 @@ class RipleyUtils < Utils
                   course: v[0][:code],
                   cs_course_id: v[0][:cs_course_id],
                   instruction_mode: v[0][:instruction_mode],
-                  instructors: instructors,
+                  instructors_and_roles: instructors,
                   label: v[0][:label],
                   locations: (v.map { |l| l[:location] }).compact.uniq,
                   primary: v[0][:primary],
                   primary_assoc_ids: (v.map { |p| p[:primary_assoc_id] }).uniq,
                   schedules: (v.map { |s| s[:schedule] }).uniq
     end
-    teachers = sections.select(&:primary).map { |prim| prim.instructors.map &:user }
+    teachers = sections.select(&:primary).map { |prim| prim.instructors_and_roles.map &:user }
     teachers.flatten!
     teachers.compact!
     teachers.uniq!
@@ -258,7 +258,7 @@ class RipleyUtils < Utils
     site_has_primaries = site.sections.select(&:primary).any?
     secs = sections || site.sections
     secs.each do |section|
-      section.instructors.each do |instr|
+      section.instructors_and_roles.each do |instr|
         instr.user.role = if section.primary
                             if %w(PI ICNT INVT).include? instr.role_code
                               'Teacher'
@@ -322,20 +322,20 @@ class RipleyUtils < Utils
 
   def self.get_course_instructor_sections(course, instructor)
     course.sections.select do |section|
-      section.instructors.find { |i| i.user.uid == instructor.uid }
+      section.instructors_and_roles.find { |i| i.user.uid == instructor.uid }
     end
   end
 
   def self.get_course_instructor_roles(course, instructor)
     instr_sections = get_course_instructor_sections(course, instructor)
     instr_roles = instr_sections.map do |section|
-      section.instructors.find { |i| i.user.uid == instructor.uid }.role_code
+      section.instructors_and_roles.find { |i| i.user.uid == instructor.uid }.role_code
     end
     instr_roles.uniq
   end
 
   def self.get_primary_instructor(site)
-    pi_role = site.sections.map(&:instructors).flatten.find { |t| t.role_code == 'PI' }
+    pi_role = site.sections.map(&:instructors_and_roles).flatten.find { |t| t.role_code == 'PI' }
     pi_role&.user
   end
 
@@ -350,7 +350,7 @@ class RipleyUtils < Utils
       roles = get_course_instructor_roles(course, instructor)
       if (roles & %w(PI APRX)).any?
         primary_ids = course.sections.select do |section|
-          section.primary && (section.instructors.map { |i| i.user.uid }.include?(instructor.uid))
+          section.primary && (section.instructors_and_roles.map { |i| i.user.uid }.include?(instructor.uid))
         end.map &:id
         secondary_ids = course.sections.select do |section|
           !section.primary && (primary_ids & section.primary_assoc_ids).any?
@@ -358,7 +358,7 @@ class RipleyUtils < Utils
         course.sections.keep_if { |section| (primary_ids + secondary_ids).include? section.id }
       else
         course.sections.keep_if do |section|
-          section.instructors.map { |i| i.user.uid }.include? instructor.uid
+          section.instructors_and_roles.map { |i| i.user.uid }.include? instructor.uid
         end
       end
       logger.info "Term course #{course.code}, sections #{course.sections.map &:id}"

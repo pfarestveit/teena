@@ -6,7 +6,7 @@ class Section
                 :enrollments,
                 :include_in_site,
                 :instruction_mode,
-                :instructors,
+                :instructors_and_roles,
                 :label,
                 :locations,
                 :number,

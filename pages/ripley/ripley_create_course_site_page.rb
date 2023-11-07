@@ -48,31 +48,31 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     end
   end
 
-  def search_for_course(site)
-    logger.debug "Searching for #{site.course.code} in #{site.course.term.name}"
-    if site.create_site_workflow == 'uid'
-      teacher = site.course.teachers.first
+  def search_for_course(course_site)
+    logger.debug "Searching for #{course_site.course.code} in #{course_site.course.term.name}"
+    if course_site.create_site_workflow == 'uid'
+      teacher = course_site.course.teachers.first
       logger.debug "Searching by instructor UID #{teacher.uid}"
       switch_to_instructor_element.when_present Utils.short_wait
       select_switch_to_instructor
       wait_for_textbox_and_type(instructor_uid_element, teacher.uid)
       wait_for_update_and_click as_instructor_button_element
-      choose_term site.course
+      choose_term course_site.course
 
-    elsif site.create_site_workflow == 'ccn'
+    elsif course_site.create_site_workflow == 'ccn'
       logger.debug 'Searching by CCN list'
       switch_to_ccn_element.when_present Utils.short_wait
       select_switch_to_ccn
-      choose_term site.course
+      choose_term course_site.course
       sleep 1
-      ccn_list = site.sections.map &:id
+      ccn_list = course_site.sections.map &:id
       logger.debug "CCN list is '#{ccn_list}'"
       wait_for_textbox_and_type(ccn_list_element, ccn_list.join(', '))
       wait_for_update_and_click review_ccns_button_element
 
     else
       logger.debug 'Searching as the instructor'
-      choose_term site.course
+      choose_term course_site.course
     end
   end
 
@@ -87,7 +87,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
       id: section_id,
       schedules: section_schedules(section_id),
       locations: section_locations(section_id),
-      instructors: section_instructors(section_id)
+      instructors_and_roles: section_instructors(section_id)
     }
   end
 
@@ -181,21 +181,21 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     wait_for_update_and_click go_back_button_element
   end
 
-  def wait_for_standalone_site_id(site, splash_page)
+  def wait_for_standalone_site_id(course_site, splash_page)
     wait_for_progress_bar
-    site.create_site_workflow = 'self'
+    course_site.create_site_workflow = 'self'
     tries = Utils.short_wait
-    teacher = site.course.teachers.first
+    teacher = course_site.course.teachers.first
     begin
       splash_page.clear_cache
       splash_page.dev_auth teacher.uid
       load_standalone_tool
       click_create_course_site
-      search_for_course site
-      expand_available_course_sections(site.course.code, site.sections.first)
-      link = link_element(xpath: "TBD #{site.course.title}")
-      site.site_id = link.attribute('href').gsub("#{Utils.canvas_base_url}/courses/", '')
-      logger.info "Course site ID is #{site.site_id}"
+      search_for_course course_site
+      expand_available_course_sections(course_site.course.code, course_site.sections.first)
+      link = link_element(xpath: "TBD #{course_site.course.title}")
+      course_site.site_id = link.attribute('href').gsub("#{Utils.canvas_base_url}/courses/", '')
+      logger.info "Course site ID is #{course_site.site_id}"
     rescue => e
       Utils.log_error e
       logger.warn "UID #{teacher.uid} is not yet associated with the site"
@@ -208,16 +208,16 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     end
   end
 
-  def provision_course_site(site, opts={})
-    load_embedded_tool site.course.teachers.first
+  def provision_course_site(course_site, opts={})
+    load_embedded_tool course_site.course.teachers.first
     click_create_course_site
-    site.course.create_site_workflow = 'ccn' if opts[:admin]
-    search_for_course site
-    expand_available_course_sections(site.course, site.sections.first)
-    select_sections site.sections
+    course_site.course.create_site_workflow = 'ccn' if opts[:admin]
+    search_for_course course_site
+    expand_available_course_sections(course_site.course, course_site.sections.first)
+    select_sections course_site.sections
     click_next
-    site.course.title = enter_site_titles site.course
+    course_site.course.title = enter_site_titles course_site.course
     click_create_site
-    wait_for_site_id site
+    wait_for_site_id course_site
   end
 end

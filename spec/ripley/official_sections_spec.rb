@@ -34,7 +34,7 @@ describe 'bCourses Official Sections tool' do
       it('cannot be tested using the given course site, since it already has all sections') { fail }
     else
       RipleyTool::TOOLS.select(&:account).each { |t| @canvas.add_ripley_tool t }
-      teacher = site.test_teacher
+      teacher = site.course.teachers.first
       term_courses = RipleyUtils.get_instructor_term_courses(teacher, test.current_term)
       site.sections = site.sections.select &:primary unless ENV['SITE']
       if site.sections == site.course.sections
@@ -254,6 +254,8 @@ describe 'bCourses Official Sections tool' do
       expected_sec_count = site.sections.length
       it('shows the added sections on Find a Person to Add') { expect(add_user_sec_count).to eql(expected_sec_count) }
 
+      # CANVAS USERS
+
       @canvas.wait_for_enrollment_import(site, roles)
       visible_users_post_add = @canvas.visible_user_section_data site
       expected_instructors_post_add = RipleyUtils.expected_instr_section_data(site, sections_to_add_delete)
@@ -309,6 +311,8 @@ describe 'bCourses Official Sections tool' do
       @add_user.wait_until(Utils.medium_wait) { @add_user.course_section_options&.any? }
       add_user_sec_count_del = @add_user.course_section_options.length
       it('shows no deleted sections on Find a Person to Add') { expect(add_user_sec_count_del).to eql(site.sections.length) }
+
+      # CANVAS USERS
 
       @canvas.wait_for_enrollment_import(site, roles)
       visible_users_post_del = @canvas.visible_user_section_data site

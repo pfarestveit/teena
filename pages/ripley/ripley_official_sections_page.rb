@@ -42,7 +42,7 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
   end
 
   def expected_instructors(section)
-    section.instructors.any? ? (section.instructors.map { |i| i.user.full_name }) : ['—']
+    section.instructors_and_roles.any? ? (section.instructors_and_roles.map { |i| i.user.full_name }) : ['—']
   end
 
   # STATIC VIEW - CURRENT SECTIONS
@@ -74,9 +74,9 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
       course: course_el&.text.to_s,
       label: label_el&.text.to_s,
       id: id_el&.text.to_s,
-      schedules: (schedule_els.map { |el| el.text.strip.upcase } if schedule_els.any?),
-      locations: (location_els.map { |el| el.text.strip } if location_els.any?),
-      instructors: (instructor_els.map { |el| el.text.strip } if instructor_els.any?)
+      schedules: (schedule_els.map { |el| el.text.strip.upcase }.delete_if(&:empty?) if schedule_els.any?),
+      locations: (location_els.map { |el| el.text.strip }.delete_if(&:empty?) if location_els.any?),
+      instructors: (instructor_els.map { |el| el.text.strip }.delete_if(&:empty?) if instructor_els.any?)
     }
   end
 
@@ -113,9 +113,9 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
       course: course_el&.text.to_s,
       label: label_el&.text.to_s,
       id: id_el&.text.to_s,
-      schedules: (schedule_els.map { |el| el.text.strip.upcase } if schedule_els.any?),
-      locations: (location_els.map { |el| el.text.strip } if location_els.any?),
-      instructors: (instructor_els.map { |el| el.text.strip } if instructor_els.any?)
+      schedules: (schedule_els.map { |el| el.text.strip.upcase }.delete_if(&:empty?) if schedule_els.any?),
+      locations: (location_els.map { |el| el.text.strip }.delete_if(&:empty?) if location_els.any?),
+      instructors: (instructor_els.map { |el| el.text.strip }.delete_if(&:empty?) if instructor_els.any?)
     }
   end
 
@@ -175,9 +175,9 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
       course: course_el&.text.to_s,
       label: label_el&.text.to_s,
       id: id_el&.text.to_s,
-      schedules: (schedule_els.map { |el| el.text.strip.upcase } if schedule_els.any?),
-      locations: (location_els.map { |el| el.text.strip } if location_els.any?),
-      instructors: (instructor_els.map { |el| el.text.strip } if instructor_els.any?)
+      schedules: (schedule_els.map { |el| el.text.strip.upcase }.delete_if(&:empty?) if schedule_els.any?),
+      locations: (location_els.map { |el| el.text.strip }.delete_if(&:empty?) if location_els.any?),
+      instructors: (instructor_els.map { |el| el.text.strip }.delete_if(&:empty?) if instructor_els.any?)
     }
   end
 

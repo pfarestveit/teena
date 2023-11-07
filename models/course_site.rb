@@ -7,9 +7,9 @@ class CourseSite
                 :is_copy,
                 :manual_members,
                 :sections,
-                :test_teacher,
                 :site_id,
                 :term,
+                :tests,
                 :title
 
   def initialize(site_data)
@@ -28,7 +28,7 @@ class CourseSite
   end
 
   def expected_teacher_count
-    instructors = @sections.map(&:instructors).flatten
+    instructors = @sections.map(&:instructors_and_roles).flatten
     if @sections.map(&:primary).any?
       instructors.select { |i| %w(PI ICNT).include? i.role_code }.uniq { |i| i.user.uid }.length
     else
@@ -38,7 +38,7 @@ class CourseSite
 
   def expected_lead_ta_count
     if @sections.map(&:primary).any?
-      @sections.map(&:instructors).flatten.select { |i| i.role_code == 'APRX' }.uniq { |i| i.user.uid }.length
+      @sections.map(&:instructors_and_roles).flatten.select { |i| i.role_code == 'APRX' }.uniq { |i| i.user.uid }.length
     else
       0
     end
@@ -46,7 +46,7 @@ class CourseSite
 
   def expected_ta_count
     if @sections.map(&:primary).any?
-      @sections.map(&:instructors).flatten.select { |i| i.role_code == 'TNIC' }.uniq { |i| i.user.uid }.length
+      @sections.map(&:instructors_and_roles).flatten.select { |i| i.role_code == 'TNIC' }.uniq { |i| i.user.uid }.length
     else
       0
     end

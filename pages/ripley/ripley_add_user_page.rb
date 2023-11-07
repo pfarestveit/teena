@@ -35,22 +35,22 @@ class RipleyAddUserPage
   button(:add_user_button, id: 'add-user-btn')
   button(:start_over_button, id: 'start-over-btn')
 
-  def embedded_tool_path(course)
-    "/courses/#{course.site_id}/external_tools/#{RipleyTool::ADD_USER.tool_id}"
+  def embedded_tool_path(course_site)
+    "/courses/#{course_site.site_id}/external_tools/#{RipleyTool::ADD_USER.tool_id}"
   end
 
-  def hit_embedded_tool_url(course)
-    navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path course}"
+  def hit_embedded_tool_url(course_site)
+    navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path course_site}"
   end
 
-  def load_embedded_tool(course)
+  def load_embedded_tool(course_site)
     logger.info 'Loading embedded version of Find a Person to Add tool'
-    load_tool_in_canvas embedded_tool_path(course)
+    load_tool_in_canvas embedded_tool_path(course_site)
   end
 
-  def load_standalone_tool(course)
+  def load_standalone_tool(course_site)
     logger.info 'Loading standalone version of Find a Person to Add tool'
-    navigate_to "#{RipleyUtils.base_url}/TBD/#{course.site_id}"
+    navigate_to "#{RipleyUtils.base_url}/TBD/#{course_site.site_id}"
   end
 
   def expand_help_notice

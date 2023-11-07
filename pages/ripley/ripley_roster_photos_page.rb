@@ -22,22 +22,22 @@ class RipleyRosterPhotosPage
   elements(:roster_photo_placeholder, :image, xpath: '//img[contains(@src, "photo_unavailable")]')
   elements(:roster_sid, :span, xpath: '//div[contains(@id, "student-id-")]')
 
-  def embedded_tool_path(course)
-    "/courses/#{course.site_id}/external_tools/#{RipleyTool::ROSTER_PHOTOS.tool_id}"
+  def embedded_tool_path(course_site)
+    "/courses/#{course_site.site_id}/external_tools/#{RipleyTool::ROSTER_PHOTOS.tool_id}"
   end
 
-  def hit_embedded_tool_url(course)
-    navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path course}"
+  def hit_embedded_tool_url(course_site)
+    navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path course_site}"
   end
 
-  def load_embedded_tool(course)
+  def load_embedded_tool(course_site)
     logger.info 'Loading embedded version of Roster Photos tool'
-    load_tool_in_canvas embedded_tool_path(course)
+    load_tool_in_canvas embedded_tool_path(course_site)
   end
 
-  def load_standalone_tool(course)
+  def load_standalone_tool(course_site)
     logger.info 'Loading standalone version of Roster Photos tool'
-    navigate_to "#{RipleyUtils.base_url}/roster/#{course.site_id}"
+    navigate_to "#{RipleyUtils.base_url}/roster/#{course_site.site_id}"
     hide_header
   end
 
@@ -68,15 +68,15 @@ class RipleyRosterPhotosPage
     sleep 1
   end
 
-  def click_student_profile_link(course, student)
-    el = link_element(xpath: "//a[contains(@href, '#{course.site.id}/profile/#{student.canvas_id}')]")
+  def click_student_profile_link(course_site, student)
+    el = link_element(xpath: "//a[contains(@href, '#{course_site.site.id}/profile/#{student.canvas_id}')]")
     wait_for_update_and_click el
     wait_until(Utils.short_wait) { h1_element(xpath: "//h1[contains(text(), \"#{student.full_name}\")]") }
   end
 
-  def export_roster(course)
-    logger.info "Downloading roster CSV for course ID #{course.site_id}"
-    parsed = parse_downloaded_csv(export_roster_link_element,"course_#{course.site_id}_rosters*.csv")
+  def export_roster(course_site)
+    logger.info "Downloading roster CSV for course ID #{course_site.site_id}"
+    parsed = parse_downloaded_csv(export_roster_link_element,"course_#{course_site.site_id}_rosters*.csv")
     parsed.map { |r| r[:student_id] }
   end
 

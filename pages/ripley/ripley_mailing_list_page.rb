@@ -15,22 +15,22 @@ class RipleyMailingListPage
   div(:list_dupe_error_msg, id: 'TBD "A Mailing List cannot be created for the site"')
   div(:list_dupe_email_msg, xpath: '//div[contains(., "is used by another bCourses site and is not available")]')
 
-  def embedded_tool_path(course)
-    "/courses/#{course.site_id}/external_tools/#{RipleyTool::MAILING_LIST.tool_id}"
+  def embedded_tool_path(course_site)
+    "/courses/#{course_site.site_id}/external_tools/#{RipleyTool::MAILING_LIST.tool_id}"
   end
 
-  def hit_embedded_tool_url(course)
-    navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path course}"
+  def hit_embedded_tool_url(course_site)
+    navigate_to "#{Utils.canvas_base_url}#{embedded_tool_path course_site}"
   end
 
-  def load_embedded_tool(course)
-    logger.info "Loading embedded instructor Mailing List tool for course ID #{course.site_id}"
-    load_tool_in_canvas embedded_tool_path(course)
+  def load_embedded_tool(course_site)
+    logger.info "Loading embedded instructor Mailing List tool for course ID #{course_site.site_id}"
+    load_tool_in_canvas embedded_tool_path(course_site)
   end
 
-  def load_standalone_tool(course)
-    logger.info "Loading standalone instructor Mailing List tool for course ID #{course.site_id}"
-    navigate_to "#{RipleyUtils.base_url} TBD #{course.site_id}"
+  def load_standalone_tool(course_site)
+    logger.info "Loading standalone instructor Mailing List tool for course ID #{course_site.site_id}"
+    navigate_to "#{RipleyUtils.base_url} TBD #{course_site.site_id}"
   end
 
   def click_create_list

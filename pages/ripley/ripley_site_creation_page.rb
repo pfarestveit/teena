@@ -19,7 +19,7 @@ class RipleySiteCreationPage
     navigate_to "#{RipleyUtils.base_url} TBD"
   end
 
-  def wait_for_site_id(site)
+  def wait_for_site_id(course_site)
     begin
       tries ||= Utils.long_wait
       wait_until(1) { current_url.include?("#{Utils.canvas_base_url}/courses") }
@@ -32,8 +32,8 @@ class RipleySiteCreationPage
         retry
       end
     end
-    site.site_id = current_url.delete "#{Utils.canvas_base_url}/courses/"
-    logger.info "Site ID is #{site.site_id}"
+    course_site.site_id = current_url.delete "#{Utils.canvas_base_url}/courses/"
+    logger.info "Site ID is #{course_site.site_id}"
   end
 
   # Course site
@@ -67,17 +67,17 @@ class RipleySiteCreationPage
   text_field(:manage_sections_site_input, id: 'canvas-site-id-input')
   select_list(:manage_sections_site_select, id: 'course-sections')
 
-  def select_site_and_manage(site)
-    logger.info "Selecting site ID #{site.site_id} in #{site.course.term.name} and continuing"
+  def select_site_and_manage(course_site)
+    logger.info "Selecting site ID #{course_site.site_id} in #{course_site.course.term.name} and continuing"
     wait_for_update_and_click manage_sections_link_element
-    wait_for_element_and_select(manage_sections_site_select_element, site.site_id)
+    wait_for_element_and_select(manage_sections_site_select_element, course_site.site_id)
     wait_for_update_and_click go_next_button_element
   end
 
-  def enter_site_and_manage(site)
-    logger.info "Entering site ID #{site.site_id} and continuing"
+  def enter_site_and_manage(course_site)
+    logger.info "Entering site ID #{course_site.site_id} and continuing"
     wait_for_update_and_click manage_sections_link_element
-    wait_for_textbox_and_type(manage_sections_site_input_element, site.site_id)
+    wait_for_textbox_and_type(manage_sections_site_input_element, course_site.site_id)
     wait_for_update_and_click go_next_button_element
   end
 end
