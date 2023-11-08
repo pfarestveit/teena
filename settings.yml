@@ -127,6 +127,37 @@ ripley:
   db_name: secret
   db_user: secret
   db_password: secret
+  test_users:
+    - uid: 123456
+      canvas_id: 654321
+      email: 'catherine-a@email.com'
+      full_name: 'Catherine of Aragon'
+      role: 'Teacher'
+    - uid: 234567
+      canvas_id: 765432
+      email: 'anne-b@email.com'
+      full_name: 'Anne Boleyn'
+      role: 'Lead TA'
+    - uid: 345678
+      canvas_id: 876543
+      email: 'jane-s@email.com'
+      full_name: 'Jane Seymour'
+      role: 'Student'
+    - uid: 456789
+      canvas_id: 987654
+      email: 'anne-c@email.com'
+      full_name: 'Anne of Cleves'
+      role: 'Reader'
+    - uid: 567890
+      canvas_id: 098765
+      email: 'catherine-h@email.com'
+      full_name: 'Catherine Howard'
+      role: 'Owner'
+    - uid: 678901
+      canvas_id: 109876
+      email: 'catherine-p@email.com'
+      full_name: 'Catherine Parr'
+      role: 'Member'
 
 squiggy:
   base_url: tbd

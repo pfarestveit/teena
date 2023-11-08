@@ -10,7 +10,7 @@ class RipleyJobsPage
   end
 
   def job_most_recent_locator(job)
-    "//h2[contains(text(), 'History')]/../../following-sibling::div//tbody/tr[contains(., '#{job.key}')][1]"
+    "//h2[contains(., 'Job History')]/../../following-sibling::div//tbody/tr[contains(., '#{job.key}')][1]"
   end
 
   def job_succeeded?(job)

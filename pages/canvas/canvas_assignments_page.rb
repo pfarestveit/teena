@@ -32,7 +32,7 @@ module Page
 
     def load_new_assignment_page(course_site)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/assignments/new"
-      assignment_name_element.when_visible Utils.medium_wait
+      assignment_name_element.when_present Utils.medium_wait
     end
 
     # Begins creating a new assignment, entering title and scrolling to the submission types
