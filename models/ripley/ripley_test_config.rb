@@ -45,32 +45,42 @@ class RipleyTestConfig < TestConfig
   end
 
   def mailing_lists
+    test_users = CONFIG['test_users'].map { |user| User.new user }
     @course_sites = [
       (
         CourseSite.new abbreviation: "Admin #{@id}",
+                       manual_members: (test_users.select { |user| !%w(Owner Maintainer Member).include? user.role }),
+                       sections: [Section.new(label: "LEC 001 #{@id}", sis_id: "LEC 001 #{@id}")],
                        term: @current_term,
                        title: "List 1 #{@id}"
       ),
       (
         CourseSite.new abbreviation: "Admin #{@id}",
+                       manual_members: (test_users.select { |user| user.role == 'Teacher' }),
+                       sections: [Section.new(label: "LEC 001 #{@id}", sis_id: "LEC 001 #{@id}")],
                        term: @current_term,
                        title: "List 2 #{@id}"
       ),
       (
         CourseSite.new abbreviation: "Instructor #{@id}",
+                       manual_members: (test_users.select { |user| !%w(Owner Maintainer Member).include? user.role }),
+                       sections: [Section.new(label: "LEC 001 #{@id}", sis_id: "LEC 001 #{@id}")],
                        title: "List 3 #{@id}"
       ),
       (
         CourseSite.new abbreviation: "Old List #{@id}",
+                       manual_members: (test_users.select { |user| user.role == 'Teacher' }),
+                       sections: [Section.new(label: "LEC 001 #{@id}", sis_id: "LEC 001 #{@id}")],
                        term: RipleyUtils.previous_term(@previous_term),
                        title: "Old List 4 #{@id}"
+      ),
+      (
+        CourseSite.new abbreviation: "Project List #{@id}",
+                       manual_members: (test_users.select { |user| %w(Owner Maintainer Member).include? user.role }),
+                       sections: [Section.new(label: "LEC 001 #{@id}", sis_id: "LEC 001 #{@id}")],
+                       title: "Project List 5 #{@id}"
       )
     ]
-    set_test_user_data ripley_test_data_file
-    @course_sites.each { |s| s.manual_members = set_fake_test_users 'mailing_lists' }
-    @course_sites[1, 3].each do |site|
-      site.manual_members = [site.manual_members.find { |m| m.role == 'Teacher' }]
-    end
   end
 
   def official_sections
@@ -112,11 +122,10 @@ class RipleyTestConfig < TestConfig
   end
 
   def welcome_email
-    site = CourseSite.new abbreviation: "#{@id} Welcome Email",
+    test_users = CONFIG['test_users'].map { |user| User.new user }
+    CourseSite.new abbreviation: "#{@id} Welcome Email",
+                          manual_members: (test_users.select { |user| %w(Teacher Student).include? user.role }),
                           title: "#{@id} Welcome"
-    set_test_user_data ripley_test_data_file
-    site.manual_members = set_fake_test_users 'mailing_lists'
-    site
   end
 
   ### GLOBAL CONFIG ###

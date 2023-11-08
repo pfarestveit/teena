@@ -8,7 +8,9 @@ describe 'bCourses welcome email', order: :defined do
     @test = RipleyTestConfig.new
     @site = @test.welcome_email
     @email = Email.new("Welcome Email #{@test.id}", "Teena welcomes you")
-    @site_members = [@test.manual_teacher, @test.students.first]
+    @teacher = @site.manual_members.find { |m| m.role == 'Teacher' }
+    @student1, @student2, @student3 = @site.manual_members.select { |m| m.role == 'Student' }
+    @site_members = [@teacher, @student1]
 
     # Browser for instructor
     @driver1 = Utils.launch_browser
@@ -27,8 +29,8 @@ describe 'bCourses welcome email', order: :defined do
     @canvas2.log_in(@cal_net2, @test.admin.username, Utils.super_admin_password)
 
     @canvas2.create_generic_course_site(Utils.canvas_official_courses_sub_account, @site, @site_members, @test.id)
-    @canvas1.masquerade_as(@test.students[0], @site)
-    @canvas1.masquerade_as(@test.manual_teacher, @site)
+    @canvas1.masquerade_as(@student1, @site)
+    @canvas1.masquerade_as(@teacher, @site)
   end
 
   after(:all) { Utils.quit_browser @driver1; Utils.quit_browser @driver2 }
@@ -91,6 +93,7 @@ describe 'bCourses welcome email', order: :defined do
       @mailing_lists.search_for_list @site.site_id
     end
 
+    # TODO - ensure email address is spoofed
     it 'is sent to existing members of the site' do
       # Update membership
       @mailing_lists.click_update_memberships
@@ -101,11 +104,12 @@ describe 'bCourses welcome email', order: :defined do
       expect(csv[:email_address].sort).to eql(@site_members.map(&:email).sort)
     end
 
+    # TODO - ensure email address is spoofed
     it 'is sent to new members of the site' do
       # Add student, accept invite
-      @canvas2.add_users(@site, [@test.students[1]])
-      @site_members << @test.students[1]
-      @canvas2.masquerade_as(@test.students[1], @site)
+      @canvas2.add_users(@site, [@student2])
+      @site_members << @student2
+      @canvas2.masquerade_as(@student2, @site)
       @canvas2.stop_masquerading
 
       # Update membership
@@ -127,10 +131,11 @@ describe 'bCourses welcome email', order: :defined do
       @mailing_list.email_paused_msg_element.when_visible 3
     end
 
+    # TODO - ensure email address is spoofed
     it 'is not sent to new members of the site' do
       # Add student, accept invite
-      @canvas2.add_users(@site, [@test.students[2]])
-      @canvas2.masquerade_as(@test.students[2], @site)
+      @canvas2.add_users(@site, [@student3])
+      @canvas2.masquerade_as(@student3, @site)
       @canvas2.stop_masquerading
 
       # Update membership

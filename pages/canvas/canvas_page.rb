@@ -257,6 +257,7 @@ module Page
         logger.info "Creating a course site named #{course_site.title}#{' in ' + course_site.term.name if course_site.term}"
         create_site course_site
         course_site.site_id = search_for_site(course_site, RipleyTool::MAILING_LIST.account)
+        add_sections(course_site, course_site.sections)
         if course_site.term
           navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
           wait_for_element_and_select(term_element, course_site.term.name)
