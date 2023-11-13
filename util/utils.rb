@@ -291,6 +291,7 @@ class Utils
   # @param dir [File]
   def self.prepare_download_dir
     FileUtils::mkdir_p download_dir
+    sleep click_wait
     FileUtils.rm_rf(download_dir, :secure => true)
   end
 

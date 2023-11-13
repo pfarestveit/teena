@@ -172,12 +172,7 @@ describe 'bCourses course site creation' do
         it "redirects to the #{site.course.term.name} #{site.course.code} course site in Canvas when finished" do
           expect(site.site_id).not_to be_nil
         end
-
-        if site.site_id
-          sites_created << site
-        else
-          logger.error "Timed out before the #{site.course.term.name} #{site.course.code} course site was created, or another error occurred"
-        end
+        sites_created << site
 
       rescue => e
         it("encountered an error creating the course site for #{site.course.term.name} #{site.course.code}") { fail Utils.error(e) }

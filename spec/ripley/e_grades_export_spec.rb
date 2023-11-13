@@ -241,7 +241,7 @@ describe 'bCourses E-Grades Export' do
   describe 'final grade' do
 
     before(:all) do
-      students = @canvas.get_students(site, @primary_section, nil, { enrollments: true })
+      students = @canvas.get_students(site, { enrollments: true , section: @primary_section})
       @canvas.enable_grading_scheme site
       @canvas.load_gradebook site
       @grades_are_final = @canvas.grades_final?
