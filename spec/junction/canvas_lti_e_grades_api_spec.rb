@@ -46,7 +46,7 @@ unless ENV['STANDALONE']
             @canvas.set_grading_scheme({scheme: scheme})
 
             # Get grades in Canvas
-            students = @canvas.get_students(course, primary_section)
+            students = @canvas.get_students(course, { section: primary_section })
             @canvas.load_gradebook course
             grades_are_final = @canvas.grades_final?
             logger.info "Grades are final is #{grades_are_final}"

@@ -19,14 +19,14 @@ module Page
       logger.info "Making sure grading scheme is disabled for course ID #{course_site.site_id}"
       load_course_settings course_site
       scroll_to_bottom
-      set_grading_scheme_cbx_checked? ?  toggle_grading_scheme : logger.info('Grading scheme already disabled')
+      grading_scheme_select? ?  toggle_grading_scheme : logger.info('Grading scheme already disabled')
     end
 
     def enable_grading_scheme(course_site)
       logger.info "Making sure grading scheme is enabled for course ID #{course_site.site_id}"
       load_course_settings course_site
       scroll_to_bottom
-      !set_grading_scheme_cbx_checked? ?  toggle_grading_scheme : logger.info('Grading scheme already enabled')
+      grading_scheme_select? ? logger.info('Grading scheme already enabled') : toggle_grading_scheme
     end
 
     def set_grading_scheme(opts)
