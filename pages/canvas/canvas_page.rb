@@ -130,7 +130,7 @@ module Page
 
     link(:create_site_link, xpath: '//a[contains(text(),"Create a Site")]')
     link(:create_site_settings_link, xpath: '//div[contains(@class, "profile-tray")]//a[contains(text(),"Create a Site")]')
-    link(:ripley_create_site_settings_link, xpath: "//div[contains(@class, 'profile-tray')]//a[contains(text(), '#{RipleyTool::MANAGE_SITE.name}')]")
+    link(:ripley_create_site_settings_link, xpath: "//div[contains(@class, 'profile-tray')]//a[contains(text(), '#{RipleyTool::MANAGE_SITES.name}')]")
 
     button(:add_new_course_button, xpath: '//button[@aria-label="Create new course"]')
     text_area(:course_name_input, xpath: '(//form[@aria-label="Add a New Course"]//input)[1]')
@@ -580,26 +580,25 @@ module Page
       hide_canvas_footer_and_popup
     end
 
-    def ripley_tool_installed?(tool, site)
-      logger.info "Checking if Ripley's #{tool.name} is installed"
-      site ? load_tools_adding_page(site) : load_account_apps(tool.account)
-      verify_block { cell_element(xpath: "//td[text()='#{tool.name}']").when_present Utils.short_wait }
+    def get_ripley_tool_dev_keys(tools)
+      if tools.any?
+        navigate_to "#{Utils.canvas_base_url}/accounts/#{Utils.canvas_uc_berkeley_sub_account}/developer_keys"
+        wait_for_load_and_click button_element(xpath: '//button[contains(., "Show All Keys")]')
+        tools.each do |tool|
+          el = div_element(xpath: "//td[contains(., '#{tool.name}')]/following-sibling::td[2]/div/div")
+          el.when_present Utils.medium_wait
+          tool.dev_key = el.text
+        end
+      end
     end
 
-    def get_ripley_tool_dev_key(tool)
-      navigate_to "#{Utils.canvas_base_url}/accounts/#{Utils.canvas_uc_berkeley_sub_account}/developer_keys"
-      wait_for_load_and_click button_element(xpath: '//button[contains(., "Show All Keys")]')
-      el = div_element(xpath: "//td[contains(., '#{tool.name}')]/following-sibling::td[2]/div/div")
-      el.when_present Utils.medium_wait
-      tool.dev_key = el.text
-    end
-
-    def add_ripley_tool(tool, course_site = nil)
-      if ripley_tool_installed?(tool, course_site)
-        logger.info "Tool #{tool.name} is already installed"
-      else
-        logger.info "Tool #{tool.name} is not installed, installing"
-        get_ripley_tool_dev_key tool
+    def add_ripley_tools(tools, course_site = nil)
+      api = CanvasAPIPage.new @driver
+      installed = []
+      tools.each { |t| installed << t if api.tool_installed?(t, course_site) }
+      to_install = tools - installed
+      get_ripley_tool_dev_keys to_install
+      to_install.each do |tool|
         course_site ? load_tools_adding_page(course_site) : load_account_apps(tool.account)
         wait_for_update_and_click add_app_link_element
         wait_for_element_and_select(config_type_element, 'By Client ID')
@@ -609,8 +608,7 @@ module Page
         wait_for_update_and_click add_tool_button_element rescue Selenium::WebDriver::Error::TimeoutError
         enable_tool(tool, course_site) if course_site
       end
-      api = CanvasAPIPage.new @driver
-      api.get_tool_id(tool, course_site)
+      tools.each { |t| api.get_tool_id(t, course_site) }
     end
 
     def click_tool_link(tool)
