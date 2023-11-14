@@ -12,6 +12,10 @@ class RipleyUtils < Utils
     @config['base_url']
   end
 
+  def self.base_url_prod
+    @config['base_url_prod']
+  end
+
   def self.background_job_attempts
     @config['background_job_attempts']
   end

@@ -208,13 +208,16 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     end
   end
 
-  def provision_course_site(course_site, opts={})
+  def provision_course_site(course_site)
     load_embedded_tool course_site.course.teachers.first
     click_create_course_site
-    course_site.course.create_site_workflow = 'ccn' if opts[:admin]
     search_for_course course_site
     expand_available_course_sections(course_site.course, course_site.sections.first)
-    select_sections course_site.sections
+    if course_site.sections == course_site.course.sections
+      wait_for_update_and_click available_sections_select_all(course_site.course)
+    else
+      select_sections course_site.sections
+    end
     click_next
     course_site.course.title = enter_site_titles course_site.course
     click_create_site

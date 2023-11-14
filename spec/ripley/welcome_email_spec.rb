@@ -18,6 +18,7 @@ describe 'bCourses welcome email', order: :defined do
     @cal_net1 = Page::CalNetPage.new @driver1
     @mailing_list = RipleyMailingListPage.new @driver1
     @canvas1.log_in(@cal_net1, @test.admin.username, Utils.super_admin_password)
+    @canvas1.add_ripley_tools RipleyTool::TOOLS.select(&:account)
     @canvas1.set_canvas_ids @site.manual_members
 
     # Browser for admin

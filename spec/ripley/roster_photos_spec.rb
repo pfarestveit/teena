@@ -30,7 +30,7 @@ describe 'bCourses Roster Photos' do
     @site, @teacher = test.configure_single_site(@canvas, @canvas_api, non_teachers)
 
     @canvas.masquerade_as @teacher
-    @create_course_site_page.provision_course_site @site unless @site.site_id
+    @create_course_site_page.provision_course_site(@site) unless @site.site_id
     @canvas.publish_course_site @site
 
     @expected_sids = @site.sections.map { |s| s.enrollments.map { |e| e.user.sis_id } }.flatten.uniq.sort
@@ -99,9 +99,9 @@ describe 'bCourses Roster Photos' do
     end
 
     it "allows a teacher to filter by section on a course site" do
+      @roster_photos_page.filter_by_string ''
       @site.sections.each do |section|
         section_sids = section.enrollments.map { |e| e.user }.map(&:sis_id).sort
-        @roster_photos_page.filter_by_string ''
         @roster_photos_page.filter_by_section section
         @roster_photos_page.wait_until(Utils.short_wait, "Expected CCN #{section.id} SIDs #{section_sids}, got #{@roster_photos_page.all_sids.sort}") do
           @roster_photos_page.all_sids.sort == section_sids
@@ -110,6 +110,7 @@ describe 'bCourses Roster Photos' do
     end
 
     it "allows a teacher to download a CSV of the course @site enrollment on a course site" do
+      @roster_photos_page.filter_by_section @site.sections.find &:primary
       exported_user_sids = @roster_photos_page.export_roster @site
       logger.info "Exported SIDs #{exported_user_sids}"
       expect(exported_user_sids.sort).to eql(@expected_sids.sort)

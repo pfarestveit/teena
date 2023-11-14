@@ -30,7 +30,7 @@ describe 'bCourses course site creation' do
     @roster_photos = RipleyRosterPhotosPage.new @driver
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
-    RipleyTool::TOOLS.select(&:account).each { |t| @canvas.add_ripley_tool t }
+    @canvas.add_ripley_tools RipleyTool::TOOLS.select(&:account)
     @canvas.set_canvas_ids non_teachers
 
     test.course_sites.reverse.each do |site|

@@ -8,6 +8,7 @@ describe 'The Grade Distribution tool' do
   test.grade_distribution
 
   begin
+    logger.info "Test course sites: #{test.course_sites.map &:site_id}"
     non_teachers = [
       test.lead_ta,
       test.ta,
@@ -41,8 +42,8 @@ describe 'The Grade Distribution tool' do
         enrollment_count = site.sections.map { |s| s.enrollments.map { |e| e.user.uid } }.flatten.uniq.length
         logger.info "#{test_case} has #{enrollment_count} students"
         @canvas.set_canvas_ids [instructor]
-        RipleyTool::TOOLS.reject(&:account).each { |t| @canvas.add_ripley_tool(t, site) }
-        @canvas.add_ripley_tool RipleyTool::ADD_USER
+        @canvas.add_ripley_tools(RipleyTool::TOOLS.reject(&:account), site)
+        @canvas.add_ripley_tools [RipleyTool::ADD_USER]
 
         @canvas.masquerade_as(instructor, site)
         @newt.load_embedded_tool site

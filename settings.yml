@@ -112,6 +112,7 @@ oec:
 
 ripley:
   base_url: https://ripley-qa.ets.berkeley.edu
+  base_url_prod: https://ripley.ets.berkeley.edu
   dev_auth_password: secret
   admin_uid: secret
   term_name: 'Spring 2023'

@@ -261,7 +261,7 @@ class RipleyTestConfig < TestConfig
   end
 
   def configure_single_site(canvas_page, canvas_api_page, non_teachers, site = nil)
-    RipleyTool::TOOLS.select(&:account).each { |t| canvas_page.add_ripley_tool t }
+    canvas_page.add_ripley_tools RipleyTool::TOOLS.select(&:account)
     site_id = ENV['SITE'] || site&.site_id
     section_ids = canvas_api_page.get_course_site_sis_section_ids site_id if site_id
     if site

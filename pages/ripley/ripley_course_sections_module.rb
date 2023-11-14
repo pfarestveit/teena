@@ -23,6 +23,10 @@ module RipleyCourseSectionsModule
     ''
   end
 
+  def available_sections_select_all(course)
+    text_field_element(xpath: "#{available_course_heading_xpath(course)}/ancestor::button/following-sibling::div//input[starts-with(@id, 'select-all-toggle')]")
+  end
+
   def available_sections_table_xpath(course, section)
     "#{available_course_heading_xpath(course)}/ancestor::button/following-sibling::div//table[contains(., \"#{section.id}\")]"
   end
