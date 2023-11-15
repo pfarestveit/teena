@@ -41,7 +41,7 @@ class RipleyTestConfig < TestConfig
 
   def grade_distribution
     @course_sites = RipleyUtils.grade_distribution_site_ids.map { |id| CourseSite.new site_id: id }
-    @course_sites.each { |s| set_real_test_course_users s }
+    set_real_test_course_users @course_sites.last
   end
 
   def mailing_lists
