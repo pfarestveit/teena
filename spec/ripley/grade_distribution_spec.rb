@@ -50,19 +50,31 @@ describe 'The Grade Distribution tool' do
 
         begin
           if enrollment_count < 150
-            user_blocked = @newt.verify_block { @newt.no_grade_dist_msg_element.when_visible Utils.medium_wait }
+            user_blocked = @newt.verify_block({ screenshot: true, screenshot_name: site.site_id }) do
+              @newt.no_grade_dist_msg_element.when_visible Utils.medium_wait
+            end
             it("denies low enrollment #{test_case} Teacher UID #{instructor.uid} access to the tool") { expect(user_blocked).to be true }
 
           else
             if site.course.teachers.length == 1
 
-              @newt.mouseover_enrollment_grade 'A'
-              enrollment_default_tooltip = @newt.tooltip_key
-              it("offers prior enrollment default data and tooltips on #{test_case}") do
-                expect(enrollment_default_tooltip).to eql('A Grade')
+              shows_demographics = @newt.verify_block({ screenshot: true, screenshot_name: site.site_id }) do
+                @newt.expand_demographics_table
+              end
+              it("offers demographics default data and table on #{test_case}") do
+                expect(shows_demographics).to be true
+              end
+
+              shows_prior_enrollments = @newt.verify_block({ screenshot: true, screenshot_name: site.site_id }) do
+                @newt.expand_prior_enrollment_table
+              end
+              it("offers prior enrollment default data and table on #{test_case}") do
+                expect(shows_prior_enrollments).to be true
               end
             else
-              user_blocked = @newt.verify_block { @newt.no_grade_dist_msg_element.when_visible Utils.medium_wait }
+              user_blocked = @newt.verify_block({ screenshot: true, screenshot_name: site.site_id }) do
+                @newt.no_grade_dist_msg_element.when_visible Utils.medium_wait
+              end
               it("denies #{test_case} Teacher UID #{instructor.uid} access to the tool") { expect(user_blocked).to be true }
             end
           end

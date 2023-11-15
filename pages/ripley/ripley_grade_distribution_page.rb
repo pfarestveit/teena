@@ -42,11 +42,19 @@ class RipleyGradeDistributionPage
 
   h2(:demographics_heading, xpath: '//h2[text()="Grade Distribution by Demographics"]')
   select_list(:demographics_select, id: 'grade-distribution-demographics-select')
+  button(:demographics_table_toggle, id: 'grade-distribution-demographics-show-btn')
+  table(:demographics_table, id: 'grade-distribution-demo-table')
 
   def select_demographic(demographic)
     logger.info "Selecting demographic '#{demographic}'"
     wait_for_element_and_select(demographics_select_element, demographic)
     sleep 2
+  end
+
+  def expand_demographics_table
+    logger.info 'Expanding demographics data table'
+    wait_for_update_and_click demographics_table_toggle_element
+    demographics_table_element.when_visible 1
   end
 
   def demographics_grade_el(grade)
@@ -62,11 +70,19 @@ class RipleyGradeDistributionPage
 
   h2(:prior_enrollment_heading, xpath: '//h2[text()="Grade Distribution by Prior Enrollment"]')
   select_list(:prior_enrollment_select, id: 'grade-distribution-enrollment-select')
+  button(:prior_enrollment_table_toggle, id: 'grade-distribution-enrollments-show-btn')
+  table(:prior_enrollment_table, id: 'grade-distribution-enroll-table')
 
   def select_prior_enrollment(course_code)
     logger.info "Selecting prior enrollment '#{course_code}'"
     wait_for_element_and_select(prior_enrollment_select_element, course_code)
     sleep 2
+  end
+
+  def expand_prior_enrollment_table
+    logger.info 'Expanding prior enrollment data table'
+    wait_for_update_and_click prior_enrollment_table_toggle_element
+    prior_enrollment_table_element.when_visible 1
   end
 
   def enrollment_grade_el(grade)

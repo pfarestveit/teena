@@ -240,11 +240,12 @@ module Page
 
   # Returns true if a code block completes without error.
   # @return [boolean]
-  def verify_block(&blk)
+  def verify_block(opts = {}, &blk)
     begin
       return true if yield
     rescue => e
-      logger.debug e.message
+      Utils.log_error e
+      Utils.save_screenshot(@driver, "#{Time.now.to_i}site#{opts[:screenshot_name]}") if opts[:screenshot]
       false
     end
   end
