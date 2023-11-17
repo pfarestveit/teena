@@ -6,6 +6,7 @@ describe 'The Grade Distribution tool' do
 
   test = RipleyTestConfig.new
   test.grade_distribution
+  terms = RipleyUtils.get_terms_since_code_red
 
   begin
     logger.info "Test course sites: #{test.course_sites.map &:site_id}"
@@ -36,14 +37,15 @@ describe 'The Grade Distribution tool' do
 
         section_ids = @canvas_api.get_course_site_sis_section_ids site.site_id
         test.get_existing_site_data(site, section_ids)
-        instructor = RipleyUtils.get_primary_instructor(site) || site.course.teachers.first
         test_case = "#{site.course.term.name} #{site.course.code} site #{site.site_id}"
-        RipleyUtils.get_completed_enrollments site.course
-        enrollment_count = site.sections.map { |s| s.enrollments.map { |e| e.user.uid } }.flatten.uniq.length
-        logger.info "#{test_case} has #{enrollment_count} students"
-        @canvas.set_canvas_ids [instructor]
+
         @canvas.add_ripley_tools(RipleyTool::TOOLS.reject(&:account), site)
         @canvas.add_ripley_tools [RipleyTool::ADD_USER]
+
+        instructors = RipleyUtils.get_primary_instructors site
+        instructor = instructors.first || site.course.teachers.first
+        @canvas.set_canvas_ids [instructor]
+        enrollment_count = site.sections.map { |s| s.enrollments.map { |e| e.user.uid } }.flatten.uniq.length
 
         @canvas.masquerade_as(instructor, site)
         @newt.load_embedded_tool site
@@ -56,26 +58,47 @@ describe 'The Grade Distribution tool' do
             it("denies low enrollment #{test_case} Teacher UID #{instructor.uid} access to the tool") { expect(user_blocked).to be true }
 
           else
-            if site.course.teachers.length == 1
+            if instructors.length == 1
 
               shows_demographics = @newt.verify_block({ screenshot: true, screenshot_name: site.site_id }) do
                 @newt.expand_demographics_table
               end
-              it("offers demographics default data and table on #{test_case}") do
-                expect(shows_demographics).to be true
+              it("offers demographics default data and table on #{test_case}") { expect(shows_demographics).to be true }
+
+              if shows_demographics
+                cs_course_id = site.course.sections.find(&:primary).cs_course_id
+                logger.info "Checking courses in terms #{terms.map &:name}"
+                all_term_courses = RipleyUtils.get_all_instr_courses_per_cs_id(terms, instructor, cs_course_id)
+                all_term_courses.each do |course|
+                  begin
+                    logger.info "Checking #{course.term.name} #{course.code}"
+                    primaries = course.sections.select &:primary
+                    student_count = primaries.map(&:enrollments).flatten.length
+                    logger.info "Enrollment count is #{student_count}"
+                    if student_count >= 150
+                      logger.info 'Checking Newt data'
+                      avg = RipleyUtils.average_grade_points primaries
+                      visible_term_data = @newt.visible_demographics_term_data course.term
+                      it("shows the average grade points for #{test_case} term #{course.term.name}") { expect(visible_term_data[:avg]).to eql(avg.to_s) }
+                      it("shows the student count for #{test_case} term #{course.term.name}") { expect(visible_term_data[:count]).to eql(student_count.to_s) }
+                    end
+                  rescue => e
+                    Utils.log_error e
+                    it("hit an error checking the highcharts graphs with #{test_case} #{course.term.name} #{course.code}") { fail Utils.error(e) }
+                  end
+                end
               end
 
               shows_prior_enrollments = @newt.verify_block({ screenshot: true, screenshot_name: site.site_id }) do
                 @newt.expand_prior_enrollment_table
               end
-              it("offers prior enrollment default data and table on #{test_case}") do
-                expect(shows_prior_enrollments).to be true
-              end
+              it("offers prior enrollment default data and table on #{test_case}") { expect(shows_prior_enrollments).to be true }
+
             else
               user_blocked = @newt.verify_block({ screenshot: true, screenshot_name: site.site_id }) do
                 @newt.no_grade_dist_msg_element.when_visible Utils.medium_wait
               end
-              it("denies #{test_case} Teacher UID #{instructor.uid} access to the tool") { expect(user_blocked).to be true }
+              it("denies multi-instructor #{test_case} Teacher UID #{instructor.uid} access to the tool") { expect(user_blocked).to be true }
             end
           end
         rescue => e

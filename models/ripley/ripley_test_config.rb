@@ -199,7 +199,7 @@ class RipleyTestConfig < TestConfig
     @course_sites.each do |site|
       # Only use a primary section instructor if testing primary sections
       if instructor_workflow_sites.include?(site) && site.sections.find(&:primary)
-        site.course.teachers = [RipleyUtils.get_primary_instructor(site)]
+        site.course.teachers = [RipleyUtils.get_primary_instructors(site).first]
       end
       # Ditch sections not associated with the instructor since they shouldn't appear
       if instructor_workflow_sites.include?(site) && site.sections.find(&:primary)
@@ -231,7 +231,7 @@ class RipleyTestConfig < TestConfig
     get_existing_site_data(course_site, section_ids) if section_ids
     course_site.course.sections.select(&:primary).each { |s| s.include_in_site = true }
     course_site.create_site_workflow = 'self'
-    course_site.course.teachers = [RipleyUtils.get_primary_instructor(course_site)]
+    course_site.course.teachers = [RipleyUtils.get_primary_instructors(course_site).first]
     course_site
   end
 
@@ -269,7 +269,7 @@ class RipleyTestConfig < TestConfig
     else
       site = get_single_test_site section_ids
     end
-    teacher = RipleyUtils.get_primary_instructor(site) || site.course.teachers.first
+    teacher = RipleyUtils.get_primary_instructors(site).first || site.course.teachers.first
     canvas_page.set_canvas_ids([teacher] + non_teachers)
     return site, teacher
   end
