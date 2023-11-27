@@ -27,7 +27,8 @@ describe 'bCourses E-Grades Export' do
         section_ids = @canvas_api.get_course_site_sis_section_ids site.site_id
         test.get_existing_site_data(site, section_ids)
 
-        instructor = RipleyUtils.get_primary_instructor(site) || site.course.teachers.first
+        instructors = RipleyUtils.get_primary_instructors site
+        instructor = instructors.first
         primary_section = site.sections.find &:primary
         test_case = "#{site.course.term} #{site.course.code} site #{site.site_id}"
         @canvas.set_canvas_ids [instructor]

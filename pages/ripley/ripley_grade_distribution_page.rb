@@ -54,7 +54,20 @@ class RipleyGradeDistributionPage
   def expand_demographics_table
     logger.info 'Expanding demographics data table'
     wait_for_update_and_click demographics_table_toggle_element
-    demographics_table_element.when_visible 1
+    demographics_table_element.when_visible 2
+  end
+
+  def visible_demographics_term_data(term)
+    sleep 2
+    xpath = "//tr[contains(@id, 'grade-distribution-demo-table-row')][contains(., '#{term.name}')]"
+    row_element(xpath: xpath).when_visible Utils.short_wait
+    avg_el = cell_element(xpath: "#{xpath}/td[2]")
+    count_el = cell_element(xpath: "#{xpath}/td[3]")
+    {
+      term: term.name,
+      avg: (avg_el.text if avg_el.exists?).to_s,
+      count: (count_el.text if count_el.exists?).to_s
+    }
   end
 
   def demographics_grade_el(grade)

@@ -113,6 +113,14 @@ class RipleyUtils < Utils
     end
   end
 
+  def self.get_terms_since_code_red
+    terms = [previous_term(current_term)]
+    while terms.map(&:sis_id).all? { |t| t.to_i > 2168 }
+      terms << previous_term(terms.last)
+    end
+    terms
+  end
+
   # SQL
 
   # Course data
@@ -191,6 +199,23 @@ class RipleyUtils < Utils
       logger.warn "No test course found matching course code '#{catalog_id_prefix}' in term #{term.sis_id}"
       nil
     end
+  end
+
+  def self.get_all_instr_courses_per_cs_id(terms, user, cs_course_id)
+    logger.info "Checking courses in terms #{terms.map &:sis_id}"
+    terms_clause = Utils.in_op terms.map(&:sis_id)
+    sql = "SELECT sis_data.edo_sections.sis_term_id
+             FROM sis_data.edo_sections
+            WHERE sis_data.edo_sections.cs_course_id = '#{cs_course_id}'
+              AND sis_data.edo_sections.instructor_uid = '#{user.uid}'
+              AND sis_data.edo_sections.sis_term_id IN (#{terms_clause});"
+    results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
+    term_ids = results.map { |r| r['sis_term_id'].to_s }
+    teaching_terms = terms.select { |t| term_ids.include? t.sis_id.to_s }
+    courses = teaching_terms.map { |t| get_course(t, cs_course_id) }
+    courses.each { |c| get_completed_enrollments c }
+    courses.each { |c| logger.info "Instructor UID #{user.uid} taught course #{cs_course_id} in #{c.term.name}" }
+    courses
   end
 
   # Sections
@@ -338,9 +363,11 @@ class RipleyUtils < Utils
     instr_roles.uniq
   end
 
-  def self.get_primary_instructor(site)
-    pi_role = site.sections.map(&:instructors_and_roles).flatten.find { |t| t.role_code == 'PI' }
-    pi_role&.user
+  def self.get_primary_instructors(site)
+    pi_roles = site.sections.map(&:instructors_and_roles).flatten.select { |t| t.role_code == 'PI' }
+    users = pi_roles.map(&:user).uniq
+    logger.info "Users: #{users.each(&:inspect)}"
+    users
   end
 
   def self.get_instructor_term_courses(instructor, term)
@@ -438,6 +465,41 @@ class RipleyUtils < Utils
     course.sections.each do |section|
       section.enrollments = enrollments.select { |e| e.section_id.to_s == section.id.to_s }
     end
+  end
+
+  def self.average_grade_points(sections)
+    enrollments = sections.map(&:enrollments).flatten
+    grades = enrollments.map(&:grade).select { |g| %w(A+ A A- B+ B B- C+ C C- D+ D D- F).include? g }
+    grades.map! do |g|
+      case g
+      when 'A+', 'A'
+        4.0
+      when 'A-'
+        3.7
+      when 'B+'
+        3.3
+      when 'B'
+        3.0
+      when 'B-'
+        2.7
+      when 'C+'
+        2.3
+      when 'C'
+        2.0
+      when 'C-'
+        1.7
+      when 'D+'
+        1.3
+      when 'D'
+        1.0
+      when 'D-'
+        0.7
+      else
+        0
+      end
+    end
+    avg = grades.inject { |ttl, g| ttl + g }.to_f / grades.length
+    avg.round 1
   end
 
   # Test users
