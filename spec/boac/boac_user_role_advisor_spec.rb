@@ -78,7 +78,9 @@ unless ENV['NO_DEPS']
                  admits.last
                end
       logger.debug "The test admit's SID is #{@admit.sis_id}"
-      @ce3_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ZCEEE, DeptMembership.new(advisor_role: AdvisorRole::ADVISOR)).last
+      @ce3_advisor = BOACUtils.get_dept_advisors(BOACDepartments::ZCEEE, DeptMembership.new(advisor_role: AdvisorRole::ADVISOR)).find do |a|
+        a.uid.length == 7
+      end
       logger.info "CE3 Advisor: #{@ce3_advisor.inspect}"
       ce3_cohort_search = CohortAdmitFilter.new
       ce3_cohort_search.set_custom_filters urem: true

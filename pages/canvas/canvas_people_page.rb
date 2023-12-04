@@ -354,13 +354,13 @@ module CanvasPeoplePage
       section_codes = span_elements(xpath: "#{xpath}//td[5]/div").map &:text
       role_strings = div_elements(xpath: "#{xpath}//td[6]/div").map &:text
       section_codes = section_codes.select { |c| c.include? "#{section.course} #{section.label}" } if section
-      section_codes.each_with_index.map do |sec, i|
-        user = enrolled_students.find { |s| s.uid == uid }.dup if enrolled_students.any?
+      section_codes.each_with_index.map do |section_code, i|
+        user = enrolled_students.find { |stud| stud.uid == uid }.dup if enrolled_students.any?
         user ||= User.new uid: uid
         user.canvas_id = canvas_id
         user.sis_id = sid
         if course_site.sections&.any?
-          section = course_site.sections.find { |section| "#{section.course} #{section.label}" == sec }
+          sec = course_site.sections.find { |s| "#{s.course} #{s.label}" == section_code }
         end
         role_str = role_strings[i].strip
         role = if primary_roles.include? role_str
@@ -372,14 +372,14 @@ module CanvasPeoplePage
                  nil
                end
         user.role = role
-        logger.debug "Canvas ID '#{canvas_id}', UID '#{uid}', role '#{role}', section '#{section&.label}'"
+        logger.debug "Canvas ID '#{canvas_id}', UID '#{uid}', role '#{role}', section '#{sec&.label}'"
         {
           user: user,
-          section: section
+          section: sec
         }
       end
     end
-    users_with_sections.flatten.compact
+    users_with_sections.flatten.compact.uniq
   end
 
   def get_students(course_site, opts = {})
@@ -398,6 +398,6 @@ module CanvasPeoplePage
         role: h[:user].role&.downcase
       }
     end
-    user_data.compact.sort_by { |h| [h[:uid], h[:section_id]] }
+    user_data.compact.uniq.sort_by { |h| [h[:uid], h[:section_id]] }
   end
 end

@@ -39,14 +39,7 @@ describe 'bCourses Mailgun mailing lists' do
     @canvas_page.add_users(project_site, project_site.manual_members)
   end
 
-  after(:all) do
-    # TODO - remove this if Canvas emails are used in test envs
-    # Set all test mailing list member emails to test email addresses
-    test.course_sites.each do |site|
-      site.manual_members.each { |user| RipleyUtils.set_mailing_list_member_email(user, user.email) }
-    end
-    Utils.quit_browser @driver
-  end
+  after(:all) { Utils.quit_browser @driver }
 
   it 'is not added to site navigation by default' do
     @canvas_page.load_course_site course_site_1
@@ -147,7 +140,7 @@ describe 'bCourses Mailgun mailing lists' do
         end
       end
 
-      it('shows the membership count') { expect(@mailing_lists_page.list_membership_count).to eql('0 members') }
+      it('shows the membership count') { expect(@mailing_lists_page.list_membership_count).to eql('0') }
       it('shows the most recent membership update') { expect(@mailing_lists_page.list_update_time).to eql('Never') }
       it('shows the course site code') { expect(@mailing_lists_page.list_site_link_element.text).to eql(course_site_1.title) }
       it('shows the course site title and term') { expect(@mailing_lists_page.list_site_desc).to eql("#{course_site_1.abbreviation}, #{course_site_1.term.name}") }
@@ -159,7 +152,7 @@ describe 'bCourses Mailgun mailing lists' do
         @mailing_lists_page.click_update_memberships
         @mailing_lists_page.update_membership_again_button_element.when_present Utils.short_wait
         sleep 1
-        expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length} members")
+        expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length}")
         expect(@mailing_lists_page.list_update_time).to include(Time.now.strftime '%b %-d, %Y')
       end
 
@@ -178,7 +171,7 @@ describe 'bCourses Mailgun mailing lists' do
         @mailing_lists_page.click_update_memberships
         @mailing_lists_page.update_membership_again_button_element.when_present Utils.short_wait
         sleep 1
-        expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length - 1} members")
+        expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length - 1}")
       end
 
       it 'shows a list of members who have been removed from the mailing list' do
@@ -196,7 +189,7 @@ describe 'bCourses Mailgun mailing lists' do
         @mailing_lists_page.click_update_memberships
         @mailing_lists_page.update_membership_again_button_element.when_present Utils.short_wait
         sleep 1
-        expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length} members")
+        expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length}")
       end
 
       it 'shows a list of members who have been restored to the mailing list' do
@@ -227,7 +220,7 @@ describe 'bCourses Mailgun mailing lists' do
         @mailing_lists_page.load_embedded_tool
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.list_membership_count_element.when_present Utils.short_wait
-        expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length - 1} members")
+        expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length - 1}")
       end
 
       it 'creates mailing list memberships for users who have been restored to the site' do
@@ -239,7 +232,7 @@ describe 'bCourses Mailgun mailing lists' do
         @mailing_lists_page.load_embedded_tool
         @mailing_lists_page.search_for_list course_site_1.site_id
         @mailing_lists_page.list_membership_count_element.when_present Utils.short_wait
-        expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length} members")
+        expect(@mailing_lists_page.list_membership_count).to eql("#{course_site_1.manual_members.length}")
       end
 
       it 'updates a mailing list member\'s email address' do
@@ -265,7 +258,7 @@ describe 'bCourses Mailgun mailing lists' do
         @mailing_lists_page.load_embedded_tool
         @mailing_lists_page.search_for_list course_site_4.site_id
         @mailing_lists_page.list_membership_count_element.when_present Utils.short_wait
-        expect(@mailing_lists_page.list_membership_count).to eql('0 members')
+        expect(@mailing_lists_page.list_membership_count).to eql('0')
       end
     end
   end

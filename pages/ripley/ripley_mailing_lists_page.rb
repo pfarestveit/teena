@@ -26,9 +26,9 @@ class RipleyMailingListsPage
 
   # View list
   link(:list_site_link, id: 'mailing-list-course-site-name')
-  div(:list_site_id, xpath: '//div[text()=" ID: "]/../following-sibling::div')
-  div(:list_site_desc, xpath: '//div[text()=" Description: "]/../following-sibling::div')
-  span(:list_address, xpath: '(//div[text()=" Name: "]/../following-sibling::div)[2]')
+  div(:list_site_id, id: 'mailing-list-course-site-id')
+  div(:list_site_desc, id: 'mailing-list-course-site-code')
+  span(:list_address, id: 'mailing-list-name')
   div(:list_membership_count, id: 'mailing-list-member-count')
   div(:list_update_time, id: 'mailing-list-membership-last-updated')
 

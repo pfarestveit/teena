@@ -46,7 +46,7 @@ module BOACPages
 
   div(:banner, xpath: '//div[@role="banner"]')
   link(:home_link, xpath: '//a[contains(.,"Online Advising")]')
-  button(:header_dropdown, xpath: '//button[contains(@id,"header-dropdown-under-name")]')
+  button(:header_dropdown, id: 'header-dropdown-under-name__BV_toggle_')
   link(:flight_data_recorder_link, text: 'Flight Data Recorder')
   link(:flight_deck_link, text: 'Flight Deck')
   link(:pax_manifest_link, text: 'Passenger Manifest')
@@ -66,8 +66,15 @@ module BOACPages
 
   # Clicks the header name button to reveal additional links
   def click_header_dropdown
-    sleep 1
+    tries ||= 3
+    logger.info 'Expanding header dropdown'
+    refresh_page
+    sleep 2
     wait_for_update_and_click header_dropdown_element
+    log_out_link_element.when_present Utils.short_wait
+  rescue => e
+    logger.error e.message
+    (tries -= 1).zero? ? fail(Utils.error e) : retry
   end
 
   # Clicks the 'Log out' link in the header

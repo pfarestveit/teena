@@ -199,6 +199,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   # COMPLETED COURSES
 
   button(:hide_note_button, xpath: '//tr[contains(., "Hide note")]//button')
+  elements(:course_assign_link, :link, xpath: '//a[contains(@id, "course-to-option")]')
 
   def click_hide_note
     wait_for_update_and_click hide_note_button_element
@@ -298,6 +299,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   def click_unassigned_course_select(course)
     wait_for_update_and_click button_element(xpath: "#{unassigned_course_xpath course}/td[1]//div[contains(@id, 'assign-course-')]")
+    wait_until(Utils.short_wait) { course_assign_link_elements.any? }
   end
 
   def unassigned_course_option_els(course)
@@ -363,6 +365,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
 
   def click_junk_course_select(course)
     wait_for_update_and_click button_element(xpath: "#{junk_course_xpath course}/td[1]//div[contains(@id, 'assign-course-')]")
+    wait_until(Utils.short_wait) { course_assign_link_elements.any? }
   end
 
   def click_junk_option
@@ -503,6 +506,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
         click_junk_course_select completed_course
       else
         wait_for_update_and_click assigned_course_select(completed_course)
+        wait_until(Utils.short_wait) { course_assign_link_elements.any? }
       end
       click_unassigned_option
     end
@@ -536,6 +540,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
       drag_and_drop(assigned_course_row(completed_course), target)
     else
       wait_for_update_and_click assigned_course_select(completed_course)
+      wait_until(Utils.short_wait) { course_assign_link_elements.any? }
       wait_for_update_and_click assigned_course_req_option(completed_course, new_req)
     end
     sleep Utils.click_wait
