@@ -689,7 +689,7 @@ module Page
             begin
               wait_for_textbox_and_type(user_search_input_element, string)
               el = (string == user.email) ? user_result_link_by_email(user) : user_result_link_by_uid(user)
-              el.when_present 3
+              el.when_present 10
               user.canvas_id = el.attribute('href').split('/').last
               break if user.canvas_id
             rescue => e

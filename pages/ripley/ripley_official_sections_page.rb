@@ -42,7 +42,7 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
   end
 
   def expected_instructors(section)
-    section.instructors_and_roles.any? ? (section.instructors_and_roles.map { |i| i.user.full_name }) : ['—']
+    section.instructors_and_roles.any? ? (section.instructors_and_roles.map { |i| i.user.full_name }).sort : ['—']
   end
 
   # STATIC VIEW - CURRENT SECTIONS

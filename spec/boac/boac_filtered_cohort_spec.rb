@@ -234,7 +234,7 @@ unless ENV['NO_DEPS']
 
         before(:all) do
           @cohort_alerts = BOACUtils.get_un_dismissed_users_alerts(@cohort.members, test.advisor)
-          @cohort_alerts.each { |a| logger.debug "Alert: #{a}" }
+          @cohort_alerts.each { |a| logger.debug "Alert: #{a.inspect}" }
         end
 
         it "offers a link to the filtered cohort" do

@@ -170,7 +170,7 @@ class BOACHomePage
     xpath = cohort.instance_of?(FilteredCohort) ? filtered_cohort_xpath(cohort) : curated_group_xpath(cohort)
     cohort.members.each do |member|
       logger.debug "Checking cohort row for SID #{member.sis_id}"
-      wait_until(1, "Expecting SID #{member.sis_id} alert count #{member.alert_count}, got #{user_row_data(member.sis_id, xpath)[:alert_count]}") do
+      wait_until(Utils.short_wait, "Expecting SID #{member.sis_id} alert count #{member.alert_count}, got #{user_row_data(member.sis_id, xpath)[:alert_count]}") do
         user_row_data(member.sis_id, xpath)[:alert_count] == member.alert_count.to_s
       end
     end

@@ -106,8 +106,8 @@ module Page
   # Hides the BOA footer element in order to interact with elements hidden beneath it.
   def hide_boac_footer
     if (footer = div_element(id: 'fixed-warning-on-all-pages')).exists? && footer.visible?
-      button_element(id: 'speedbird').click
-      footer.when_not_present 1
+      execute_script('arguments[0].click();', button_element(id: 'speedbird'))
+      sleep Utils.click_wait
     end
   end
 

@@ -236,6 +236,7 @@ module BOACPagesCreateNoteModal
     50.times { hit_delete }
     set_date_input_element.send_keys note.set_date.strftime('%m/%d/%Y') if note.set_date
     2.times { hit_tab }
+    hit_escape
   end
 
   # Save
