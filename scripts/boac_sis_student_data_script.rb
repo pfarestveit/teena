@@ -69,7 +69,7 @@ begin
   appts_heading = %w(UID ID AdvisorUID AdvisorName AdvisorDepts Subj Detail Attach Created Updated)
   appts_csv = Utils.create_test_output_csv("boac-sis-appts-#{suffix}.csv", appts_heading)
 
-  @driver = Utils.launch_browser test.chrome_profile
+  @driver = Utils.launch_browser
   @boac_homepage = BOACHomePage.new @driver
   if BOACUtils.base_url.include? 'boa-'
     @boac_homepage.dev_auth test.advisor

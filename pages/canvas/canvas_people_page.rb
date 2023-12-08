@@ -92,6 +92,8 @@ module CanvasPeoplePage
 
     activate_user_and_reset_email users_missing
 
+    canvas_api = CanvasAPIPage.new @driver
+    canvas_api.get_tool_id RipleyTool::ADD_USER
     add_user_page = RipleyAddUserPage.new @driver
     add_user_page.load_embedded_tool course_site
     users_missing.each do |user|
@@ -103,6 +105,8 @@ module CanvasPeoplePage
 
   def add_users_by_section(course_site, users)
     load_users_page course_site
+    canvas_api = CanvasAPIPage.new @driver
+    canvas_api.get_tool_id RipleyTool::ADD_USER
     add_user_page = RipleyAddUserPage.new @driver
     add_user_page.load_embedded_tool course_site
     users.each do |user|

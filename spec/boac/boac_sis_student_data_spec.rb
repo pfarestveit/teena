@@ -26,7 +26,7 @@ unless ENV['NO_DEPS']
       user_course_data_heading = %w(UID Term UnitsMin UnitsMax CourseCode CourseName SectionCcn SectionCode Primary? Midpoint Grade GradingBasis Units EnrollmentStatus)
       user_course_sis_data = Utils.create_test_output_csv('boac-sis-courses.csv', user_course_data_heading)
 
-      @driver = Utils.launch_browser test.chrome_profile
+      @driver = Utils.launch_browser
       @boac_homepage = BOACHomePage.new @driver
       @boac_cohort_page = BOACGroupStudentsPage.new @driver
       @boac_student_page = BOACStudentPage.new @driver

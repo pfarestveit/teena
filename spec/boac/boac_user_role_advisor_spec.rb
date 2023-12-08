@@ -20,7 +20,7 @@ unless ENV['NO_DEPS']
       @admin_cohorts = BOACUtils.get_everyone_filtered_cohorts({default: true}, BOACDepartments::ADMIN)
       @admin_groups = BOACUtils.get_everyone_curated_groups BOACDepartments::ADMIN
 
-      @driver = Utils.launch_browser @test.chrome_profile
+      @driver = Utils.launch_browser
       @admit_page = BOACAdmitPage.new @driver
       @api_admin_page = BOACApiAdminPage.new @driver
       @api_notes_page = BOACApiNotesPage.new @driver

@@ -26,7 +26,7 @@ begin
   missing_heading = %w(Term Course UID)
   missing_students_csv = Utils.create_test_output_csv('boac-class-page-missing_students.csv', missing_heading)
 
-  @driver = Utils.launch_browser test.chrome_profile
+  @driver = Utils.launch_browser
   @homepage = BOACHomePage.new @driver
   if BOACUtils.base_url.include? 'boa-'
     @homepage.dev_auth test.advisor

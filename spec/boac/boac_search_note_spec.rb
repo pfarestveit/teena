@@ -13,7 +13,7 @@ unless ENV['NO_DEPS']
       max_note_count_per_src = BOACUtils.notes_max_notes - 1
       word_count = BOACUtils.search_word_count
 
-      @driver = Utils.launch_browser test_config.chrome_profile
+      @driver = Utils.launch_browser
       @homepage = BOACHomePage.new @driver
       @search_results_page = BOACSearchResultsPage.new @driver
       @api_admin_page = BOACApiAdminPage.new @driver

@@ -176,6 +176,7 @@ module Page
     end
 
     def create_squiggy_course_site(test)
+      add_ripley_tools([RipleyTool::ADD_USER])
       if test.course_site.site_id
         navigate_to "#{Utils.canvas_base_url}/courses/#{test.course_site.site_id}/settings"
         course_details_link_element.when_visible Utils.medium_wait

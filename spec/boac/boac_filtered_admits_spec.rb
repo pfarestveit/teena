@@ -13,7 +13,7 @@ unless ENV['NO_DEPS']
     all_admit_data = NessieUtils.get_admit_page_data
 
     before(:all) do
-      @driver = Utils.launch_browser test.chrome_profile
+      @driver = Utils.launch_browser
       @homepage = BOACHomePage.new @driver
       @cohort_page = BOACFilteredAdmitsPage.new @driver
       @admit_page = BOACAdmitPage.new @driver

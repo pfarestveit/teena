@@ -254,7 +254,7 @@ class SquiggyAssetLibraryListViewPage
   div(:resume_sync_success, xpath: '//div[text()=" Syncing has been resumed for this course. There may be a short delay before SuiteC tools are updated. "]')
 
   def ensure_canvas_sync(test, canvas_assign_page)
-    add_link_button_element.when_visible Utils.short_wait
+    add_link_button_element.when_visible Utils.medium_wait
     if resume_sync_button?
       assign = Assignment.new title: 'resume sync'
       canvas_assign_page.load_page test.course_site

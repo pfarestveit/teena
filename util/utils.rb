@@ -48,46 +48,56 @@ class Utils
   # is false, a new profile will be used.
   # @param profile [String]
   # @return [Selenium::WebDriver]
-  def self.launch_browser(profile = nil, driver = nil)
+  def self.launch_browser(driver = nil)
     driver_config = @config['webdriver']
     browser = driver || driver_config['browser']
-    logger.info "Launching #{browser.capitalize}#{(' using profile at ' + profile) if profile}"
+    logger.info "Launching #{browser.capitalize}"
 
-    # When launching browser, select the profile to use, tweak profile settings to facilitate file downloads, and launch in headless mode if desired.
     driver = case browser
 
-      when 'chrome'
-        options = Selenium::WebDriver::Chrome::Options.new
-        if @config['webdriver']['chrome_profile']
-          profile_dir = (profile ? profile : File.join(@config_dir, 'chrome-profile'))
-          options.add_argument("user-data-dir=#{profile_dir}")
-        end
+             when 'chrome'
 
-        options.add_argument('--headless=new') if headless?
-        options.add_preference('download.prompt_for_download', false)
-        options.add_preference('download.default_directory', Utils.download_dir)
-        options.add_preference('profile.default_content_setting_values.automatic_downloads', 1)
-        Selenium::WebDriver.for :chrome, options: options
+               options = Selenium::WebDriver::Chrome::Options.new binary: driver_config['chrome_binary_path']
+               options.add_argument('--headless=new') if headless?
+               options.add_preference('download.prompt_for_download', false)
+               options.add_preference('download.default_directory', Utils.download_dir)
+               options.add_preference('profile.default_content_setting_values.automatic_downloads', 1)
+               Selenium::WebDriver.for :chrome, options: options
 
-      when 'firefox'
-        profile = Selenium::WebDriver::Firefox::Profile.new
-        profile['browser.download.folderList'] = 2
-        profile['browser.download.manager.showWhenStarting'] = false
-        profile['browser.download.dir'] = Utils.download_dir
-        profile['browser.helperApps.neverAsk.saveToDisk'] = 'application/msword, application/vnd.ms-excel, application/vnd.ms-powerpointtd>, application/pdf, application/zip, audio/mpeg, image/png, image/bmp, image/jpeg, image/gif, image/sgi, image/svg+xml, image/webp, text/csv, video/mp4, video/quicktime'
-        profile['browser.helperApps.alwaysAsk.force'] = false
-        # Turn off Firefox's pretty JSON since it prevents parsing JSON strings in the browser.
-        profile['devtools.jsonview.enabled'] = false
-        profile['pdfjs.diabled'] = true
-        options = Selenium::WebDriver::Firefox::Options.new
-        options.profile = profile
-        options.add_argument '-headless' if headless?
-        Selenium::WebDriver.for :firefox, options: options
+             when 'firefox'
+               profile = Selenium::WebDriver::Firefox::Profile.new
+               profile['browser.download.folderList'] = 2
+               profile['browser.download.manager.showWhenStarting'] = false
+               profile['browser.download.dir'] = Utils.download_dir
+               profile['browser.helperApps.neverAsk.saveToDisk'] = 'application/msword,
+                                                                    application/pdf,
+                                                                    application/vnd.ms-excel,
+                                                                    application/vnd.ms-powerpoint,
+                                                                    application/zip,
+                                                                    audio/mpeg,
+                                                                    image/bmp,
+                                                                    image/gif,
+                                                                    image/jpeg,
+                                                                    image/png,
+                                                                    image/sgi,
+                                                                    image/svg+xml,
+                                                                    image/webp,
+                                                                    text/csv,
+                                                                    video/mp4,
+                                                                    video/quicktime'
+               profile['browser.helperApps.alwaysAsk.force'] = false
+               # Turn off Firefox's pretty JSON since it prevents parsing JSON strings in the browser.
+               profile['devtools.jsonview.enabled'] = false
+               profile['pdfjs.diabled'] = true
+               options = Selenium::WebDriver::Firefox::Options.new
+               options.profile = profile
+               options.add_argument '-headless' if headless?
+               Selenium::WebDriver.for :firefox, options: options
 
-      else
-        logger.error 'Designated WebDriver is not supported'
-        nil
-    end
+             else
+               logger.error 'Designated WebDriver is not supported'
+               nil
+             end
     set_default_window_size driver
     driver.manage.timeouts.page_load = 120
     Selenium::WebDriver.logger.level = :error
@@ -100,14 +110,6 @@ class Utils
 
   def self.set_reduced_window_size(driver)
     driver.manage.window.resize_to(500, 700)
-  end
-
-  def self.use_optional_chrome_profile?
-    @config['webdriver']['chrome_optional_profile']
-  end
-
-  def self.optional_chrome_profile_dir
-    File.join(@config_dir, 'chrome-profile-optional')
   end
 
   def self.headless?
@@ -356,7 +358,7 @@ class Utils
 
   # Logs an error message and its stacktrace
   # @param e [Exception]
-  def self.log_error(e, msg=nil)
+  def self.log_error(e, msg = nil)
     logger.error msg if msg
     logger.error "#{e.message + "\n"} #{e.backtrace.join("\n ")}"
   end
@@ -420,11 +422,11 @@ class Utils
   def self.query_pg_db(db_credentials, query_string)
     begin
       creds = {
-          host: db_credentials[:host],
-          port: db_credentials[:port],
-          dbname: db_credentials[:name],
-          user: db_credentials[:user],
-          password: db_credentials[:password]
+        host: db_credentials[:host],
+        port: db_credentials[:port],
+        dbname: db_credentials[:name],
+        user: db_credentials[:user],
+        password: db_credentials[:password]
       }
       connection = PG.connect creds
       logger.debug "Sending query '#{query_string}'"
@@ -450,7 +452,7 @@ class Utils
   end
 
   def self.in_op(arr)
-    arr.map {|i| "'#{i}'"}.join(', ')
+    arr.map { |i| "'#{i}'" }.join(', ')
   end
 
   # Converts term name to the SIS code for the term
@@ -460,15 +462,15 @@ class Utils
     split = term_name.split
     year_code = split[1][0] + split[1][2..3]
     season_code = case split[0]
-                    when 'Spring'
-                      '2'
-                    when 'Summer'
-                      '5'
-                    when 'Fall'
-                      '8'
-                    else
-                      logger.error "Unknown term season '#{split[0]}'"
-                      fail
+                  when 'Spring'
+                    '2'
+                  when 'Summer'
+                    '5'
+                  when 'Fall'
+                    '8'
+                  else
+                    logger.error "Unknown term season '#{split[0]}'"
+                    fail
                   end
     year_code + season_code
   end
@@ -476,16 +478,16 @@ class Utils
   def self.sis_code_to_term_name(term_id)
     term_id = term_id.to_s
     season = case term_id[-1]
-                  when '2'
-                    'Spring'
-                  when '5'
-                    'Summer'
-                  when '8'
-                    'Fall'
-                  else
-                    logger.error "Unknown term season code '#{term_id[-1]}'"
-                    fail
-                  end
+             when '2'
+               'Spring'
+             when '5'
+               'Summer'
+             when '8'
+               'Fall'
+             else
+               logger.error "Unknown term season code '#{term_id[-1]}'"
+               fail
+             end
     "#{season} #{term_id[0]}0#{term_id[1..2]}"
   end
 
