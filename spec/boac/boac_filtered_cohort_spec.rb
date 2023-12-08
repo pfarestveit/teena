@@ -11,7 +11,7 @@ unless ENV['NO_DEPS']
     pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor, default: true
 
     before(:all) do
-      @driver = Utils.launch_browser test.chrome_profile
+      @driver = Utils.launch_browser
       @homepage = BOACHomePage.new @driver
       @cohort_page = BOACFilteredStudentsPage.new(@driver, test.advisor)
       @student_page = BOACStudentPage.new @driver

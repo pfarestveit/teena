@@ -11,7 +11,7 @@ unless ENV['DEPS']
       test_config = BOACTestConfig.new
       test_config.search_classes
 
-      @driver = Utils.launch_browser test_config.chrome_profile
+      @driver = Utils.launch_browser
       @homepage = BOACHomePage.new @driver
       @search_results_page = BOACSearchResultsPage.new @driver
       @student_page = BOACStudentPage.new @driver

@@ -15,7 +15,7 @@ unless ENV['NO_DEPS']
 
     before(:all) do
       @service_announcement = "#{BOACUtils.config['service_announcement']} " * 15
-      @driver = Utils.launch_browser test.chrome_profile
+      @driver = Utils.launch_browser
       @admin_page = BOACFlightDeckPage.new @driver
       @api_admin_page = BOACApiAdminPage.new @driver
       @api_section_page = BOACApiSectionPage.new @driver

@@ -268,16 +268,6 @@ class BOACTestConfig < TestConfig
     end
   end
 
-  # Uses the secondary Chrome profile if config set to true
-  # @return [String]
-  def chrome_profile
-    if Utils.use_optional_chrome_profile?
-      logger.warn 'Using the secondary Chrome profile'
-      Utils.optional_chrome_profile_dir
-    end
-  end
-
-
   ### CONFIGURATION FOR SPECIFIC TEST SCRIPTS ###
 
   # Config for admit page testing

@@ -27,7 +27,7 @@ unless ENV['NO_DEPS']
     pre_existing_groups = BOACUtils.get_user_curated_groups test.advisor
 
     before(:all) do
-      @driver = Utils.launch_browser test.chrome_profile
+      @driver = Utils.launch_browser
       @analytics_page = BOACApiStudentPage.new @driver
       @homepage = BOACHomePage.new @driver
       @group_page = BOACGroupStudentsPage.new @driver

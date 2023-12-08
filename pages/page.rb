@@ -84,6 +84,9 @@ module Page
       browser_warning.click
       browser_warning.when_not_present Utils.short_wait
     end
+    if (msg = div_element(xpath: '//div[contains(@class, "flash-message-container")]')).exists?
+      msg.when_not_present Utils.short_wait
+    end
     if (footer = div_element(id: 'element_toggler_0')).exists? && footer.visible?
       tries ||= 2
       begin
@@ -244,7 +247,7 @@ module Page
     begin
       return true if yield
     rescue => e
-      Utils.log_error e
+      logger.warn e.message
       Utils.save_screenshot(@driver, "#{Time.now.to_i}site#{opts[:screenshot_name]}") if opts[:screenshot]
       false
     end

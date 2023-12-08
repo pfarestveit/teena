@@ -13,7 +13,7 @@ unless ENV['DEPS']
       pages_tested = []
       bubbles_tested = []
 
-      @driver = Utils.launch_browser test.chrome_profile
+      @driver = Utils.launch_browser
       @homepage = BOACHomePage.new @driver
       @class_list_page = BOACClassListViewPage.new @driver
       @class_matrix_page = BOACClassMatrixViewPage.new @driver

@@ -35,7 +35,7 @@ unless ENV['NO_DEPS']
 
       # EXECUTE SEARCHES
 
-      @driver = Utils.launch_browser test_config.chrome_profile
+      @driver = Utils.launch_browser
       @homepage = BOACHomePage.new @driver
       @search_results_page = BOACSearchResultsPage.new @driver
       @api_admin_page = BOACApiAdminPage.new @driver

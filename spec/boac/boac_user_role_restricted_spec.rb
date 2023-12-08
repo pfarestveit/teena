@@ -11,7 +11,7 @@ unless ENV['DEPS']
       @test.user_role_notes_only
       @test_student = @test.test_students.sample
 
-      @driver = Utils.launch_browser @test.chrome_profile
+      @driver = Utils.launch_browser
 
       @homepage = BOACHomePage.new @driver
       @class_page = BOACClassListViewPage.new @driver
