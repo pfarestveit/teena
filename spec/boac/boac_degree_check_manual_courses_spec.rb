@@ -61,7 +61,7 @@ unless ENV['DEPS']
                                                    name: "TEENA COPIES 1B #{test.id}",
                                                    units: '4'
 
-      @driver = Utils.launch_browser
+      @driver = Utils.launch_browser 'firefox'
       @homepage = BOACHomePage.new @driver
       @pax_manifest = BOACPaxManifestPage.new @driver
       @degree_templates_mgmt_page = BOACDegreeTemplateMgmtPage.new @driver

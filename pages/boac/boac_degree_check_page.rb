@@ -297,9 +297,14 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     hide_note_button_element.when_visible 1
   end
 
-  def click_unassigned_course_select(course)
-    wait_for_update_and_click button_element(xpath: "#{unassigned_course_xpath course}/td[1]//div[contains(@id, 'assign-course-')]")
+  def click_assignment_select(select_button_el)
+    wait_for_update_and_click select_button_el
     wait_until(Utils.short_wait) { course_assign_link_elements.any? }
+  end
+
+  def click_unassigned_course_select(course)
+    button = button_element(xpath: "#{unassigned_course_xpath course}/td[1]//div[contains(@id, 'assign-course-')]")
+    click_assignment_select button
   end
 
   def unassigned_course_option_els(course)
@@ -364,8 +369,8 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def click_junk_course_select(course)
-    wait_for_update_and_click button_element(xpath: "#{junk_course_xpath course}/td[1]//div[contains(@id, 'assign-course-')]")
-    wait_until(Utils.short_wait) { course_assign_link_elements.any? }
+    button = button_element(xpath: "#{junk_course_xpath course}/td[1]//div[contains(@id, 'assign-course-')]")
+    click_assignment_select button
   end
 
   def click_junk_option
@@ -505,8 +510,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
       if completed_course.junk
         click_junk_course_select completed_course
       else
-        wait_for_update_and_click assigned_course_select(completed_course)
-        wait_until(Utils.short_wait) { course_assign_link_elements.any? }
+        click_assignment_select assigned_course_select(completed_course)
       end
       click_unassigned_option
     end
@@ -539,8 +543,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
       target = new_req.instance_of?(DegreeReqtCourse) ? course_req_row(new_req) : cat_drop_zone_el(new_req)
       drag_and_drop(assigned_course_row(completed_course), target)
     else
-      wait_for_update_and_click assigned_course_select(completed_course)
-      wait_until(Utils.short_wait) { course_assign_link_elements.any? }
+      click_assignment_select assigned_course_select(completed_course)
       wait_for_update_and_click assigned_course_req_option(completed_course, new_req)
     end
     sleep Utils.click_wait
@@ -587,7 +590,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
       drag_and_drop(course_el, junk_drop_zone_element)
     else
       if old_req
-        wait_for_update_and_click assigned_course_select(completed_course)
+        click_assignment_select assigned_course_select(completed_course)
       else
         click_unassigned_course_select completed_course
       end
@@ -700,7 +703,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     enter_course_note course.note
     wait_for_update_and_click create_course_save_button_element
     create_course_save_button_element.when_not_present Utils.short_wait
-    assign_completed_course(course, req, {manual: true})
+    assign_completed_course(course, req, { manual: true })
     course.degree_check = degree
     BOACUtils.set_degree_manual_course_id(degree, course)
   end
@@ -716,7 +719,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def edit_unassigned_course(course)
-    logger.info "Editing unassigned course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
+    logger.info "Editing unassigned course #{course.name}#{ +' ' + course.term_id if course.term_id}"
     click_edit_unassigned_course course
     enter_course_units course.units
     enter_course_note course.note
@@ -739,7 +742,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def edit_junk_course(course)
-    logger.info "Editing junk course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
+    logger.info "Editing junk course #{course.name}#{ +' ' + course.term_id if course.term_id}"
     click_edit_junk_course course
     enter_course_units course.units
     enter_course_note course.note
@@ -763,7 +766,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def edit_assigned_course(course)
-    logger.info "Editing assigned course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
+    logger.info "Editing assigned course #{course.name}#{ +' ' + course.term_id if course.term_id}"
     click_edit_assigned_course course
     enter_course_units course.units
     select_course_unit_req course
@@ -788,7 +791,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def delete_unassigned_course(course)
-    logger.info "Deleting unassigned course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
+    logger.info "Deleting unassigned course #{course.name}#{ +' ' + course.term_id if course.term_id}"
     click_delete_unassigned_course course
     wait_for_update_and_click confirm_delete_or_discard_button_element
     sleep 1
@@ -805,7 +808,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def delete_junk_course(course)
-    logger.info "Deleting junk course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
+    logger.info "Deleting junk course #{course.name}#{ +' ' + course.term_id if course.term_id}"
     click_delete_junk_course course
     wait_for_update_and_click confirm_delete_or_discard_button_element
     sleep 1
@@ -822,7 +825,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
   end
 
   def delete_assigned_course(course)
-    logger.info "Deleting assigned course #{course.name}#{ + ' ' + course.term_id if course.term_id}"
+    logger.info "Deleting assigned course #{course.name}#{ +' ' + course.term_id if course.term_id}"
     click_delete_assigned_course course
     wait_for_update_and_click confirm_delete_or_discard_button_element
     sleep 1

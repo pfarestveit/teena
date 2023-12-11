@@ -39,7 +39,7 @@ unless ENV['DEPS']
       logger.debug "Subcategory with no courses '#{@sub_cat_no_courses.name}'"
       logger.debug "Subcategory with courses '#{@sub_cat_with_courses.name}'"
 
-      @driver = Utils.launch_browser
+      @driver = Utils.launch_browser 'firefox'
       @homepage = BOACHomePage.new @driver
       @pax_manifest = BOACPaxManifestPage.new @driver
       @degree_templates_mgmt_page = BOACDegreeTemplateMgmtPage.new @driver
