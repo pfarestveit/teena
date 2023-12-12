@@ -19,7 +19,7 @@ unless ENV['DEPS']
   describe 'A BOA degree' do
 
     before(:all) do
-      @driver = Utils.launch_browser
+      @driver = Utils.launch_browser 'firefox'
       @homepage = BOACHomePage.new @driver
       @cohort_page = BOACFilteredStudentsPage.new(@driver, test.advisor)
       @curated_group_page = BOACGroupStudentsPage.new @driver

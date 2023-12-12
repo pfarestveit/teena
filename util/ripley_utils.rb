@@ -414,15 +414,14 @@ class RipleyUtils < Utils
             WHERE enrollment.sis_term_id = '#{course.term.sis_id}'
               AND enrollment.sis_section_id IN (#{Utils.in_op(course.sections.map &:id)})
               AND enrollment.sis_enrollment_status IN ('E', 'W')
-              AND (SELECT DISTINCT(primary_enrollment.grade)
-                     FROM sis_data.edo_enrollments primary_enrollment
-                     JOIN sis_data.edo_sections
-                       ON primary_enrollment.ldap_uid = enrollment.ldap_uid
-                      AND primary_enrollment.sis_term_id = enrollment.sis_term_id
-                      AND primary_enrollment.sis_section_id = sis_data.edo_sections.primary_associated_section_id
-                    WHERE sis_data.edo_sections.sis_term_id = enrollment.sis_term_id
-                      AND sis_data.edo_sections.sis_section_id = enrollment.sis_section_id
-                   ) != 'W';"
+              AND 'W' NOT IN (SELECT DISTINCT(primary_enrollment.grade)
+                                FROM sis_data.edo_enrollments primary_enrollment
+                                JOIN sis_data.edo_sections
+                                  ON primary_enrollment.ldap_uid = enrollment.ldap_uid
+                                 AND primary_enrollment.sis_term_id = enrollment.sis_term_id
+                                 AND primary_enrollment.sis_section_id = sis_data.edo_sections.primary_associated_section_id
+                               WHERE sis_data.edo_sections.sis_term_id = enrollment.sis_term_id
+                                 AND sis_data.edo_sections.sis_section_id = enrollment.sis_section_id);"
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     results_to_enrollments(course, results)
   end

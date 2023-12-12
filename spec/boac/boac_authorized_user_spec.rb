@@ -10,7 +10,7 @@ unless ENV['NO_DEPS']
       @auth_user = BOACUser.new({:uid => Utils.super_admin_uid, :username => Utils.super_admin_username})
       @initial_logins = BOACUtils.get_user_login_count @auth_user
 
-      @driver = Utils.launch_browser(nil, 'firefox')
+      @driver = Utils.launch_browser 'firefox'
       @home_page = BOACHomePage.new @driver
       @cal_net_page = Page::CalNetPage.new @driver
     end

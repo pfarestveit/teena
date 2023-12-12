@@ -32,7 +32,7 @@ class CanvasAPIPage
     end
     tool_installed = @parsed.find { |t| t['url'] == "#{RipleyUtils.base_url}/api/lti/#{tool.path}" }
     tool_enabled = tool_installed && tool_installed["#{tool.navigation}"] && tool_installed["#{tool.navigation}"]['enabled']
-    logger.info "#{tool.name} installed and enabled is #{tool_enabled}"
+    logger.info "#{tool.name} installed and enabled is #{tool_enabled ? true : false}"
     if tool_installed && !tool_enabled
       fail "#{tool.name} is installed but not enabled, sounds weird"
     end
