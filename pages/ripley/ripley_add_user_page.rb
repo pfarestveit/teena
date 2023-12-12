@@ -16,7 +16,7 @@ class RipleyAddUserPage
   div(:success_msg, id: 'success-message')
 
   text_area(:search_term, id: 'search-text')
-  select_list(:search_type, id: 'search-type')
+  radio_button(:search_type, id: 'search-type')
   button(:search_button, id: 'add-user-submit-search-btn')
 
   button(:need_help_button, id: 'add-user-help-btn')
