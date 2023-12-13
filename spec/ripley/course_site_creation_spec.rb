@@ -208,8 +208,16 @@ describe 'bCourses course site creation' do
         expected_site_members = expected_instructors + expected_students
         logger.warn "Unexpected users after creating site: #{visible_site_members - expected_site_members}"
         logger.warn "Missing users after creating site: #{expected_site_members - visible_site_members}"
-        it("adds no unexpected users to #{test_case}") { expect(visible_site_members - expected_site_members).to be_empty }
-        it("neglects no expected users on #{test_case}") { expect(expected_site_members - visible_site_members).to be_empty }
+        it "adds no unexpected users to #{test_case}" do
+          @canvas.wait_until(1, "Unexpected: #{visible_site_members - expected_site_members}") do
+            (visible_site_members - expected_site_members).empty?
+          end
+        end
+        it "neglects no expected users on #{test_case}" do
+          @canvas.wait_until(1, "Missing: #{expected_site_members - visible_site_members}") do
+            (expected_site_members - visible_site_members).empty?
+          end
+        end
 
         # -- Verify roster photos tool shows the right sections --
 

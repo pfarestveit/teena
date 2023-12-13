@@ -263,8 +263,16 @@ describe 'bCourses Official Sections tool' do
       expected_users_post_add = initial_population + expected_instructors_post_add + expected_students_post_add
       logger.warn "Unexpected users after adding sections: #{visible_users_post_add - expected_users_post_add}"
       logger.warn "Missing users after adding sections: #{expected_users_post_add - visible_users_post_add}"
-      it('adds no unexpected users to the site') { expect(visible_users_post_add - expected_users_post_add).to be_empty }
-      it('neglects no expected users on the site') { expect(expected_users_post_add - visible_users_post_add).to be_empty }
+      it 'adds no unexpected users to the site' do
+        @canvas.wait_until(1, "Unexpected adds: #{visible_users_post_add - expected_users_post_add}") do
+          (visible_users_post_add - expected_users_post_add).empty?
+        end
+      end
+      it 'neglects no expected users on the site' do
+        @canvas.wait_until(1, "Missing adds: #{expected_users_post_add - visible_users_post_add}") do
+          (expected_users_post_add - visible_users_post_add).empty?
+        end
+      end
 
       visible_sections = @canvas.section_label_elements.map(&:text).uniq
       added_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
@@ -318,8 +326,16 @@ describe 'bCourses Official Sections tool' do
       visible_users_post_del = @canvas.visible_user_section_data site
       logger.warn "Unexpected users after removing sections: #{visible_users_post_del - initial_population}"
       logger.warn "Missing users after removing sections: #{initial_population - visible_users_post_del}"
-      it('leaves no unexpected users on the site') { expect(visible_users_post_del - initial_population).to be_empty }
-      it('removes no expected users from the site') { expect(initial_population - visible_users_post_del).to be_empty }
+      it 'leaves no unexpected users on the site' do
+        @canvas.wait_until(1, "Missing deletes: #{visible_users_post_del - initial_population}") do
+          (visible_users_post_del - initial_population).empty?
+        end
+      end
+      it 'removes no expected users from the site' do
+        @canvas.wait_until(1, "Unexpected deletes: #{initial_population - visible_users_post_del}") do
+          (initial_population - visible_users_post_del).empty?
+        end
+      end
 
       visible_sections = @canvas.section_label_elements.map(&:text).uniq
       deleted_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }

@@ -20,7 +20,7 @@ class RipleyMailingListsPage
   link(:view_site_link, id: 'mailing-list-course-site-name')
   text_area(:list_name_input, id: 'mailing-list-name-input')
   button(:register_list_button, id: 'btn-create-mailing-list')
-  div(:list_name_error_msg, xpath: '//div[text()=" Only lowercase alphanumeric, underscore and hyphen characters allowed. "]')
+  div(:list_name_error_msg, xpath: '//div[text()="Only lowercase alphanumeric, underscore and hyphen characters allowed. "]')
   div(:list_creation_error_msg, id: 'TBD "A Mailing List cannot be created for the site"')
   div(:list_name_taken_error_msg, xpath: '//div[contains(., "is used by another bCourses site and is not available")]')
 

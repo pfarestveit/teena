@@ -247,7 +247,7 @@ module Page
       add_users(course_site, test_users)
     end
 
-    def create_ripley_mailing_list_site(course_site)
+    def create_ripley_mailing_list_site(course_site, members = [])
       if course_site.site_id
         navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
         course_details_link_element.when_visible Utils.medium_wait
@@ -258,7 +258,7 @@ module Page
         logger.info "Creating a course site named #{course_site.title}#{' in ' + course_site.term.name if course_site.term}"
         create_site course_site
         course_site.site_id = search_for_site(course_site, RipleyTool::MAILING_LIST.account)
-        add_sections(course_site, course_site.sections)
+        add_sections(course_site, course_site.sections) if course_site.sections&.any?
         if course_site.term
           navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
           wait_for_element_and_select(term_element, course_site.term.name)
@@ -268,7 +268,8 @@ module Page
       end
       publish_course_site course_site
       logger.info "Course ID is #{course_site.site_id}"
-      add_users(course_site, course_site.manual_members)
+      users_to_add = members.any? ? members : course_site.manual_members
+      add_users(course_site, users_to_add)
     end
 
     def click_create_site
