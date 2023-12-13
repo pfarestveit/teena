@@ -16,7 +16,9 @@ class RipleyAddUserPage
   div(:success_msg, id: 'success-message')
 
   text_area(:search_term, id: 'search-text')
-  radio_button(:search_type, id: 'search-type')
+  radio_button(:search_by_name, id: 'radio-btn-name')
+  radio_button(:search_by_email, id: 'radio-btn-email')
+  radio_button(:search_by_uid, id: 'radio-btn-uid')
   button(:search_button, id: 'add-user-submit-search-btn')
 
   button(:need_help_button, id: 'add-user-help-btn')
@@ -65,9 +67,16 @@ class RipleyAddUserPage
 
   def search(text, option)
     logger.info "Searching for string '#{text}' by #{option}"
-    search_type_element.when_visible Utils.medium_wait
-    wait_for_element_and_select(search_type_element, option)
-    wait_for_element_and_type(search_term_element, text)
+    radio_el = case option
+               when 'Last Name, First Name'
+                 search_by_name_element
+               when 'Email'
+                 search_by_email_element
+               when 'CalNet UID'
+                 search_by_uid_element
+               end
+    wait_for_update_and_click radio_el
+    wait_for_textbox_and_type(search_term_element, text)
     wait_for_update_and_click search_button_element
   end
 

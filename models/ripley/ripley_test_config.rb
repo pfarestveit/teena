@@ -50,34 +50,29 @@ class RipleyTestConfig < TestConfig
       (
         CourseSite.new abbreviation: "Admin #{@id}",
                        manual_members: (test_users.select { |user| !%w(Owner Maintainer Member).include? user.role }),
-                       sections: [Section.new(label: "LEC 001 #{@id}", sis_id: "LEC 001 #{@id}")],
                        term: @current_term,
                        title: "List 1 #{@id}"
       ),
       (
         CourseSite.new abbreviation: "Admin #{@id}",
                        manual_members: (test_users.select { |user| user.role == 'Teacher' }),
-                       sections: [Section.new(label: "LEC 001 #{@id}", sis_id: "LEC 001 #{@id}")],
                        term: @current_term,
                        title: "List 2 #{@id}"
       ),
       (
         CourseSite.new abbreviation: "Instructor #{@id}",
                        manual_members: (test_users.select { |user| !%w(Owner Maintainer Member).include? user.role }),
-                       sections: [Section.new(label: "LEC 001 #{@id}", sis_id: "LEC 001 #{@id}")],
                        title: "List 3 #{@id}"
       ),
       (
         CourseSite.new abbreviation: "Old List #{@id}",
                        manual_members: (test_users.select { |user| user.role == 'Teacher' }),
-                       sections: [Section.new(label: "LEC 001 #{@id}", sis_id: "LEC 001 #{@id}")],
                        term: RipleyUtils.previous_term(@previous_term),
                        title: "Old List 4 #{@id}"
       ),
       (
         CourseSite.new abbreviation: "Project List #{@id}",
                        manual_members: (test_users.select { |user| %w(Owner Maintainer Member).include? user.role }),
-                       sections: [Section.new(label: "LEC 001 #{@id}", sis_id: "LEC 001 #{@id}")],
                        title: "Project List 5 #{@id}"
       )
     ]
@@ -124,8 +119,8 @@ class RipleyTestConfig < TestConfig
   def welcome_email
     test_users = CONFIG['test_users'].map { |user| User.new user }
     CourseSite.new abbreviation: "#{@id} Welcome Email",
-                          manual_members: (test_users.select { |user| %w(Teacher Student).include? user.role }),
-                          title: "#{@id} Welcome"
+                   manual_members: (test_users.select { |user| %w(Teacher Student).include? user.role }),
+                   title: "#{@id} Welcome"
   end
 
   ### GLOBAL CONFIG ###

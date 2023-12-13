@@ -29,7 +29,7 @@ describe 'bCourses welcome email', order: :defined do
     @mailing_lists = RipleyMailingListsPage.new @driver2
     @canvas2.log_in(@cal_net2, @test.admin.username, Utils.super_admin_password)
 
-    @canvas2.create_generic_course_site(Utils.canvas_official_courses_sub_account, @site, @site_members, @test.id)
+    @canvas2.create_ripley_mailing_list_site(@site, @site_members)
     @canvas1.masquerade_as(@student1, @site)
     @canvas1.masquerade_as(@teacher, @site)
   end
@@ -89,12 +89,10 @@ describe 'bCourses welcome email', order: :defined do
 
     before(:all) do
       @mailing_list.click_activation_toggle
-      @mailing_list.email_activated_msg_element.when_visible 3
       @mailing_lists.load_embedded_tool
       @mailing_lists.search_for_list @site.site_id
     end
 
-    # TODO - ensure email address is spoofed
     it 'is sent to existing members of the site' do
       # Update membership
       @mailing_lists.click_update_memberships
@@ -105,7 +103,6 @@ describe 'bCourses welcome email', order: :defined do
       expect(csv[:email_address].sort).to eql(@site_members.map(&:email).sort)
     end
 
-    # TODO - ensure email address is spoofed
     it 'is sent to new members of the site' do
       # Add student, accept invite
       @canvas2.add_users(@site, [@student2])
@@ -128,11 +125,10 @@ describe 'bCourses welcome email', order: :defined do
   context 'when paused' do
 
     before(:all) do
+      @mailing_list.load_embedded_tool @site
       @mailing_list.click_activation_toggle
-      @mailing_list.email_paused_msg_element.when_visible 3
     end
 
-    # TODO - ensure email address is spoofed
     it 'is not sent to new members of the site' do
       # Add student, accept invite
       @canvas2.add_users(@site, [@student3])
