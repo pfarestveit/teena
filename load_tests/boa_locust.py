@@ -14,16 +14,15 @@ In your browser, go to localhost:8089 to start tests and view charts.
 Visit https://locust.io for more information.
 """
 
-
 from itertools import groupby
 import os
 import random
-import yaml
 
-from locust import HttpLocust, TaskSet, task
+from locust import between, HttpUser, task, TaskSet
 import psycopg2
 import psycopg2.extras
 from pyquery import PyQuery
+import yaml
 
 
 """
@@ -119,11 +118,10 @@ def _row_to_cohort(row):
 
 
 class TestData:
-
     students = NessieRds.fetch(f"""
         SELECT sid, uid FROM student.student_profile_index
         ORDER BY last_name
-        OFFSET {random.randint(0,30000)}
+        OFFSET {random.randint(0, 30000)}
         LIMIT 50
     """)
 
@@ -131,14 +129,14 @@ class TestData:
 
     users = []
     user_draft_note_results = BoaRds.fetch("""
-        SELECT au.uid AS uid, notes.id AS note_id, notes.body, notes.subject, notes.sid
-        FROM authorized_users au
-        JOIN notes on notes.author_uid = au.uid
-        WHERE au.deleted_at IS NULL
-        AND au.can_access_canvas_data IS TRUE
-        AND notes.is_draft IS TRUE
-        AND notes.deleted_at IS NULL"""
-    )
+            SELECT au.uid AS uid, notes.id AS note_id, notes.body, notes.subject, notes.sid
+            FROM authorized_users au
+            JOIN notes on notes.author_uid = au.uid
+            WHERE au.deleted_at IS NULL
+            AND au.can_access_canvas_data IS TRUE
+            AND notes.is_draft IS TRUE
+            AND notes.deleted_at IS NULL""",
+                                           )
     for uid, rows in groupby(user_draft_note_results, lambda x: x['uid']):
         users.append({
             'uid': uid,
@@ -148,15 +146,15 @@ class TestData:
     cohort_users = []
     uids = ''
     for i in [u['uid'] for u in users]:
-        uids += f'\'{i}\', '
+        uids += f"'{i}', "
     user_cohort_results = BoaRds.fetch(f"""
         SELECT au.uid AS uid, cf.id AS cohort_id, cf.student_count, cf.filter_criteria
         FROM authorized_users au
         JOIN cohort_filters cf on cf.owner_id = au.id
         WHERE au.deleted_at IS NULL
         AND au.uid IN ({uids[:-2]})
-        ORDER BY uid"""
-    )
+        ORDER BY uid""",
+                                       )
     for uid, rows in groupby(user_cohort_results, lambda x: x['uid']):
         cohort_users.append({
             'uid': uid,
@@ -177,6 +175,7 @@ Define user tasks.
 class BoaTaskSet(TaskSet):
 
     def on_start(self):
+        self.user.user_data = sample(TestData.users)
         self.load_front_end()
         self.login()
 
@@ -195,8 +194,7 @@ class BoaTaskSet(TaskSet):
 
     def login(self, uid=None):
         if uid is None:
-            uid = self.locust.user['uid']
-        print(f"Test UID {uid}")
+            uid = self.user.user_data['uid']
         self.client.post(
             '/api/auth/dev_auth_login',
             json={
@@ -232,11 +230,13 @@ class BoaTaskSet(TaskSet):
     @task(3)
     def load_cohort_page(self):
         try:
-            cohort = sample(self.locust.user['cohorts'])
+            cohort = sample(self.user.user_data['cohorts'])
             self.client.get(f"/api/cohort/{cohort['id']}", name='/api/cohort/[id]')
             self.client.post('/api/cohort/filter_options/me', json={'existingFilters': []})
-            self.client.post('/api/cohort/translate_to_filter_options/me', json={'filterCriteria': cohort['filter_criteria']})
-        except: KeyError
+            self.client.post('/api/cohort/translate_to_filter_options/me',
+                             json={'filterCriteria': cohort['filter_criteria']})
+        except KeyError:
+            pass
 
     @task(4)
     def load_student_page(self):
@@ -245,7 +245,7 @@ class BoaTaskSet(TaskSet):
 
     @task(5)
     def update_drafts(self):
-        note = sample(self.locust.user['note_drafts'])
+        note = sample(self.user.user_data['note_drafts'])
         self.client.post(
             '/api/notes/update',
             data={
@@ -267,12 +267,11 @@ Hatch a locust.
 """
 
 
-class BoaLocust(HttpLocust):
-    task_set = BoaTaskSet
+class BoaUser(HttpUser):
+    tasks = [BoaTaskSet]
     host = boac_cfg['api_base_url']
-    min_wait = 1000
-    max_wait = 3000
+    wait_time = between(1, 3)
+    user_data = {}
 
-    def __init__(self):
-        super(BoaLocust, self).__init__()
-        self.user = sample(TestData.users)
+    def __init__(self, parent):
+        super().__init__(parent)
