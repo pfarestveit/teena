@@ -14,16 +14,14 @@ In your browser, go to localhost:8089 to start tests and view charts.
 Visit https://locust.io for more information.
 """
 
-
 import os
 import random
-import yaml
 
-from locust import HttpLocust, TaskSet, task
+from locust import between, HttpUser, task, TaskSet
 import psycopg2
 import psycopg2.extras
 from pyquery import PyQuery
-
+import yaml
 
 """
 Define utility functions.
@@ -46,23 +44,20 @@ def sample(_list):
 CONFIG
 """
 
-
 with open('settings.yml') as config_yml:
     configs = yaml.safe_load(config_yml)
 with open(os.environ.get('HOME') + '/.webdriver-config/settings.yml') as local_config_yml:
     local_configs = yaml.safe_load(local_config_yml)
 merge_recursive(configs, local_configs)
 
-
 squiggy_cfg = configs['squiggy']
-
 
 """
 DB
 """
 
 
-class Rds():
+class Rds:
     @classmethod
     def fetch(cls, sql, params=None):
         connection = psycopg2.connect(**cls.connection_params)
@@ -90,20 +85,19 @@ TEST DATA
 
 
 class TestData:
-
     users = []
 
     busy_users = SquiggyRds.fetch(
         """SELECT users.id AS user_id,
-           	  users.course_id AS course_id,
-           	  ARRAY_AGG(assets.id)
+                  users.course_id AS course_id,
+                  ARRAY_AGG(assets.id)
              FROM users
              JOIN assets ON assets.course_id = users.course_id
             WHERE users.canvas_course_role = 'urn:lti:role:ims/lis/Instructor'
               AND users.canvas_enrollment_state = 'active'
          GROUP BY users.id, users.course_id
          ORDER BY ARRAY_LENGTH(ARRAY_AGG(assets.id), 1) DESC
-        """
+        """,
     )
 
     for row in busy_users:
@@ -121,6 +115,7 @@ TASKS
 class SquiggyTaskSet(TaskSet):
 
     def on_start(self):
+        self.user.user_data = sample(TestData.users)
         self.load_front_end()
         self.login()
 
@@ -139,7 +134,7 @@ class SquiggyTaskSet(TaskSet):
 
     def login(self, user_id=None):
         if user_id is None:
-            user_id = self.locust.user['user_id']
+            user_id = self.user.user_data['user_id']
         self.client.post(
             '/api/auth/dev_auth_login',
             json={
@@ -155,13 +150,13 @@ class SquiggyTaskSet(TaskSet):
     def load_asset_list(self):
         self.client.post(
             '/api/assets',
-            json={'orderBy': 'recent'}
+            json={'orderBy': 'recent'},
         )
 
     @task(2)
     def load_search_params(self):
         self.client.get(
-            f"/api/course/{self.locust.user['course_id']}/advanced_asset_search_options",
+            f"/api/course/{self.user.user_data['course_id']}/advanced_asset_search_options",
             name='/api/course/[course_id]/advanced_asset_search_options',
         )
 
@@ -175,12 +170,11 @@ LET THE LOCUSTS BE FREE!
 """
 
 
-class SquiggyLocust(HttpLocust):
-    task_set = SquiggyTaskSet
+class SquiggyUser(HttpUser):
+    tasks = [SquiggyTaskSet]
     host = squiggy_cfg['base_url']
-    min_wait = 1000
-    max_wait = 3000
+    wait_time = between(1, 3)
+    user_data = {}
 
-    def __init__(self):
-        super(SquiggyLocust, self).__init__()
-        self.user = sample(TestData.users)
+    def __init__(self, parent):
+        super().__init__(parent)
