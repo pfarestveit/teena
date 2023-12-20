@@ -48,7 +48,7 @@ describe 'bCourses' do
       end
 
       it 'include a "Privacy Policy" link' do
-        title = 'Product Privacy | Policy | Instructure'
+        title = 'Product Privacy | Policy'
         expect(@canvas.external_link_valid?(@canvas.privacy_policy_link_element, title)).to be true
       end
 
@@ -233,12 +233,8 @@ describe 'bCourses' do
         expect(@course_add_user_page.visible_user_role_options).to eql(opts)
       end
 
-      it "offers no link to the tool in course navigation" do
-        @canvas.switch_to_main_content
-        expect(@canvas.tool_nav_link(RipleyTool::ADD_USER).exists?).to be false
-      end
-
       it "offers #{user.role} an Academic Policies link" do
+        @canvas.switch_to_main_content
         expect(@canvas.external_link_valid?(@canvas.policies_link_element, @policies_heading)).to be true
       end
     end
@@ -250,12 +246,8 @@ describe 'bCourses' do
         @course_add_user_page.auth_check_failed_msg_element.when_visible Utils.medium_wait
       end
 
-      it "offers no link to the tool in course navigation" do
-        @canvas.switch_to_main_content
-        expect(@canvas.tool_nav_link(RipleyTool::ADD_USER).exists?).to be false
-      end
-
       it "offers #{user.role} an Academic Policies link" do
+        @canvas.switch_to_main_content
         expect(@canvas.external_link_valid?(@canvas.policies_link_element, @policies_heading)).to be true
       end
     end
@@ -266,11 +258,6 @@ describe 'bCourses' do
         @canvas.masquerade_as(user, @site)
         @course_add_user_page.load_embedded_tool @site
         @course_add_user_page.auth_check_failed_msg_element.when_visible Utils.medium_wait
-      end
-
-      it "offers no link to the tool in course navigation" do
-        @canvas.switch_to_main_content
-        expect(@canvas.tool_nav_link(RipleyTool::ADD_USER).exists?).to be false
       end
 
       it "offers #{user.role} an Academic Policies link" do

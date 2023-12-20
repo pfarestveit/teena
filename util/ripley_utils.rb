@@ -260,10 +260,10 @@ class RipleyUtils < Utils
              else
                "(#{r['mode']})"
              end
-      days = r['days'] ? (r['days'].gsub('MO', 'M').gsub('WE', 'W').gsub('FR', 'F').strip) : '—'
+      days = r['days'] ? (r['days'].gsub('MO', 'M').gsub('WE', 'W').gsub('FR', 'F').strip) : nil
       start = (r['start_time'] == '00:00' || !r['start_time']) ? '—' : "#{DateTime.strptime(r['start_time'], "%H:%M").strftime("%l:%M%p")[0..-2]}-"
       finish = (r['end_time'] == '00:00' || !r['end_time']) ? '—' : DateTime.strptime(r['end_time'], "%H:%M").strftime("%l:%M%p")[0..-2]
-      schedule = (days == '—') ? '—' : "#{days} #{start.strip}#{finish.strip}".strip
+      schedule = days ? "#{days} #{start.strip}#{finish.strip}".strip : '—'
       location = r['location'] || '—'
       {
         id: r['id'],
@@ -497,8 +497,9 @@ class RipleyUtils < Utils
         0
       end
     end
-    avg = grades.inject { |ttl, g| ttl + g }.to_f / grades.length
-    avg.round 1
+    avg = (grades.inject { |ttl, g| ttl + g }.to_f / grades.length).round(1)
+    avg = (sprintf '%.1f', avg).to_f
+    (avg.floor == avg) ? avg.floor : avg
   end
 
   # Test users

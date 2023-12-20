@@ -44,7 +44,6 @@ describe 'The Grade Distribution tool' do
         instructors = RipleyUtils.get_primary_instructors site
         instructor = instructors.first || site.course.teachers.first
         @canvas.set_canvas_ids [instructor]
-        enrollment_count = site.sections.map { |s| s.enrollments.map { |e| e.user.uid } }.flatten.uniq.length
 
         @canvas.masquerade_as(instructor, site)
         @newt.load_embedded_tool site
@@ -56,21 +55,31 @@ describe 'The Grade Distribution tool' do
           it("offers demographics default data and table on #{test_case}") { expect(shows_demographics).to be true }
 
           if shows_demographics
+            logger.info "Checking all terms where UID #{instructor.uid} taught this course"
             cs_course_id = site.course.sections.find(&:primary).cs_course_id
-            logger.info "Checking courses in terms #{terms.map &:name}"
             all_term_courses = RipleyUtils.get_all_instr_courses_per_cs_id(terms, instructor, cs_course_id)
             all_term_courses.each do |course|
               begin
                 logger.info "Checking #{course.term.name} #{course.code}"
-                primaries = course.sections.select &:primary
-                student_count = primaries.map(&:enrollments).flatten.length
+
+                primaries = course.sections.select do |s|
+                  instructor_uids = s.instructors_and_roles.map { |i| i.user.uid }
+                  s.primary && instructor_uids.include?(instructor.uid)
+                end
+
+                student_count = primaries.map(&:enrollments).flatten.map(&:grade).select { |g| %w(A+ A A- B+ B B- C+ C C- D+ D D- F).include? g }.length
                 logger.info "Enrollment count is #{student_count}"
-                if student_count >= 150
+
+                if student_count >= 50
                   logger.info 'Checking Newt data'
                   avg = RipleyUtils.average_grade_points primaries
                   visible_term_data = @newt.visible_demographics_term_data course.term
-                  it("shows the average grade points for #{test_case} term #{course.term.name}") { expect(visible_term_data[:avg]).to eql(avg.to_s) }
-                  it("shows the student count for #{test_case} term #{course.term.name}") { expect(visible_term_data[:count]).to eql(student_count.to_s) }
+                  it "shows the average grade points for #{test_case} term #{course.term.name}" do
+                    expect(visible_term_data[:avg]).to eql(avg.to_s)
+                  end
+                  it "shows the student count for #{test_case} term #{course.term.name}" do
+                    expect(visible_term_data[:count]).to eql(student_count.to_s)
+                  end
                 end
               rescue => e
                 Utils.log_error e
@@ -86,7 +95,7 @@ describe 'The Grade Distribution tool' do
         end
       rescue => e
         Utils.log_error e
-        it("hit an error checking the highcharts graphs with #{test_case}") { fail Utils.error(e) }
+        it("hit an error loading Newt for #{test_case}") { fail Utils.error(e) }
       end
 
       if site == test.course_sites.last
