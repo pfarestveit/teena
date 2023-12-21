@@ -44,6 +44,7 @@ class RipleyGradeDistributionPage
   select_list(:demographics_select, id: 'grade-distribution-demographics-select')
   button(:demographics_table_toggle, id: 'grade-distribution-demographics-show-btn')
   table(:demographics_table, id: 'grade-distribution-demo-table')
+  elements(:demographics_table_row, :row, xpath: '//tr[contains(@id, "grade-distribution-demo-table-row")]')
 
   def select_demographic(demographic)
     logger.info "Selecting demographic '#{demographic}'"
@@ -58,16 +59,19 @@ class RipleyGradeDistributionPage
   end
 
   def visible_demographics_term_data(term)
-    sleep 2
+    sleep 1
     xpath = "//tr[contains(@id, 'grade-distribution-demo-table-row')][contains(., '#{term.name}')]"
     row_element(xpath: xpath).when_visible Utils.short_wait
     avg_el = cell_element(xpath: "#{xpath}/td[2]")
     count_el = cell_element(xpath: "#{xpath}/td[3]")
-    {
+    [avg_el, count_el].each { |el| logger.debug "Checking demographic data at #{el.locator}" }
+    data = {
       term: term.name,
       avg: (avg_el.text if avg_el.exists?).to_s,
       count: (count_el.text if count_el.exists?).to_s
     }
+    logger.debug "Visible data: #{data}"
+    data
   end
 
   def demographics_grade_el(grade)

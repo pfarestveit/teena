@@ -61,15 +61,6 @@ describe 'bCourses course site creation' do
         # -- Verify page content and external links for one of the courses --
 
         if site == test.course_sites.find { |s| %w(self uid).include? s.create_site_workflow }
-          maintenance_notice = @create_course_site.maintenance_notice?
-          maintenance_detail = @create_course_site.maintenance_detail?
-          bcourses_title = 'bCourses | Research, Teaching, and Learning'
-          bcourses_link_works = @create_course_site.external_link_valid?(@create_course_site.bcourses_service_link_element, bcourses_title)
-          it('shows a maintenance notice') { expect(maintenance_notice).to be true }
-          it('shows maintenance detail') { expect(maintenance_detail).to be true }
-          it('shows a link to the bCourses service page') { expect(bcourses_link_works).to be true }
-
-          @canvas.switch_to_canvas_iframe
           help = @create_course_site.need_help?
           it('shows suggestions for creating sites for courses with multiple sections') { expect(help).to be true }
 
@@ -208,15 +199,12 @@ describe 'bCourses course site creation' do
         expected_site_members = expected_instructors + expected_students
         logger.warn "Unexpected users after creating site: #{visible_site_members - expected_site_members}"
         logger.warn "Missing users after creating site: #{expected_site_members - visible_site_members}"
+
         it "adds no unexpected users to #{test_case}" do
-          @canvas.wait_until(1, "Unexpected: #{visible_site_members - expected_site_members}") do
-            (visible_site_members - expected_site_members).empty?
-          end
+          expect(visible_site_members - expected_site_members).to be_empty
         end
         it "neglects no expected users on #{test_case}" do
-          @canvas.wait_until(1, "Missing: #{expected_site_members - visible_site_members}") do
-            (expected_site_members - visible_site_members).empty?
-          end
+          expect(expected_site_members - visible_site_members).to be_empty
         end
 
         # -- Verify roster photos tool shows the right sections --

@@ -35,7 +35,7 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
 
   def choose_term(course)
     wait_until(Utils.medium_wait) do
-      term_button(course.term).exists? || h2_element(xpath: "//h2[text()='#{course.term.name} Official Sections']").exists?
+      term_button(course.term).exists? || h2_element(id: 'official-sections-heading').exists?
     end
     if term_button(course.term).exists?
       if term_button(course.term).attribute('class').include?('v-btn--active')

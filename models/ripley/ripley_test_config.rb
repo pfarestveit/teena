@@ -133,7 +133,9 @@ class RipleyTestConfig < TestConfig
 
   def set_sis_courses
     prefixes = CONFIG['course_prefixes']
-    current_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(@current_term, p) }
+    # TODO - restore current term when Ripley changes term
+    current_term_courses = []
+    # current_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(@current_term, p) }
     next_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(@next_term, p) }
     courses = current_term_courses + next_term_courses
     courses.compact!
@@ -158,10 +160,10 @@ class RipleyTestConfig < TestConfig
     courses.each { |c| RipleyUtils.get_course_enrollment c }
 
     # Test site with multiple courses
-    prim = courses.select { |c| c.sections.any?(&:primary) && c.term == @current_term }
+    prim = courses.select { |c| c.sections.any?(&:primary) && c.term == @next_term }
     primaries = prim.map(&:sections).flatten.select(&:primary)
+    primaries.select! { |s| s.instructors_and_roles&.any? }
     primaries.sort_by! { |p| p.enrollments.length }
-    logger.info "#{primaries.map &:course}"
     instructors = (primaries[0].instructors_and_roles.map(&:user) + primaries[1].instructors_and_roles.map(&:user)).uniq
     multi_course = Course.new code: primaries[0].course,
                               multi_course: true,

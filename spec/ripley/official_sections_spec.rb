@@ -35,7 +35,8 @@ describe 'bCourses Official Sections tool' do
     else
       @canvas.add_ripley_tools RipleyTool::TOOLS.select(&:account)
       teacher = site.course.teachers.first
-      term_courses = RipleyUtils.get_instructor_term_courses(teacher, test.current_term)
+      # TODO revert to current term when Ripley switches term
+      term_courses = RipleyUtils.get_instructor_term_courses(teacher, test.next_term)
       site.sections = site.sections.select &:primary unless ENV['SITE']
       if site.sections == site.course.sections
         sections_to_add_delete = if site.sections.all?(&:primary) || site.sections.none?(&:primary)
@@ -94,16 +95,6 @@ describe 'bCourses Official Sections tool' do
       # EDIT VIEW
 
       @official_sections.click_edit_sections
-
-      # Links and notices
-      maintenance_notice = @official_sections.maintenance_notice?
-      it('shows a maintenance notice') { expect(maintenance_notice).to be true }
-      title = 'bCourses | Research, Teaching, and Learning'
-      service_link_works = @official_sections.verify_block do
-        @official_sections.external_link_valid?(@official_sections.bcourses_service_link_element, title)
-      end
-      it('offers a link to the bCourses service page in the expanded maintenance notice') { expect(service_link_works).to be true }
-      @official_sections.switch_to_canvas_iframe
 
       # Current site sections
 
@@ -263,22 +254,12 @@ describe 'bCourses Official Sections tool' do
       expected_users_post_add = initial_population + expected_instructors_post_add + expected_students_post_add
       logger.warn "Unexpected users after adding sections: #{visible_users_post_add - expected_users_post_add}"
       logger.warn "Missing users after adding sections: #{expected_users_post_add - visible_users_post_add}"
-      it 'adds no unexpected users to the site' do
-        @canvas.wait_until(1, "Unexpected adds: #{visible_users_post_add - expected_users_post_add}") do
-          (visible_users_post_add - expected_users_post_add).empty?
-        end
-      end
-      it 'neglects no expected users on the site' do
-        @canvas.wait_until(1, "Missing adds: #{expected_users_post_add - visible_users_post_add}") do
-          (expected_users_post_add - visible_users_post_add).empty?
-        end
-      end
+      it('adds no unexpected users to the site') { expect(visible_users_post_add - expected_users_post_add).to be_empty }
+      it('neglects no expected users on the site') { expect(expected_users_post_add - visible_users_post_add).to be_empty }
 
       visible_sections = @canvas.section_label_elements.map(&:text).uniq
       added_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
-      site_sections_added = @canvas.verify_block do
-        @canvas.wait_until(1) { (visible_sections & added_sections).any? }
-      end
+      site_sections_added = @canvas.verify_block { @canvas.wait_until(1) { (visible_sections & added_sections).any? } }
       it('adds all the sections to the site') { expect(site_sections_added).to be true }
 
       # CANVAS SECTIONS
@@ -326,36 +307,25 @@ describe 'bCourses Official Sections tool' do
       visible_users_post_del = @canvas.visible_user_section_data site
       logger.warn "Unexpected users after removing sections: #{visible_users_post_del - initial_population}"
       logger.warn "Missing users after removing sections: #{initial_population - visible_users_post_del}"
-      it 'leaves no unexpected users on the site' do
-        @canvas.wait_until(1, "Missing deletes: #{visible_users_post_del - initial_population}") do
-          (visible_users_post_del - initial_population).empty?
-        end
-      end
-      it 'removes no expected users from the site' do
-        @canvas.wait_until(1, "Unexpected deletes: #{initial_population - visible_users_post_del}") do
-          (initial_population - visible_users_post_del).empty?
-        end
-      end
+      it('leaves no unexpected users on the site') { expect(visible_users_post_del - initial_population).to be_empty }
+      it('removes no expected users from the site') { expect(initial_population - visible_users_post_del).to be_empty }
 
       visible_sections = @canvas.section_label_elements.map(&:text).uniq
       deleted_sections = sections_to_add_delete.map { |s| "#{s.course} #{s.label}" }
-      site_sections_removed = @canvas.verify_block do
-        @canvas.wait_until(1) { (visible_sections & deleted_sections).empty? }
-      end
+      site_sections_removed = @canvas.verify_block { @canvas.wait_until(1) { (visible_sections & deleted_sections).empty? } }
       it('removes the sections from the site') { expect(site_sections_removed).to be true }
 
       # CANVAS SECTIONS
 
       updated_sections_post_delete = site.sections.map &:id
       section_ids_post_delete = @canvas_api.get_course_site_section_ccns site.site_id
-      it('shows all the right added sections in the Canvas API') { expect(section_ids_post_delete.sort).to eql(updated_sections_post_delete.sort) }
-
-      non_teachers.each do |u|
-        logger.info "Test user to add: #{u.inspect}"
+      it 'shows all the right added sections in the Canvas API' do
+        expect(section_ids_post_delete.sort).to eql(updated_sections_post_delete.sort)
       end
 
       @canvas.stop_masquerading
-      [test.lead_ta, test.ta, test.designer, test.reader, test.observer, test.students.first, test.wait_list_student].each do |user|
+      non_teachers.each { |u| logger.info "Test user to add: #{u.inspect}" }
+      non_teachers.each do |user|
         @add_user.load_embedded_tool site
         @add_user.search(user.uid, 'CalNet UID')
         @add_user.add_user_by_uid(user, site.sections.first)

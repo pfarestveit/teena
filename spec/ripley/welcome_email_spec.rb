@@ -44,7 +44,7 @@ describe 'bCourses welcome email', order: :defined do
     end
 
     it 'includes a link to more information' do
-      title = 'IT - bCourses Mailing List - Welcome Email'
+      title = 'IT - How to Create a Welcome Email with the bCourses Mailing List'
       expect(@mailing_list.external_link_valid?(@mailing_list.welcome_email_link_element, title)).to be true
     end
 
@@ -143,7 +143,8 @@ describe 'bCourses welcome email', order: :defined do
       # Verify no new email triggered
       @mailing_list.load_embedded_tool @site
       csv = @mailing_list.download_csv
-      expect(csv[:email_address].sort).to eql(@site_members.map(&:email).sort)
+      expect(csv[:email_address].sort).to eql([@site_members, @student3].flatten.map(&:email).sort)
+      expect(csv[:message_sent].compact.length).to eql(3)
     end
   end
 end
