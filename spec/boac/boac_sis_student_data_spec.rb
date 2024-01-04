@@ -710,12 +710,14 @@ unless ENV['NO_DEPS']
               term_section_ccns = []
 
               courses = student_data[:api].courses term
+              course_careers = []
               if courses.any?
                 courses.each_with_index do |course, i|
 
                   begin
                     course_sis_data = student_data[:api].sis_course_data course
                     course_code = course_sis_data[:code]
+                    course_careers << course_sis_data[:acad_career]
                     test_case = "UID #{student_data[:student].uid} term #{term_name} course #{course_code} on the student page"
 
                     logger.info "Checking course #{course_code}"
@@ -868,6 +870,20 @@ unless ENV['NO_DEPS']
 
               else
                 logger.warn "No course data in #{term_name}"
+              end
+
+              # CONCURRENT ENROLLMENT
+
+              course_careers.compact!
+              logger.info "Term #{term_name} course careers are #{course_careers}"
+              if course_careers.include? 'UCBX'
+                it "shows no UCBX on the student page for #{student_data[:student].uid} in #{term_name}" do
+                  expect(visible_term_data[:concurrent_enroll]).to be true
+                end
+              else
+                it "shows UCBX on the student page for #{student_data[:student].uid} in #{term_name}" do
+                  expect(visible_term_data[:concurrent_enroll]).to be false
+                end
               end
 
               # UNMATCHED SITES

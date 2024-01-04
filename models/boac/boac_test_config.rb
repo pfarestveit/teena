@@ -163,7 +163,7 @@ class BOACTestConfig < TestConfig
                      elsif opts[:with_enrollments]
                        sids = NessieUtils.get_sids_with_enrollments BOACUtils.term_code
                        @students.shuffle!
-                       @students.select { |s| sids.include? s.sis_id }[0..(config - 1)]
+                       @students.first(1000).select { |s| sids.include? s.sis_id }[0..(config - 1)]
 
                      elsif !opts[:include_inactive]
                        @students.shuffle.select { |s| s.status == 'active' }[0..(config - 1)]
