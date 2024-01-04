@@ -133,9 +133,7 @@ class RipleyTestConfig < TestConfig
 
   def set_sis_courses
     prefixes = CONFIG['course_prefixes']
-    # TODO - restore current term when Ripley changes term
-    current_term_courses = []
-    # current_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(@current_term, p) }
+    current_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(@current_term, p) }
     next_term_courses = prefixes.map { |p| RipleyUtils.get_test_course(@next_term, p) }
     courses = current_term_courses + next_term_courses
     courses.compact!

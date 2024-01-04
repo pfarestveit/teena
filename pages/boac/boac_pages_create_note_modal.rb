@@ -221,7 +221,7 @@ module BOACPagesCreateNoteModal
 
   def select_contact_type(note)
     logger.debug "Selecting contact type '#{note.type}'"
-    sleep 2
+    hit_escape
     contact_type_radio(note).click
   end
 
@@ -235,8 +235,7 @@ module BOACPagesCreateNoteModal
     50.times { hit_backspace }
     50.times { hit_delete }
     set_date_input_element.send_keys note.set_date.strftime('%m/%d/%Y') if note.set_date
-    2.times { hit_tab }
-    hit_escape
+    wait_for_update_and_click note_body_text_area_elements[1]
   end
 
   # Save

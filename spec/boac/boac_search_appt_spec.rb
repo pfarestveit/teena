@@ -35,7 +35,7 @@ unless ENV['NO_DEPS']
 
       # EXECUTE SEARCHES
 
-      @driver = Utils.launch_browser
+      @driver = Utils.launch_browser 'firefox'
       @homepage = BOACHomePage.new @driver
       @search_results_page = BOACSearchResultsPage.new @driver
       @api_admin_page = BOACApiAdminPage.new @driver

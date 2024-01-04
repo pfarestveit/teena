@@ -268,12 +268,14 @@ class BOACStudentPage
     term_units_min_el = div_element(id: "term-#{term_id}-min-units")
     term_units_max_el = div_element(id: "term-#{term_id}-max-units")
     term_academic_standing_el = span_element(id: "academic-standing-term-#{term_id}")
+    term_concurrent_enroll_el = span_element(xpath: "//h3[@id='term-#{term_id}-header']/following-sibling::span[text()='UCBX']")
     {
       term_units: (term_units_el.attribute('innerText').split.last if term_units_el.exists?),
       term_gpa: (term_gpa_el.text.split.last if term_gpa_el.exists?),
       term_units_min: (term_units_min_el.attribute('innerText').split.last if term_units_min_el.exists?),
       term_units_max: (term_units_max_el.attribute('innerText').split.last if term_units_max_el.exists?),
-      academic_standing: (term_academic_standing_el.text.strip if term_academic_standing_el.exists?)
+      academic_standing: (term_academic_standing_el.text.strip if term_academic_standing_el.exists?),
+      concurrent_enroll: term_concurrent_enroll_el.exists?
     }
   end
 

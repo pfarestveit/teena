@@ -86,7 +86,6 @@ unless ENV['DEPS']
                   expected_roles = []
                   expected_roles << 'Advisor' if membership.advisor_role == AdvisorRole::ADVISOR
                   expected_roles << 'Director' if membership.advisor_role == AdvisorRole::DIRECTOR
-                  expected_roles << user.degree_progress_perm.user_perm if user.degree_progress_perm
                   visible_user_details = @pax_manifest_page.get_user_details user
                   visible_dept = visible_user_details['departments'].find { |d| d['code'] == membership.dept.code }
                   visible_dept_roles = @pax_manifest_page.visible_dept_roles(user, membership.dept.code)
