@@ -129,6 +129,7 @@ module Page
     # COURSE SITE SETUP
 
     link(:create_site_link, xpath: '//a[contains(text(),"Create a Site")]')
+    link(:ripley_manage_sites_link, xpath: "//a[text()='#{RipleyTool::MANAGE_SITES.name}']")
     link(:create_site_settings_link, xpath: '//div[contains(@class, "profile-tray")]//a[contains(text(),"Create a Site")]')
     link(:ripley_create_site_settings_link, xpath: "//div[contains(@class, 'profile-tray')]//a[contains(text(), '#{RipleyTool::MANAGE_SITES.name}')]")
 
@@ -280,6 +281,16 @@ module Page
       retry unless (tries -= 1).zero?
     ensure
       switch_to_canvas_iframe JunctionUtils.junction_base_url
+    end
+
+    def click_manage_sites
+      tries ||= 2
+      wait_for_load_and_click ripley_manage_sites_link_element
+    rescue
+      execute_script('arguments[0].style.hidden="hidden";', div_element(id: 'fixed_bottom'))
+      retry unless (tries -= 1).zero?
+    ensure
+      switch_to_canvas_iframe RipleyUtils.base_url
     end
 
     def accept_invite

@@ -53,7 +53,7 @@ describe 'bCourses' do
       end
 
       it 'include a "Terms of Service" link' do
-        title = 'Terms of Use | Policy | Instructure'
+        title = 'Terms of Use | Policy'
         expect(@canvas.external_link_valid?(@canvas.terms_of_service_link_element, title)).to be true
       end
 
@@ -125,10 +125,8 @@ describe 'bCourses' do
   describe 'Find a Person to Add' do
 
     before(:all) do
-      # TODO - uncomment when link is present
-      # @canvas.load_users_page @site
-      # @canvas.click_find_person_to_add
-      @course_add_user_page.load_embedded_tool @site
+      @canvas.load_users_page @site
+      @canvas.click_find_person_to_add
     end
 
     it 'requires that a search term be entered' do
@@ -184,10 +182,8 @@ describe 'bCourses' do
 
     before(:all) do
       @section_to_test = @site.sections.first
-      # TODO - uncomment when the link is present
-      # @canvas.load_users_page @site
-      # @canvas.click_find_person_to_add
-      @course_add_user_page.load_embedded_tool @site
+      @canvas.load_users_page @site
+      @canvas.click_find_person_to_add
       non_teachers.each do |user|
         @course_add_user_page.search(user.uid, 'CalNet UID')
         @course_add_user_page.add_user_by_uid(user, @section_to_test)
@@ -220,10 +216,8 @@ describe 'bCourses' do
     [test.lead_ta, test.ta].each do |user|
       it "allows #{user.role} #{user.uid} access to the Find a Person to Add tool with limited roles" do
         @canvas.masquerade_as(user, @site)
-        # TODO - uncomment when link is present
-        # @canvas.load_users_page @site
-        # @canvas.click_find_person_to_add
-        @course_add_user_page.load_embedded_tool @site
+        @canvas.load_users_page @site
+        @canvas.click_find_person_to_add
         @course_add_user_page.search('Oski', 'Last Name, First Name')
         opts = if user == test.lead_ta
                  ['Student', 'Waitlist Student', 'TA', 'Lead TA', 'Reader', 'Observer']

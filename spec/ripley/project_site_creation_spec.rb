@@ -107,7 +107,7 @@ describe 'bCourses project site', order: :defined do
       it "allows #{user.role} UID #{user.uid} to see a Create a Site button if permitted to do so" do
         @canvas.masquerade_as user
         @canvas.load_homepage
-        has_create_site_button = @canvas.verify_block { @canvas.create_site_link_element.when_visible(Utils.short_wait) }
+        has_create_site_button = @canvas.verify_block { @canvas.ripley_manage_sites_link_element.when_visible(Utils.short_wait) }
         (%w(TA Staff).include? user.role) ? (expect(has_create_site_button).to be true) : (expect(has_create_site_button).to be false)
       end
 
@@ -126,10 +126,8 @@ describe 'bCourses project site', order: :defined do
           expect(@create_project_site_page.site_name_input_element.when_present Utils.short_wait).to be_truthy
         else
           logger.debug "Verifying that #{user.role} UID #{user.uid} has access to neither the course nor the project site UIs"
-          student_can_create_site = @site_creation_page.verify_block do
-            @site_creation_page.create_course_site_link_element.when_present Utils.short_wait
-          end
-          expect(student_can_create_site).to be false
+          @site_creation_page.create_course_site_link_element.when_present Utils.short_wait
+          expect(@site_creation_page.create_course_site_link_element.enabled?).to be false
         end
       end
     end

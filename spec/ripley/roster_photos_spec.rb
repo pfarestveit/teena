@@ -40,10 +40,8 @@ describe 'bCourses Roster Photos' do
     logger.info "There are #{@student_count} enrolled students and #{@waitlist_count} waitlisted students, for a total of #{@total_user_count}"
     logger.warn 'There are no students on this @site' if @total_user_count.zero?
 
-    # TODO - restore the following when Add User button works
-    # @canvas.load_users_page @site
-    # @canvas.click_find_person_to_add RipleyUtils.base_url
-    @course_add_user_page.load_embedded_tool @site
+    @canvas.load_users_page @site
+    @canvas.click_find_person_to_add
     non_teachers.each do |user|
       @course_add_user_page.search(user.uid, 'CalNet UID')
       @course_add_user_page.add_user_by_uid(user, @site.sections.first)

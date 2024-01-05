@@ -282,11 +282,11 @@ class RipleyUtils < Utils
     end
   end
 
-  def self.expected_instr_section_data(site, sections = nil)
+  def self.expected_instr_section_data(site, specific_sections = nil)
     instructor_data = []
     site_has_primaries = site.sections.select(&:primary).any?
-    secs = sections || site.sections
-    secs.each do |section|
+    sections = specific_sections || site.sections
+    sections.each do |section|
       section.instructors_and_roles.each do |instr|
         instr.user.role = if section.primary
                             if %w(PI ICNT INVT).include? instr.role_code
@@ -313,10 +313,10 @@ class RipleyUtils < Utils
     instructor_data.sort_by { |h| [h[:uid], h[:section_id]] }
   end
 
-  def self.expected_student_section_data(site, sections = nil)
+  def self.expected_student_section_data(site, specific_sections = nil)
     student_data = []
-    secs = sections || site.sections
-    secs.each do |section|
+    sections = specific_sections || site.sections
+    sections.each do |section|
       section.enrollments.each do |enroll|
         student_data << {
           uid: enroll.user.uid,

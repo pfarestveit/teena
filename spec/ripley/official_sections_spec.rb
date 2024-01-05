@@ -251,7 +251,7 @@ describe 'bCourses Official Sections tool' do
       visible_users_post_add = @canvas.visible_user_section_data site
       expected_instructors_post_add = RipleyUtils.expected_instr_section_data(site, sections_to_add_delete)
       expected_students_post_add = RipleyUtils.expected_student_section_data(site, sections_to_add_delete)
-      expected_users_post_add = initial_population + expected_instructors_post_add + expected_students_post_add
+      expected_users_post_add = (initial_population + expected_instructors_post_add + expected_students_post_add).uniq
       logger.warn "Unexpected users after adding sections: #{visible_users_post_add - expected_users_post_add}"
       logger.warn "Missing users after adding sections: #{expected_users_post_add - visible_users_post_add}"
       it('adds no unexpected users to the site') { expect(visible_users_post_add - expected_users_post_add).to be_empty }

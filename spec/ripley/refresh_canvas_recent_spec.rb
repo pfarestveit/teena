@@ -8,68 +8,73 @@ describe 'bCourses recent enrollment updates' do
     @driver = Utils.launch_browser
     @cal_net_page = Page::CalNetPage.new @driver
     @canvas_page = Page::CanvasPage.new @driver
+    @canvas_api = CanvasAPIPage.new @driver
     @splash_page = RipleySplashPage.new @driver
     @create_course_site_page = RipleyCreateCourseSitePage.new @driver
     @jobs_page = RipleyJobsPage.new @driver
 
     @test = RipleyTestConfig.new
-    site = @test.get_single_test_site
-    @test.set_incremental_refresh_users site
+
+    @canvas_page.log_in(@cal_net_page, @test.admin.username, Utils.super_admin_password)
+    @site, @teacher = @test.configure_single_site(@canvas_page, @canvas_api, [])
+
+    @test.set_incremental_refresh_users @site
+    @canvas_page.set_canvas_ids(@test.teachers + @test.students)
     logger.info "Teachers: #{@test.teachers.map &:uid}"
     logger.info "Students: #{@test.students.map &:uid}"
 
-    @canvas_page.log_in(@cal_net_page, @test.admin.username, Utils.super_admin_password)
-    if site.site_id
-      @canvas_page.load_course_site site
-    else
-      @create_course_site_page.provision_course_site site
-      @canvas_page.publish_course_site site
+    unless @site.site_id
+      @canvas_page.masquerade_as @teacher
+      @create_course_site_page.provision_course_site @site
+      @canvas_page.publish_course_site @site
+      @canvas_page.stop_masquerading
     end
+    @canvas_page.load_course_site @site
 
     # Primary section updates
-    @primary_section = site.sections.find &:primary
+    @primary_section = @site.sections.find &:primary
     @prim_stu0_enroll = SectionEnrollment.new user: @test.students[0],
-                                              term: site.course.term,
+                                              term: @site.course.term,
                                               section_id: @primary_section.id,
                                               status: 'E'
     @prim_stu1_enroll = SectionEnrollment.new user: @test.students[1],
-                                              term: site.course.term,
+                                              term: @site.course.term,
                                               section_id: @primary_section.id,
                                               status: 'W'
-    RipleyUtils.insert_instructor_update(site.course, @primary_section, @test.teachers[0], 'PI')
-    RipleyUtils.insert_instructor_update(site.course, @primary_section, @test.teachers[1], 'APRX')
-    RipleyUtils.insert_instructor_update(site.course, @primary_section, @test.teachers[2], 'ICNT')
-    RipleyUtils.insert_instructor_update(site.course, @primary_section, @test.teachers[3], 'INVT')
+    RipleyUtils.insert_instructor_update(@site.course, @primary_section, @test.teachers[0], 'PI')
+    RipleyUtils.insert_instructor_update(@site.course, @primary_section, @test.teachers[1], 'APRX')
+    RipleyUtils.insert_instructor_update(@site.course, @primary_section, @test.teachers[2], 'ICNT')
+    RipleyUtils.insert_instructor_update(@site.course, @primary_section, @test.teachers[3], 'INVT')
     RipleyUtils.insert_enrollment_update @prim_stu0_enroll
     RipleyUtils.insert_enrollment_update @prim_stu1_enroll
 
     # Secondary section updates
-    @secondary_sections = site.sections.select { |s| !s.primary }
+    @secondary_sections = @site.sections.select { |s| !s.primary }
     @sec0_stu0_enroll = SectionEnrollment.new user: @test.students[0],
-                                              term: site.course.term,
+                                              term: @site.course.term,
                                               section_id: @secondary_sections[0].id,
                                               status: 'E'
     @sec1_stu0_list = SectionEnrollment.new user: @test.students[0],
-                                            term: site.course.term,
+                                            term: @site.course.term,
                                             section_id: @secondary_sections[1].id,
                                             status: 'W'
     @sec1_stu1_list = SectionEnrollment.new user: @test.students[1],
-                                            term: site.course.term,
+                                            term: @site.course.term,
                                             section_id: @secondary_sections[1].id,
                                             status: 'W'
-    RipleyUtils.insert_instructor_update(site.course, @secondary_sections[0], @test.teachers[4], 'TNIC')
+    RipleyUtils.insert_instructor_update(@site.course, @secondary_sections[0], @test.teachers[4], 'TNIC')
     RipleyUtils.insert_enrollment_update @sec0_stu0_enroll
     RipleyUtils.insert_enrollment_update @sec1_stu0_list
     RipleyUtils.insert_enrollment_update @sec1_stu1_list
 
     # Run Ripley job
     @splash_page.load_page
+    @splash_page.log_out
     @splash_page.dev_auth @test.admin.uid
-    @splash_page.click_jobs_link
     @jobs_page.run_job RipleyJob::REFRESH_INCREMENTAL
 
     # Get resulting Canvas enrollments
-    @enrollments = @canvas_page.get_users_with_sections site.course
+    @enrollments = @canvas_page.get_users_with_sections @site.course
   end
 
   context 'when a PI in a primary section' do
