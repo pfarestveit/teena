@@ -23,9 +23,11 @@ module RipleyPages
     )
   end
 
-  button(:log_out_link, id: 'TBD')
+  button(:header_menu_button, xpath: '//button[@aria-haspopup="menu"]')
+  button(:log_out_link, id: 'log-out')
 
   def log_out
+    wait_for_update_and_click header_menu_button_element
     wait_for_update_and_click log_out_link_element unless title.include? 'Welcome. Please log in. | bCourses Support'
     log_out_link_element.when_not_present Utils.short_wait
   end

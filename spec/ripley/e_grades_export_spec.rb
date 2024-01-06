@@ -324,10 +324,9 @@ describe 'bCourses E-Grades Export' do
     [test.lead_ta, test.ta, test.reader].each do |user|
       it "denies #{user.role} #{user.uid} access to the tool" do
         @canvas.masquerade_as(user, site)
-        # TODO - reinstate when button works
-        # @canvas.load_gradebook site
-        # @canvas.click_e_grades_export_button
-        # @e_grades_export_page.switch_to_canvas_iframe
+        @canvas.load_gradebook site
+        @canvas.click_e_grades_export_button
+        @e_grades_export_page.switch_to_canvas_iframe
         @e_grades_export_page.load_embedded_tool site
         @e_grades_export_page.unauthorized_msg_element.when_visible Utils.medium_wait
       end

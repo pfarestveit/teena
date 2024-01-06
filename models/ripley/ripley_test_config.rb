@@ -158,7 +158,7 @@ class RipleyTestConfig < TestConfig
     courses.each { |c| RipleyUtils.get_course_enrollment c }
 
     # Test site with multiple courses
-    prim = courses.select { |c| c.sections.any?(&:primary) && c.term == @next_term }
+    prim = courses.select { |c| c.sections.any?(&:primary) && c.term == @current_term }
     primaries = prim.map(&:sections).flatten.select(&:primary)
     primaries.select! { |s| s.instructors_and_roles&.any? }
     primaries.sort_by! { |p| p.enrollments.length }
