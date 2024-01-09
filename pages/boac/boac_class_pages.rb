@@ -26,6 +26,7 @@ module BOACClassPages
     hit_class_page_url(term_id, ccn, student)
     wait_for_spinner
     div_element(id: 'meetings-0').when_visible Utils.medium_wait
+    hide_boac_footer
   end
 
   h1(:course_code, id: 'course-header')

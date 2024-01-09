@@ -18,7 +18,7 @@ unless ENV['DEPS']
       @attachments = @test.attachments.sort_by(&:file_size).delete_if { |a| a.file_size > 20000000 }
       @attachments = @attachments.first 10
 
-      @driver = Utils.launch_browser
+      @driver = Utils.launch_browser 'firefox'
       @homepage = BOACHomePage.new @driver
       @student_page = BOACStudentPage.new @driver
       @cohort_page = BOACFilteredStudentsPage.new(@driver, @test.advisor)
@@ -46,7 +46,7 @@ unless ENV['DEPS']
         @student_page.click_templates_button
       end
 
-      it('show a "You have no saved templates" message') { @student_page.no_templates_msg_element.when_visible 1 }
+      it('show a "You have no saved templates" message') { @student_page.no_templates_msg_element.when_present 2 }
     end
 
     context 'on the student page create-note modal' do

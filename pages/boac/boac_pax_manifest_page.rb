@@ -19,6 +19,7 @@ class BOACPaxManifestPage
   def load_page
     hit_page_url
     user_search_input_element.when_visible Utils.medium_wait
+    hide_boac_footer
   end
 
   # User export

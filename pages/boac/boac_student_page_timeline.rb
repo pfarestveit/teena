@@ -51,7 +51,11 @@ module BOACStudentPageTimeline
   def collapsed_item_el(item)
     type = item_type item
     logger.debug "Searching for collapsed item element for #{type}"
-    row_element(id: "permalink-#{type}-#{item.id}")
+    if @driver.browser.to_s == 'firefox'
+      row_element(xpath: "//tr[@id='permalink-#{type}-#{item.id}']/td")
+    else
+      row_element(id: "permalink-#{type}-#{item.id}")
+    end
   end
 
   # Returns the visible sequence of message ids, whether or not collapsed

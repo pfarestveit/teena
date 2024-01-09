@@ -10,7 +10,7 @@ class BOACApiStudentPage
     logger.info "Getting data for UID #{user.uid}"
     navigate_to "#{BOACUtils.api_base_url}/api/student/by_uid/#{user.uid}"
     parse_json
-    if @parsed['message'] == 'Unknown student'
+    if @parsed['message'] && @parsed['message'] == 'Unknown student'
       logger.error "BOAC does not recognize UID #{user.uid}!"
       nil
     else

@@ -71,6 +71,7 @@ class BOACAdmitPage
     hit_page_url admit_csid
     wait_for_spinner
     name_element.when_visible Utils.short_wait
+    hide_boac_footer
   end
 
   # Returns the concatenated first, middle, and last names

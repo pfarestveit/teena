@@ -315,7 +315,7 @@ module BOACStudentPageAdvisingNote
 
   # Save
 
-  button(:edit_note_save_button, id: 'save-note-button')
+  button(:edit_note_save_button, xpath: '//button[@id="save-note-button"]')
 
   # Clicks the save note edit button
   def click_save_note_edit
@@ -355,8 +355,8 @@ module BOACStudentPageAdvisingNote
     add_attachments_to_new_note(note, attachments) if attachments&.any?
     add_topics(note, topics)
     set_note_privacy note
-    enter_set_date note if note.set_date
     select_contact_type note if note.type
+    enter_set_date note if note.set_date
     click_save_new_note
     set_new_note_id note
   end
