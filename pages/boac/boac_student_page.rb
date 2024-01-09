@@ -17,6 +17,7 @@ class BOACStudentPage
     logger.info "Loading student page for UID #{user.uid}"
     navigate_to "#{BOACUtils.base_url}#{path_to_student_view(user.uid)}"
     wait_for_spinner
+    hide_boac_footer
   end
 
   # SIS PROFILE DATA

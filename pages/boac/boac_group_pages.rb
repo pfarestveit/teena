@@ -10,6 +10,7 @@ module BOACGroupPages
   def load_page(group)
     navigate_to "#{BOACUtils.base_url}/curated/#{group.id}"
     wait_for_spinner
+    hide_boac_footer
   end
 
   def hit_non_auth_group(group)

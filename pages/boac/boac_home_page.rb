@@ -21,6 +21,7 @@ class BOACHomePage
   def load_page
     navigate_to BOACUtils.base_url
     wait_for_spinner
+    hide_boac_footer
   end
 
   # Clicks the sign in button

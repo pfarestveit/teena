@@ -40,7 +40,7 @@ describe 'BOA draft note' do
     @curated_group = CuratedGroup.new({ :name => "Group 1 - #{@test.id}" })
     @cohort = @test.default_cohort
 
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser 'firefox'
     @cohort_page = BOACFilteredStudentsPage.new(@driver, @test.advisor)
     @curated_group_page = BOACGroupStudentsPage.new @driver
     @drafts_page = BOACDraftNotesPage.new @driver
@@ -178,15 +178,15 @@ describe 'BOA draft note' do
 
       it 'saves the contact method' do
         @note_1.type = 'Phone'
-        @student_page.select_contact_type @note_1
         @student_page.click_update_note_draft
-        @student_page.wait_for_draft_note_update(@note_1, manual_update=true)
+        @student_page.expand_item @note_1
+        @student_page.click_edit_note_button @note_1
+        @student_page.select_contact_type @note_1
+        @student_page.wait_for_draft_note_update @note_1
       end
 
       it 'removes the contact method' do
         @note_1.type = nil
-        @student_page.expand_item @note_1
-        @student_page.click_edit_note_button @note_1
         @student_page.select_contact_type @note_1
         @student_page.wait_for_draft_note_update @note_1
       end
@@ -270,11 +270,13 @@ describe 'BOA draft note' do
         @note_2.set_date = nil
         @drafts_page.click_subject @note_2
         @drafts_page.enter_set_date @note_2
-        @drafts_page.wait_for_draft_note_update @note_2
+        @drafts_page.click_save_as_draft
+        @drafts_page.wait_for_draft_note_update(@note_2, manual_update = true)
       end
 
       it 'adds the contact method' do
         @note_2.type = 'Phone'
+        @drafts_page.click_subject @note_2
         @drafts_page.select_contact_type @note_2
         @drafts_page.wait_for_draft_note_update @note_2
       end
@@ -706,10 +708,10 @@ describe 'BOA draft note' do
         @student_page.click_edit_note_button @note_5
         @student_page.enter_edit_note_subject @note_5
         @student_page.enter_note_body @note_5
-        @student_page.enter_set_date @note_5
         @student_page.select_contact_type @note_5
         @student_page.set_note_privacy @note_5
         @student_page.add_topics(@note_5, [Topic::ACADEMIC_PROGRESS])
+        @student_page.enter_set_date @note_5
         @student_page.click_update_note_draft
         @student_page.add_attachments_to_existing_note(@note_5, [@attachments[0]])
         @visible_expanded = @student_page.visible_expanded_note_data @note_5
@@ -741,11 +743,11 @@ describe 'BOA draft note' do
         @drafts_page.add_students_to_batch(@note_4, [@test_student])
         @drafts_page.enter_new_note_subject @note_4
         @drafts_page.enter_note_body @note_4
-        @drafts_page.enter_set_date @note_4
         @drafts_page.select_contact_type @note_4
         @drafts_page.set_note_privacy @note_4
         @drafts_page.add_topics(@note_4, [Topic::CHANGE_OF_COLLEGE])
         @drafts_page.add_attachments_to_new_note(@note_4, [@attachments[0]])
+        @drafts_page.enter_set_date @note_4
         @drafts_page.click_save_as_draft
         @drafts_page.wait_for_draft_note_row @note_4
         @drafts_page.click_student_link @note_4

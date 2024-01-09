@@ -153,13 +153,13 @@ module BOACSearchForm
     wait_until(Utils.short_wait) do
       auto_suggest_option_elements.any?
       auto_suggest_option_elements.find do |el|
-        el.text.downcase.include?(name.downcase) ||
-          (alt_names.find { |n| el.text.downcase.include? n.downcase } if alt_names.any?)
+        text = el.attribute('innerText').downcase
+        text.include?(name.downcase) || (alt_names.find { |n| text.include? n.downcase } if alt_names.any?)
       end
     end
     el = auto_suggest_option_elements.find do |el|
-      el.text.downcase.include?(name.downcase) ||
-        (alt_names.find { |n| el.text.downcase.include? n.downcase } if alt_names.any?)
+      text = el.attribute('innerText').downcase
+      text.include?(name.downcase) || (alt_names.find { |n| text.include? n.downcase } if alt_names.any?)
     end
     el.click
   end

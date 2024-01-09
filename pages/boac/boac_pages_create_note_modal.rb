@@ -191,8 +191,8 @@ module BOACPagesCreateNoteModal
 
   # CE3 Restricted
 
-  radio_button(:universal_radio, xpath: '//input[@id="note-is-not-private-radio-button"]/..')
-  radio_button(:private_radio, xpath: '//input[@id="note-is-private-radio-button"]/..')
+  radio_button(:universal_radio, xpath: '//input[@id="note-is-not-private-radio-button"]/ancestor::div[contains(@class, "custom-radio")]')
+  radio_button(:private_radio, xpath: '//input[@id="note-is-private-radio-button"]/ancestor::div[contains(@class, "custom-radio")]')
 
   def set_note_privacy(note)
     if note.advisor&.dept_memberships&.find { |m| m.dept == BOACDepartments::ZCEEE } || note.advisor&.depts&.include?(BOACDepartments::ZCEEE.name)
@@ -213,15 +213,14 @@ module BOACPagesCreateNoteModal
 
   def contact_type_radio(note)
     if note.type
-      radio_button_element(xpath: "//input[@type='radio'][@value='#{note.type}']/..")
+      radio_button_element(xpath: "//input[@type='radio'][@value='#{note.type}']/ancestor::div[contains(@class, 'custom-radio')]")
     else
-      radio_button_element(xpath: '//input[@id="contact-option-none-radio-button"]/..')
+      radio_button_element(xpath: '//input[@id="contact-option-none-radio-button"]/ancestor::div[contains(@class, "custom-radio")]')
     end
   end
 
   def select_contact_type(note)
     logger.debug "Selecting contact type '#{note.type}'"
-    hit_escape
     contact_type_radio(note).click
   end
 
@@ -235,7 +234,6 @@ module BOACPagesCreateNoteModal
     50.times { hit_backspace }
     50.times { hit_delete }
     set_date_input_element.send_keys note.set_date.strftime('%m/%d/%Y') if note.set_date
-    wait_for_update_and_click note_body_text_area_elements[1]
   end
 
   # Save
@@ -469,6 +467,7 @@ module BOACPagesCreateNoteModal
   def click_cancel_template
     logger.info 'Canceling the template'
     wait_for_update_and_click cancel_template_button_element
+    sleep 2
   end
 
   def enter_template_title(template)
@@ -582,7 +581,8 @@ module BOACPagesCreateNoteModal
   def delete_template(template)
     logger.info "Deleting template ID #{template.id}"
     click_delete_template template
-    wait_for_update_and_click confirm_delete_or_discard_button_element unless "#{browser.browser}" == 'firefox'
+    wait_for_update_and_click confirm_delete_or_discard_button_element
+    sleep 1
   end
 
 end

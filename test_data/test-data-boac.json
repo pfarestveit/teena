@@ -29,11 +29,6 @@
                     {
                         "ethnicity": "Puerto Rican"
                     }
-                ],
-                "genders": [
-                    {
-                        "gender": "Male"
-                    }
                 ]
             },
             {
@@ -174,19 +169,9 @@
                         "level": "10"
                     }
                 ],
-                "genders": [
-                    {
-                        "gender": "Male"
-                    }
-                ],
                 "mid_point_deficient": true
             },
             {
-                "coe_genders": [
-                    {
-                        "gender": "F"
-                    }
-                ],
                 "coe_inactive": true
             },
             {

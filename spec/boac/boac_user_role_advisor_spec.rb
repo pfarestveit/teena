@@ -226,7 +226,6 @@ unless ENV['NO_DEPS']
         it('sees a Units Completed filter') { expect(@opts).to include 'Units Completed' }
 
         it('sees an Ethnicity filter') { expect(@opts).to include('Ethnicity') }
-        it('sees a Gender filter') { expect(@opts).to include('Gender') }
         it('sees an Underrepresented Minority filter') { expect(@opts).to include('Underrepresented Minority') }
         it('sees a Visa Type filter') { expect(@opts).to include('Visa Type') }
 
@@ -236,7 +235,6 @@ unless ENV['NO_DEPS']
 
         it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
         it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
-        it('sees no Gender (COE) filter') { expect(@opts).not_to include('Gender (COE)') }
         it('sees no Inactive (COE) filter') { expect(@opts).not_to include('Inactive (COE)') }
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
@@ -431,7 +429,6 @@ unless ENV['NO_DEPS']
         it('sees a Units Completed filter') { expect(@opts).to include 'Units Completed' }
 
         it('sees an Ethnicity filter') { expect(@opts).to include('Ethnicity') }
-        it('sees a Gender filter') { expect(@opts).to include('Gender') }
         it('sees an Underrepresented Minority filter') { expect(@opts).to include('Underrepresented Minority') }
         it('sees a Visa Type filter') { expect(@opts).to include('Visa Type') }
 
@@ -441,7 +438,6 @@ unless ENV['NO_DEPS']
 
         it('sees an Advisor (COE) filter') { expect(@opts).to include('Advisor (COE)') }
         it('sees an Ethnicity (COE) filter') { expect(@opts).to include('Ethnicity (COE)') }
-        it('sees a Gender (COE) filter') { expect(@opts).to include('Gender (COE)') }
         it('sees an Inactive (COE) filter') { expect(@opts).to include('Inactive (COE)') }
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
@@ -633,7 +629,6 @@ unless ENV['NO_DEPS']
         it('sees a Units Completed filter') { expect(@opts).to include 'Units Completed' }
 
         it('sees an Ethnicity filter') { expect(@opts).to include('Ethnicity') }
-        it('sees a Gender filter') { expect(@opts).to include('Gender') }
         it('sees an Underrepresented Minority filter') { expect(@opts).to include('Underrepresented Minority') }
         it('sees a Visa Type filter') { expect(@opts).to include('Visa Type') }
 
@@ -643,7 +638,6 @@ unless ENV['NO_DEPS']
 
         it('sees no Advisor (COE) filter') { expect(@opts).not_to include('Advisor (COE)') }
         it('sees no Ethnicity (COE) filter') { expect(@opts).not_to include('Ethnicity (COE)') }
-        it('sees no Gender (COE) filter') { expect(@opts).not_to include('Gender (COE)') }
         it('sees no Inactive (COE) filter') { expect(@opts).not_to include('Inactive (COE)') }
         it('sees a Last Name filter') { expect(@opts).to include('Last Name') }
         it('sees a My Curated Groups filter') { expect(@opts).to include('My Curated Groups') }
