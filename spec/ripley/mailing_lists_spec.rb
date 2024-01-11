@@ -88,7 +88,7 @@ describe 'bCourses Mailgun mailing lists' do
 
       it('shows the course site code') { expect(@mailing_lists_page.site_name_link_element.text).to include(course_site_1.title) }
       it('shows the course site term') { expect(@mailing_lists_page.site_term).to eql(course_site_1.term.name) }
-      it('shows the course site ID') { expect(@mailing_lists_page.site_id).to eql("Site ID #{course_site_1.site_id}") }
+      it('shows the course site ID') { expect(@mailing_lists_page.site_id).to eql("bCourses Site ID #{course_site_1.site_id}") }
 
       it 'shows a link to the course site' do
         expect(@mailing_lists_page.external_link_valid?(@mailing_lists_page.site_name_link_element, course_site_1.title)).to be true
@@ -97,7 +97,7 @@ describe 'bCourses Mailgun mailing lists' do
       it 'shows a default mailing list name' do
         @mailing_lists_page.switch_to_canvas_iframe
         @mailing_lists_page.wait_until(Utils.short_wait) do
-          @mailing_lists_page.list_name_input_element.value == @mailing_lists_page.default_list_name(course_site_1)
+          @mailing_lists_page.list_name_input_element.value == @mailing_lists_page.default_list_name(course_site_1)[0..-6]
         end
       end
 
@@ -112,16 +112,18 @@ describe 'bCourses Mailgun mailing lists' do
       end
 
       it 'creates a mailing list with a valid, unique mailing list name' do
-        @mailing_lists_page.enter_custom_list_name @mailing_lists_page.default_list_name(course_site_1)
+        @mailing_lists_page.enter_custom_list_name @mailing_lists_page.default_list_name(course_site_1)[0..-6]
+        expected_list_name = "#{@mailing_lists_page.default_list_name course_site_1}@bcourses-mail.berkeley.edu"
         @mailing_lists_page.wait_until(timeout) do
-          @mailing_lists_page.list_address == "#{@mailing_lists_page.default_list_name course_site_1}@bcourses-mail.berkeley.edu"
+          logger.info "Expected #{expected_list_name}; actual #{@mailing_lists_page.list_address}"
+          @mailing_lists_page.list_address == expected_list_name
         end
       end
 
       it 'will not create a mailing list for a course site with the same course code as an existing list' do
         @mailing_lists_page.click_cancel_list
         @mailing_lists_page.search_for_list course_site_2.site_id
-        @mailing_lists_page.enter_custom_list_name @mailing_lists_page.default_list_name(course_site_1)
+        @mailing_lists_page.enter_custom_list_name @mailing_lists_page.default_list_name(course_site_1)[0..-6]
         @mailing_lists_page.list_name_taken_error_msg_element.when_visible timeout
       end
     end
@@ -135,8 +137,10 @@ describe 'bCourses Mailgun mailing lists' do
       end
 
       it 'shows the mailing list email address' do
+        expected_list_name = "#{@mailing_lists_page.default_list_name course_site_1}@bcourses-mail.berkeley.edu"
         @mailing_lists_page.wait_until(timeout) do
-          @mailing_lists_page.list_address == "#{@mailing_lists_page.default_list_name course_site_1}@bcourses-mail.berkeley.edu"
+          logger.info "Expected #{expected_list_name}; actual #{@mailing_lists_page.list_address}"
+          @mailing_lists_page.list_address == expected_list_name
         end
       end
 
@@ -246,9 +250,11 @@ describe 'bCourses Mailgun mailing lists' do
       it 'does not update mailing list memberships for lists from two terms past' do
         @mailing_lists_page.load_embedded_tool
         @mailing_lists_page.search_for_list course_site_4.site_id
-        @mailing_lists_page.enter_custom_list_name @mailing_lists_page.default_list_name(course_site_4)
+        @mailing_lists_page.enter_custom_list_name @mailing_lists_page.default_list_name(course_site_4)[0..-6]
+        expected_list_name = "#{@mailing_lists_page.default_list_name course_site_4}@bcourses-mail.berkeley.edu"
         @mailing_lists_page.wait_until(timeout) do
-          @mailing_lists_page.list_address == "#{@mailing_lists_page.default_list_name course_site_4}@bcourses-mail.berkeley.edu"
+          logger.info "Expected #{expected_list_name}; actual #{@mailing_lists_page.list_address}"
+          @mailing_lists_page.list_address == expected_list_name
         end
 
         @canvas_page.masquerade_as(course_site_4.manual_members.first, course_site_4)
@@ -310,8 +316,10 @@ describe 'bCourses Mailgun mailing lists' do
       @mailing_lists_page.load_embedded_tool
       @mailing_lists_page.search_for_list project_site.site_id
       @mailing_lists_page.enter_custom_list_name @mailing_lists_page.default_list_name(project_site)
+      expected_list_name = "#{@mailing_lists_page.default_list_name project_site}@bcourses-mail.berkeley.edu"
       @mailing_lists_page.wait_until(timeout) do
-        @mailing_lists_page.list_address == "#{@mailing_lists_page.default_list_name project_site}@bcourses-mail.berkeley.edu"
+        logger.info "Expected #{expected_list_name}; actual #{@mailing_lists_page.list_address}"
+        @mailing_lists_page.list_address == expected_list_name
       end
     end
 

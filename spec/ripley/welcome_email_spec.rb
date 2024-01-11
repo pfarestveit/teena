@@ -44,7 +44,7 @@ describe 'bCourses welcome email', order: :defined do
     end
 
     it 'includes a link to more information' do
-      title = 'IT - How to Create a Welcome Email with the bCourses Mailing List'
+      title = 'IT - How do I send a welcome email to newly enrolled students with the bCourses Mailing List tool?'
       expect(@mailing_list.external_link_valid?(@mailing_list.welcome_email_link_element, title)).to be true
     end
 

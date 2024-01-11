@@ -485,7 +485,6 @@ module Page
     text_area(:url_input, id: 'configUrl')
     text_area(:client_id_input, name: 'client_id')
     button(:add_tool_button, id: 'continue-install')
-    link(:app_placements_button, text: 'Placements')
     button(:activate_navigation_button, xpath: '//span[text()="Course Navigation"]/following-sibling::span//button')
     button(:close_placements_button, xpath: '//span[@aria-label="App Placements"]//button[contains(., "Close")]')
 
@@ -568,7 +567,7 @@ module Page
 
               # Enable tool placement in sidebar navigation
               wait_for_update_and_click button_element(xpath: "//tr[contains(., '#{tool.name}')]//button")
-              wait_for_update_and_click app_placements_button_element
+              wait_for_update_and_click link_element(xpath: "//tr[contains(., '#{tool.name}')]//a[text()='Placements']")
               wait_for_update_and_click activate_navigation_button_element
               wait_for_update_and_click close_placements_button_element
               sleep 1
