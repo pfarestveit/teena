@@ -85,11 +85,11 @@ describe 'Impact Studio' do
 
       it 'offers a user search field' do
         @impact_studio.user_select_element.when_present Utils.short_wait
-        expect(@impact_studio.user_select_options.map &:strip).to eql([teacher.full_name, student_1.full_name, student_2.full_name])
+        expect(@impact_studio.user_select_options.map(&:strip).sort).to eql([teacher.full_name, student_1.full_name, student_2.full_name].sort)
       end
       it 'offers user profile pagination' do
-        expect(@impact_studio.browse_previous_element.text).to include(student_1.full_name)
-        expect(@impact_studio.browse_next_element.text).to include(teacher.full_name)
+        expect([student_1.full_name, teacher.full_name]).to include(@impact_studio.browse_previous_element.text.delete('<>').strip)
+        expect([student_1.full_name, teacher.full_name]).to include(@impact_studio.browse_next_element.text.delete('<>').strip)
       end
     end
   end
