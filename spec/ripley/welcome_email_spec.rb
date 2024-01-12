@@ -53,6 +53,11 @@ describe 'bCourses welcome email', order: :defined do
       expect(@mailing_list.email_save_button_element.disabled?).to be true
     end
 
+    it 'includes a disabled activation toggle' do
+      expect(@mailing_list.email_activation_disabled_msg?).to be true
+      expect(@mailing_list.email_activation_toggle_element.disabled?).to be true
+    end
+
     it 'is possible with a subject and body' do
       @mailing_list.enter_email_subject @email.subject
       @mailing_list.enter_email_body @email.body

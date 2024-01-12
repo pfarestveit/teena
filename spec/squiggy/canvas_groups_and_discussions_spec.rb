@@ -42,7 +42,7 @@ describe 'A SuiteC course' do
                                                   owner: @student_1,
                                                   collaborators: [@student_3, @student_4]
 
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser 'firefox'
     @cal_net = Page::CalNetPage.new @driver
     @canvas_groups_page = Page::CanvasGroupsPage.new @driver
     @canvas_discussions_page = Page::CanvasAnnounceDiscussPage.new @driver
@@ -108,6 +108,7 @@ describe 'A SuiteC course' do
         it 'offers search filtering by all groups' do
           @asset_library.open_advanced_search
           @asset_library.click_group_select
+          @asset_library.wait_until(Utils.short_wait) { @asset_library.group_options.any? }
           expect(@asset_library.group_options.sort).to eql(@group_options.sort)
         end
       end

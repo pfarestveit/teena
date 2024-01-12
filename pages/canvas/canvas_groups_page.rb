@@ -106,7 +106,7 @@ module Page
 
     # STUDENT
 
-    button(:stud_grp_add_button, xpath: '//button[@data-test-id="add-group-button"]')
+    button(:stud_grp_add_button, xpath: '//button[@data-testid="add-group-button"]')
     text_field(:stud_grp_add_name_input, id: 'group-name')
     text_field(:stud_grp_add_member_input, id: 'invite-filter')
     elements(:stud_grp_member_option, :span, xpath: '//span[@role="option"]')

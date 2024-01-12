@@ -6,7 +6,7 @@ describe 'Asset Library' do
   test.course_site.site_id = ENV['COURSE_ID']
 
   before(:all) do
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser 'firefox'
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @assets_list = SquiggyAssetLibraryListViewPage.new @driver

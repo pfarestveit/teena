@@ -50,6 +50,7 @@ class RipleyMailingListPage
   text_area(:email_body_text_area, xpath: '//div[@role="textbox"]')
   button(:email_save_button, id: 'btn-save-welcome-email')
   button(:email_activation_toggle, xpath: '//input[contains(@id, "switch-")]')
+  span(:email_activation_disabled_msg, xpath: '//span[contains(., "You can activate the welcome email after you enter email subject and message below.")]')
   span(:email_paused_msg, xpath: '//span[text()="Sending welcome emails is paused."]')
   div(:email_activated_msg, span: '//span[text()="Welcome email  activated."]')
   div(:email_subject, id: 'page-site-mailing-list-subject')

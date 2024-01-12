@@ -107,7 +107,7 @@ module Page
         primary_reply_iframe_element.when_present Utils.short_wait
         replies = discussion_reply_elements.length
         switch_to_frame primary_reply_iframe_element.attribute('id')
-        wait_for_element_and_type_js(paragraph_element(xpath: '//p'), reply_body)
+        wait_for_element_and_type_js(div_element(id: 'tinymce'), reply_body)
         switch_to_main_content
         reply_prompt_dismiss_button_element.click if reply_prompt_dismiss_button_element.exists?
         wait_for_load_and_click primary_post_reply_button_element
@@ -118,7 +118,7 @@ module Page
         wait_for_load_and_click secondary_reply_link_elements[index]
         secondary_reply_iframe_element.when_present Utils.short_wait
         switch_to_frame secondary_reply_iframe_element.attribute('id')
-        wait_for_element_and_type_js(paragraph_element(xpath: '//p'), reply_body)
+        wait_for_element_and_type_js(div_element(id: 'tinymce'), reply_body)
         switch_to_main_content
         reply_prompt_dismiss_button_element.click if reply_prompt_dismiss_button_element.exists?
         wait_for_load_and_click secondary_post_reply_button_elements[index]
