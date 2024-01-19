@@ -821,7 +821,7 @@ class BOACUtils < Utils
 
         note_data = {
           id: r['id'],
-          subject: r['subject'],
+          subject: r['subject'].gsub(/\s+/, ' '),
           body: (r['body'] && Nokogiri::HTML(r['body']).text).to_s.strip,
           advisor: BOACUser.new(advisor_data),
           created_date: Time.parse(r['created_at'].to_s).utc.localtime,

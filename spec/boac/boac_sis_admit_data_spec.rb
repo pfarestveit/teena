@@ -107,9 +107,6 @@ unless ENV['DEPS']
           visible_country = @admit_page.address_country
           it("shows the address country of CS ID #{admit[:cs_empl_id]}") { expect(visible_country).to eql(admit[:permanent_country]) }
 
-          visible_gender_id = @admit_page.gender_identity
-          it("shows the gender identity of CS ID #{admit[:cs_empl_id]}") { expect(visible_gender_id).to eql(admit[:gender_identity]) }
-
           visible_x_ethnic = @admit_page.x_ethnic
           it("shows the x-ethnic status of CS ID #{admit[:cs_empl_id]}") { expect(visible_x_ethnic).to eql(admit[:xethnic]) }
 

@@ -562,7 +562,7 @@ module Page
               wait_for_element_and_type(secret_input_element, creds[:secret])
               wait_for_element_and_type(url_input_element, "#{SquiggyUtils.base_url}#{tool.xml}")
               wait_for_update_and_click submit_button_element
-              wait_for_update_and_click add_tool_button_element
+              wait_for_update_and_click add_tool_button_element rescue logger.warn('No add tool button')
               link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
 
               # Enable tool placement in sidebar navigation

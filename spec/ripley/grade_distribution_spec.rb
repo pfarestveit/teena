@@ -29,6 +29,7 @@ describe 'The Grade Distribution tool' do
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     @canvas.set_canvas_ids non_teachers
+    @canvas_api.get_support_admin_canvas_id test.canvas_admin
 
     test.course_sites.each do |site|
 
@@ -114,6 +115,12 @@ describe 'The Grade Distribution tool' do
           end
           it("denies #{user.role} #{user.uid} access to the tool") { expect(user_blocked).to be true }
         end
+        admin_access = @newt.verify_block do
+          @canvas.masquerade_as(test.canvas_admin, site)
+          @newt.load_embedded_tool site
+          @newt.expand_demographics_table
+        end
+        it("permits a #{test.canvas_admin.role} access to the tool") { expect(admin_access).to be true }
       end
 
     rescue => e

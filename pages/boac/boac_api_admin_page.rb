@@ -31,6 +31,7 @@ class BOACApiAdminPage
   end
 
   def reindex_notes
+    logger.info 'Indexing notes'
     navigate_to "#{BOACUtils.api_base_url}/api/admin/reindex/notes"
     sleep Utils.short_wait
   end

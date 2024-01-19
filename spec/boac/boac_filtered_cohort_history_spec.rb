@@ -11,7 +11,7 @@ unless ENV['NO_DEPS']
       @test.filtered_history
 
       @cohort_1_filters = CohortFilter.new
-      @cohort_1_filters.set_custom_filters major: ['English BA'], gender: ['Female']
+      @cohort_1_filters.set_custom_filters major: ['English BA'], ethnicity: ['African-American / Black']
       @cohort_1 = FilteredCohort.new name: "Cohort 1 #{@test.id}", search_criteria: @cohort_1_filters
 
       @cohort_2_filters = CohortFilter.new
@@ -88,10 +88,10 @@ unless ENV['NO_DEPS']
 
       before(:all) do
         @initial_members = @cohort_1.members
-        @cohort_1.search_criteria.gender = ['Male']
+        @cohort_1.search_criteria.ethnicity = ['Puerto Rican']
         @cohort_page.load_cohort @cohort_1
         @cohort_page.show_filters
-        @cohort_page.edit_filter('Gender', @cohort_1.search_criteria.gender.first)
+        @cohort_page.edit_filter('Ethnicity', @cohort_1.search_criteria.ethnicity.first)
         @cohort_page.apply_and_save_cohort
         @cohort_page.set_cohort_members(@cohort_1, @test)
         added_members = @cohort_1.members - @initial_members

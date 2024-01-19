@@ -126,7 +126,7 @@ describe 'bCourses Roster Photos' do
 
   context 'when not a Teacher' do
 
-    [test.lead_ta, test.ta].each do |user|
+    [test.canvas_admin, test.lead_ta, test.ta].each do |user|
       it "permits #{user.role} #{user.uid}, #{user.canvas_id} access to the tool" do
         @canvas.masquerade_as(user, @site)
         @roster_photos_page.load_embedded_tool @site

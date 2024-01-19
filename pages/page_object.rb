@@ -41,7 +41,14 @@ module PageObject
     wait.until do
       yield
     rescue
-      false
+      Utils.log_js_errors @driver
+      if Utils.get_js_errors(@driver).find { |m| m.include?('NETWORK') }
+        logger.error 'Network error, retrying'
+        refresh_page
+        retry
+      else
+        false
+      end
     end
   end
 

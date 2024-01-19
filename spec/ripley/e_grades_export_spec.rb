@@ -321,6 +321,12 @@ describe 'bCourses E-Grades Export' do
       end
     end
 
+    it "permits #{test.canvas_admin} access to the tool" do
+      @canvas.masquerade_as(test.canvas_admin, site)
+      @e_grades_export_page.load_embedded_tool site
+      @e_grades_export_page.click_continue
+    end
+
     [test.lead_ta, test.ta, test.reader].each do |user|
       it "denies #{user.role} #{user.uid} access to the tool" do
         @canvas.masquerade_as(user, site)
