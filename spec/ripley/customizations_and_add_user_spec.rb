@@ -213,13 +213,15 @@ describe 'bCourses' do
       @mental_health_heading = 'Mental Health | University Health Services'
     end
 
-    [test.lead_ta, test.ta].each do |user|
+    [test.canvas_admin, test.lead_ta, test.ta].each do |user|
       it "allows #{user.role} #{user.uid} access to the Find a Person to Add tool with limited roles" do
         @canvas.masquerade_as(user, @site)
         @canvas.load_users_page @site
         @canvas.click_find_person_to_add
         @course_add_user_page.search('Oski', 'Last Name, First Name')
-        opts = if user == test.lead_ta
+        opts = if user == test.canvas_admin
+                 ['Student', 'Waitlist Student', 'Teacher', 'TA', 'Lead TA', 'Reader', 'Designer', 'Observer']
+               elsif user == test.lead_ta
                  ['Student', 'Waitlist Student', 'TA', 'Lead TA', 'Reader', 'Observer']
                else
                  ['Student', 'Waitlist Student', 'Observer']

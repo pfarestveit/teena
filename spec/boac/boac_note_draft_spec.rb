@@ -701,7 +701,7 @@ describe 'BOA draft note' do
 
         @note_5.subject = "#{@note_5.subject} EDITED"
         @note_5.body = "#{@note_5.body} EDITED"
-        @note_5.set_date = Time.now
+        @note_5.set_date = Date.today
         @note_5.type = 'Phone'
         @note_5.is_private = true
 
@@ -736,7 +736,7 @@ describe 'BOA draft note' do
 
         @note_4.subject = "#{@note_4.subject} EDITED"
         @note_4.body = "Draft note 4 #{@test.id} body"
-        @note_4.set_date = Time.now - 172800
+        @note_4.set_date = Date.today - 1
         @note_4.type = 'Admin'
         @note_4.is_private = true
 

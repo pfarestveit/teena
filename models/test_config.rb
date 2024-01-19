@@ -4,6 +4,7 @@ class TestConfig
                 :test_course_data,
                 :test_user_data,
                 :admin,
+                :canvas_admin,
                 :designer,
                 :lead_ta,
                 :observer,

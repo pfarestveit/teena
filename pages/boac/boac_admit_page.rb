@@ -26,7 +26,6 @@ class BOACAdmitPage
   div(:address_street_2, id: 'admit-permanent-street-2')
   div(:address_city_region_postal, id: 'admit-permanent-city-region-postal')
   div(:address_country, id: 'admit-permanent-country')
-  cell(:gender_identity, id: 'admit-gender-identity')
   cell(:x_ethnic, id: 'admit-x-ethnic')
   cell(:hispanic, id: 'admit-hispanic')
   cell(:urem, id: 'admit-urem')

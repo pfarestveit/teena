@@ -54,4 +54,12 @@ class CanvasAPIPage
     (tries -= 1).zero? ? fail(e.message) : retry
   end
 
+  def get_support_admin_canvas_id(user)
+    navigate_to "#{Utils.canvas_base_url}/api/v1/accounts/#{Utils.canvas_uc_berkeley_sub_account}/admins?per_page=100"
+    parse_json
+    obj = @parsed.find { |i| i['role'] == 'Support Admin' && (i['user'] && i['user']['id']) }
+    logger.debug "Support Admin: #{obj}"
+    user.canvas_id = obj['user']['id']
+  end
+
 end

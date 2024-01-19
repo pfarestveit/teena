@@ -17,9 +17,10 @@ describe 'bCourses Mailgun mailing lists' do
   before(:all) do
     @driver = Utils.launch_browser
     @canvas_page = Page::CanvasPage.new @driver
+    @canvas_api_page = CanvasAPIPage.new @driver
     @cal_net_page = Page::CalNetPage.new @driver
     @splash_page = RipleySplashPage.new @driver
-    @jobs_page = RipleyJobsPage.new @driver
+    @jobs_page = RipleyAdminPage.new @driver
     @mailing_list_page = RipleyMailingListPage.new @driver
     @mailing_lists_page = RipleyMailingListsPage.new @driver
     @site_creation_page = RipleySiteCreationPage.new @driver
@@ -27,6 +28,7 @@ describe 'bCourses Mailgun mailing lists' do
 
     @canvas_page.log_in(@cal_net_page, test.admin.username, Utils.super_admin_password)
     @canvas_page.add_ripley_tools RipleyTool::TOOLS.select(&:account)
+    @canvas_api_page.get_support_admin_canvas_id test.canvas_admin
     @canvas_page.create_ripley_mailing_list_site course_site_1
     @canvas_page.create_ripley_mailing_list_site course_site_2
     @canvas_page.create_ripley_mailing_list_site course_site_3
@@ -46,8 +48,8 @@ describe 'bCourses Mailgun mailing lists' do
     expect(@mailing_list_page.mailing_list_link?).to be false
   end
 
-  course_site_1.manual_members.each do |user|
-    if ['Teacher', 'Lead TA', 'TA', 'Reader'].include? user.role
+  (course_site_1.manual_members + [test.canvas_admin]).each do |user|
+    if ['Canvas Admin', 'Teacher', 'Lead TA', 'TA', 'Reader'].include? user.role
       it "can be managed by a course #{user.role}" do
         @canvas_page.masquerade_as(user, course_site_1)
         @mailing_list_page.load_embedded_tool course_site_1
@@ -60,9 +62,16 @@ describe 'bCourses Mailgun mailing lists' do
         @mailing_list_page.unauthorized_msg_element.when_present Utils.short_wait
       end
     end
-    it "cannot be managed by a course #{user.role} via the admin tool" do
-      @mailing_lists_page.load_embedded_tool
-      @mailing_lists_page.unauthorized_msg_element.when_present Utils.short_wait
+    if 'Canvas Admin' == user.role
+      it "can be managed by a course #{user.role} via the admin tool" do
+        @mailing_lists_page.load_embedded_tool
+        @mailing_lists_page.search_for_list course_site_1.site_id
+      end
+    else
+      it "cannot be managed by a course #{user.role} via the admin tool" do
+        @mailing_lists_page.load_embedded_tool
+        @mailing_lists_page.unauthorized_msg_element.when_present Utils.short_wait
+      end
     end
   end
 

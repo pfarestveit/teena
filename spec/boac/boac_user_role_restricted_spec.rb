@@ -113,7 +113,6 @@ unless ENV['DEPS']
         it('sees a Units Completed filter') { expect(@opts).to include 'Units Completed' }
 
         it('sees an Ethnicity filter') { expect(@opts).to include('Ethnicity') }
-        it('sees a Gender filter') { expect(@opts).to include('Gender') }
         it('sees an Underrepresented Minority filter') { expect(@opts).to include('Underrepresented Minority') }
         it('sees a Visa Type filter') { expect(@opts).to include('Visa Type') }
 
@@ -316,7 +315,6 @@ unless ENV['DEPS']
         it('sees a Units Completed filter') { expect(@opts).to include 'Units Completed' }
 
         it('sees an Ethnicity filter') { expect(@opts).to include('Ethnicity') }
-        it('sees a Gender filter') { expect(@opts).to include('Gender') }
         it('sees an Underrepresented Minority filter') { expect(@opts).to include('Underrepresented Minority') }
         it('sees a Visa Type filter') { expect(@opts).to include('Visa Type') }
 

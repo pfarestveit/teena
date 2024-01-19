@@ -11,6 +11,7 @@ describe 'bCourses project site', order: :defined do
     @driver = Utils.launch_browser
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasPage.new @driver
+    @canvas_api = CanvasAPIPage.new @driver
     @splash_page = RipleySplashPage.new @driver
     @site_creation_page = RipleySiteCreationPage.new @driver
     @create_project_site_page = RipleyCreateProjectSitePage.new @driver
@@ -21,6 +22,7 @@ describe 'bCourses project site', order: :defined do
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     @canvas.add_ripley_tools RipleyTool::TOOLS.select(&:account)
     @canvas.set_canvas_ids project.manual_members
+    @canvas_api.get_support_admin_canvas_id test.canvas_admin
     @canvas.masquerade_as test.manual_teacher
   end
 
@@ -102,13 +104,13 @@ describe 'bCourses project site', order: :defined do
 
   describe 'user role restrictions' do
 
-    [test.ta, test.staff, test.students.first].each do |user|
+    [test.canvas_admin, test.ta, test.staff, test.students.first].each do |user|
 
       it "allows #{user.role} UID #{user.uid} to see a Create a Site button if permitted to do so" do
         @canvas.masquerade_as user
         @canvas.load_homepage
         has_create_site_button = @canvas.verify_block { @canvas.ripley_manage_sites_link_element.when_visible(Utils.short_wait) }
-        (%w(TA Staff).include? user.role) ? (expect(has_create_site_button).to be true) : (expect(has_create_site_button).to be false)
+        ['Canvas Admin', 'TA', 'Staff'].include?(user.role) ? (expect(has_create_site_button).to be true) : (expect(has_create_site_button).to be false)
       end
 
       it "allows #{user.role} UID #{user.uid} to navigate to the tool if permitted to do so" do

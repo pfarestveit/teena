@@ -51,6 +51,7 @@ describe 'bCourses Official Sections tool' do
 
       roles = ['Teacher', 'Lead TA', 'TA', 'Student', 'Waitlist Student']
       @canvas.set_canvas_ids([teacher] + non_teachers)
+      @canvas_api.get_support_admin_canvas_id test.canvas_admin
       @canvas.masquerade_as teacher
 
       logger.info "Sections to add/delete are #{sections_to_add_delete.map &:id}"
@@ -331,13 +332,15 @@ describe 'bCourses Official Sections tool' do
         @add_user.add_user_by_uid(user, site.sections.first)
       end
 
-      lead_ta_edit_access = @canvas.verify_block do
-        @canvas.masquerade_as(test.lead_ta, site)
-        @official_sections.load_embedded_tool test.lead_ta
-        @official_sections.select_site_and_manage site
-        @official_sections.click_edit_sections
+      [test.canvas_admin, test.lead_ta].each do |user|
+        edit_access = @canvas.verify_block do
+          @canvas.masquerade_as(user, site)
+          @official_sections.load_embedded_tool user
+          @official_sections.select_site_and_manage site
+          @official_sections.click_edit_sections
+        end
+        it("allow a #{user.role} full access to the tool") { expect(edit_access).to be true }
       end
-      it('allow a Lead TA full access to the tool') { expect(lead_ta_edit_access).to be true }
 
       [test.ta, test.designer].each do |user|
         no_edit_access = @canvas.verify_block do

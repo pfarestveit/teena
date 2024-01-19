@@ -25,6 +25,7 @@ describe 'bCourses course site creation' do
     @site_creation = RipleySiteCreationPage.new @driver
     @create_course_site = RipleyCreateCourseSitePage.new @driver
     @canvas = Page::CanvasPage.new @driver
+    @canvas_api = CanvasAPIPage.new @driver
     @canvas_assignments = Page::CanvasAssignmentsPage.new @driver
     @official_sections = RipleyOfficialSectionsPage.new @driver
     @roster_photos = RipleyRosterPhotosPage.new @driver
@@ -32,6 +33,7 @@ describe 'bCourses course site creation' do
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     @canvas.add_ripley_tools RipleyTool::TOOLS.select(&:account)
     @canvas.set_canvas_ids non_teachers
+    @canvas_api.get_support_admin_canvas_id test.canvas_admin
 
     test.course_sites.reverse.each do |site|
 
@@ -287,6 +289,15 @@ describe 'bCourses course site creation' do
     end
 
     # VERIFY ACCESS TO TOOL FOR USER ROLES
+
+    @canvas.masquerade_as test.canvas_admin
+    canvas_admin_has_button = @canvas.verify_block { @canvas.create_site_link_element.when_visible Utils.short_wait }
+    @canvas.click_ripley_create_site_settings_link
+    canvas_admin_access_permitted = @create_course_site.verify_block do
+      @create_course_site.create_course_site_link_element.when_visible Utils.short_wait
+    end
+    it('offers a Create a Site button to a Canvas Admin') { expect(canvas_admin_has_button).to be true }
+    it('permits a Canvas Admin access to the tool') { expect(canvas_admin_access_permitted).to be true }
 
     @canvas.masquerade_as test.students.first
     student_has_button = @canvas.verify_block { @canvas.create_site_link_element.when_visible Utils.short_wait }

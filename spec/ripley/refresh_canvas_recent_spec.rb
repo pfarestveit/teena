@@ -11,7 +11,7 @@ describe 'bCourses recent enrollment updates' do
     @canvas_api = CanvasAPIPage.new @driver
     @splash_page = RipleySplashPage.new @driver
     @create_course_site_page = RipleyCreateCourseSitePage.new @driver
-    @jobs_page = RipleyJobsPage.new @driver
+    @jobs_page = RipleyAdminPage.new @driver
 
     @test = RipleyTestConfig.new
 

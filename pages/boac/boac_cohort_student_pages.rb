@@ -26,6 +26,7 @@ module BOACCohortStudentPages
     end
     csv_file_path = "#{Utils.download_dir}/#{cohort.name + '-' if cohort.id}students-#{Time.now.strftime('%Y-%m-%d')}_*.csv"
     wait_until(20) { Dir[csv_file_path].any? }
+    sleep 1
     CSV.table Dir[csv_file_path].first
   end
 

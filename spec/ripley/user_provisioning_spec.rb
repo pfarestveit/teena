@@ -21,11 +21,13 @@ describe 'User Provisioning' do
     @cal_net = Page::CalNetPage.new @driver
     @splash_page = RipleySplashPage.new @driver
     @canvas = Page::CanvasPage.new @driver
+    @canvas_api = CanvasAPIPage.new @driver
     @user_prov_tool = RipleyUserProvisioningPage.new @driver
 
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     @canvas.add_ripley_tools RipleyTool::TOOLS.select(&:account)
     @canvas.set_canvas_ids test_users
+    @canvas_api.get_support_admin_canvas_id test.canvas_admin
   end
 
   after(:all) { Utils.quit_browser @driver }
@@ -71,6 +73,15 @@ describe 'User Provisioning' do
       uids = "#{uids} " * 29
       @user_prov_tool.enter_uids_and_submit uids
       @user_prov_tool.max_input_msg_element.when_visible Utils.short_wait
+    end
+  end
+
+  context 'when the user is a Canvas admin' do
+
+    it 'permits the user to reach the tool' do
+      @canvas.masquerade_as test.canvas_admin
+      @user_prov_tool.load_embedded_tool
+      @user_prov_tool.uid_input_element.when_present Utils.short_wait
     end
   end
 

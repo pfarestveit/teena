@@ -46,6 +46,7 @@ class RipleyTestConfig < TestConfig
 
   def mailing_lists
     test_users = CONFIG['test_users'].map { |user| User.new user }
+    @canvas_admin = User.new role: 'Canvas Admin'
     @course_sites = [
       (
         CourseSite.new abbreviation: "Admin #{@id}",
@@ -266,6 +267,7 @@ class RipleyTestConfig < TestConfig
     end
     teacher = RipleyUtils.get_primary_instructors(site).first || site.course.teachers.first
     canvas_page.set_canvas_ids([teacher] + non_teachers)
+    canvas_api_page.get_support_admin_canvas_id @canvas_admin
     return site, teacher
   end
 
@@ -312,6 +314,8 @@ class RipleyTestConfig < TestConfig
     @wait_list_student = students[2]
     @wait_list_student.role = 'Waitlist Student'
 
+    @canvas_admin = User.new role: 'Canvas Admin'
+
     site.manual_members = (teachers + tas + staff + students) if site
   end
 
@@ -324,6 +328,8 @@ class RipleyTestConfig < TestConfig
     @ta.role = 'TA'
     @students = RipleyUtils.get_users_of_affiliations('STUDENT-TYPE-REGISTERED', 1)
     @students.each { |s| s.role = 'Student' }
+    @canvas_admin = User.new role: 'Canvas Admin'
+
     site.manual_members = ([@manual_teacher, @staff, @ta] + @students) if site
   end
 end
