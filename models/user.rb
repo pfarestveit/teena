@@ -3,6 +3,7 @@ class User
   attr_accessor :uid,
                 :sis_id,
                 :canvas_id,
+                :demographics,
                 :squiggy_id,
                 :role,
                 :role_code,
@@ -19,6 +20,7 @@ class User
   def initialize(test_data)
     test_data.each { |k, v| public_send("#{k}=", v) }
     @sections ||= []
+    @demographics ||= {}
   end
 
 end

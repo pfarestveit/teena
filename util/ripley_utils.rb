@@ -213,7 +213,7 @@ class RipleyUtils < Utils
     term_ids = results.map { |r| r['sis_term_id'].to_s }
     teaching_terms = terms.select { |t| term_ids.include? t.sis_id.to_s }
     courses = teaching_terms.map { |t| get_course(t, cs_course_id) }
-    courses.each { |c| get_completed_enrollments c }
+    courses.each { |c| get_newt_enrollments c }
     courses.each { |c| logger.info "Instructor UID #{user.uid} taught course #{cs_course_id} in #{c.term.name}" }
     courses
   end
@@ -436,7 +436,7 @@ class RipleyUtils < Utils
                   sis_data.edo_basic_attributes.last_name,
                   sis_data.edo_basic_attributes.email_address
              FROM sis_data.edo_enrollments
-             JOIN sis_data.edo_basic_attributes
+        LEFT JOIN sis_data.edo_basic_attributes
                ON sis_data.edo_basic_attributes.ldap_uid = sis_data.edo_enrollments.ldap_uid
             WHERE sis_data.edo_enrollments.sis_term_id = '#{course.term.sis_id}'
               AND sis_data.edo_enrollments.sis_section_id IN (#{Utils.in_op(course.sections.map &:id)})
@@ -466,40 +466,99 @@ class RipleyUtils < Utils
     end
   end
 
-  def self.average_grade_points(sections)
-    enrollments = sections.map(&:enrollments).flatten
-    grades = enrollments.map(&:grade).select { |g| %w(A+ A A- B+ B B- C+ C C- D+ D D- F).include? g }
-    grades.map! do |g|
-      case g
-      when 'A+', 'A'
-        4.0
-      when 'A-'
-        3.7
-      when 'B+'
-        3.3
-      when 'B'
-        3.0
-      when 'B-'
-        2.7
-      when 'C+'
-        2.3
-      when 'C'
-        2.0
-      when 'C-'
-        1.7
-      when 'D+'
-        1.3
-      when 'D'
-        1.0
-      when 'D-'
-        0.7
-      else
-        0
-      end
+  ### NEWT ###
+
+  def self.newt_min_grade_count
+    @config['newt_min_grade_count']
+  end
+
+  def self.newt_small_cell_suppression
+    @config['newt_small_cell_supp']
+  end
+
+  def self.get_instructor_primaries(sections, instructor)
+    sections.select do |s|
+      instructor_uids = s.instructors_and_roles.map { |i| i.user.uid }
+      s.primary && instructor_uids.include?(instructor.uid)
     end
-    avg = (grades.inject { |ttl, g| ttl + g }.to_f / grades.length).round(1)
-    avg = (sprintf '%.1f', avg).to_f
-    (avg.floor == avg) ? avg.floor : avg
+  end
+
+  def self.get_newt_enrollments(course)
+    sql = "SELECT sis_data.edo_enrollments.sis_section_id,
+                  sis_data.edo_enrollments.ldap_uid AS uid,
+                  sis_data.edo_enrollments.grade,
+                  sis_data.edo_basic_attributes.sid,
+                  student.student_profile_index.transfer,
+                  student.demographics.gender,
+                  student.demographics.minority,
+                  student.visas.visa_type
+             FROM sis_data.edo_enrollments
+        LEFT JOIN sis_data.edo_basic_attributes
+               ON sis_data.edo_basic_attributes.ldap_uid = sis_data.edo_enrollments.ldap_uid
+             JOIN student.student_profile_index
+               ON sis_data.edo_enrollments.ldap_uid = student.student_profile_index.uid
+        LEFT JOIN student.demographics
+               ON student.student_profile_index.sid = student.demographics.sid
+        LEFT JOIN student.visas
+               ON student.student_profile_index.sid = student.visas.sid
+              AND student.visas.visa_status = 'G'
+            WHERE sis_data.edo_enrollments.sis_term_id = '#{course.term.sis_id}'
+              AND sis_data.edo_enrollments.sis_section_id IN (#{Utils.in_op(course.sections.map &:id)})
+              AND sis_data.edo_enrollments.sis_enrollment_status = 'E'
+              AND sis_data.edo_enrollments.grade NOT IN ('W', '', 'RD');"
+    results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
+    results_to_newt_enrollments(course, results)
+  end
+
+  def self.results_to_newt_enrollments(course, results)
+    enrollments = results.map do |r|
+      student = User.new uid: r['uid'],
+                         demographics: {
+                           gender: r['gender'],
+                           intl: (r['visa_type'] ? true : false),
+                           minority: (r['minority'] == 't'),
+                           transfer: (r['transfer'] == 't')
+                         },
+                         email: r['email_address'],
+                         first_name: r['first_name'],
+                         full_name: "#{r['first_name']} #{r['last_name']}",
+                         last_name: r['last_name'],
+                         sis_id: r['sid']
+      SectionEnrollment.new user: student,
+                            grade: r['grade'],
+                            grading_basis: r['grading_basis'],
+                            section_id: r['sis_section_id'],
+                            status: r['status']
+    end
+    enrollments.uniq!
+    course.sections.each do |section|
+      section.enrollments = enrollments.select { |e| e.section_id.to_s == section.id.to_s }
+    end
+  end
+
+  def self.get_newt_prior_enrollment_uids(uids, term, course_code)
+    sql = "SELECT DISTINCT sis_data.edo_enrollments.ldap_uid
+             FROM sis_data.edo_enrollments
+             JOIN sis_data.edo_sections
+               ON sis_data.edo_sections.sis_section_id = sis_data.edo_enrollments.sis_section_id
+              AND sis_data.edo_sections.sis_term_id = sis_data.edo_enrollments.sis_term_id
+            WHERE sis_data.edo_sections.sis_term_id BETWEEN '2168' AND '#{RipleyUtils.previous_term_sis_id term}'
+              AND sis_data.edo_sections.sis_course_name = '#{course_code}'
+              AND sis_data.edo_sections.is_primary IS TRUE
+              AND sis_data.edo_enrollments.grade NOT IN ('W', '', 'RD')
+              AND sis_data.edo_enrollments.ldap_uid IN (#{in_op uids});"
+    results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
+    results.map { |r| r['ldap_uid'] }
+  end
+
+  def self.newt_enrollments_per_grade(enrollments)
+    enrolls = enrollments.select { |e| %w(A+ A A- B+ B B- C+ C C- D+ D D- F NP P).include? e.grade }
+    enrolls.group_by { |e| e.grade }.map do |k, v|
+      {
+        grade: k,
+        uids: (v.map { |e| e.user.uid })
+      }
+    end
   end
 
   # Test users
