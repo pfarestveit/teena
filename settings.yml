@@ -127,6 +127,8 @@ ripley:
   db_name: secret
   db_user: secret
   db_password: secret
+  newt_min_grade_count: 50
+  newt_small_cell_supp: 10
   test_users:
     - uid: 123456
       canvas_id: 654321

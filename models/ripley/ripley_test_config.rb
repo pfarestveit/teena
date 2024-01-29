@@ -231,7 +231,7 @@ class RipleyTestConfig < TestConfig
     course_site
   end
 
-  def get_existing_site_data(site, sis_section_ids)
+  def get_existing_site_data(site, sis_section_ids, newt=false)
     term_code = sis_section_ids.first.split('-')[0..1].join('-')
     term_name = Utils.term_code_to_term_name term_code
     term = Term.new code: term_code,
@@ -246,6 +246,8 @@ class RipleyTestConfig < TestConfig
     site.sections = site.course.sections.select { |s| ccns.include? s.id }
     if term.sis_id.to_i < @current_term.sis_id.to_i
       RipleyUtils.get_completed_enrollments site.course
+    elsif newt
+      RipleyUtils.get_newt_enrollments site.course
     else
       RipleyUtils.get_course_enrollment site.course
     end

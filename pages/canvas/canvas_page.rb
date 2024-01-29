@@ -612,15 +612,23 @@ module Page
       get_ripley_tool_dev_keys to_install
       to_install.each do |tool|
         course_site ? load_tools_adding_page(course_site) : load_account_apps(tool.account)
-        wait_for_update_and_click add_app_link_element
+        wait_for_load_and_click add_app_link_element
         wait_for_element_and_select(config_type_element, 'By Client ID')
         wait_for_element_and_type(client_id_input_element, tool.dev_key)
         wait_for_update_and_click submit_button_element
         wait_for_update_and_click button_element(xpath: '//button[contains(., "Install")]')
-        wait_for_update_and_click add_tool_button_element rescue Selenium::WebDriver::Error::TimeoutError
+        begin
+          wait_until(5) { add_tool_button? }
+          add_tool_button_element.click
+        rescue Selenium::WebDriver::Error::TimeoutError
+          logger.warn 'No install button'
+        end
         enable_tool(tool, course_site) if course_site
       end
-      tools.each { |t| api.get_tool_id(t, course_site) }
+      tools.each do |t|
+        logger.info "Getting tool id for #{t.name}"
+        api.get_tool_id(t, course_site)
+      end
     end
 
     def click_tool_link(tool)
