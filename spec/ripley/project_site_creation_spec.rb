@@ -118,7 +118,7 @@ describe 'bCourses project site', order: :defined do
         @site_creation_page.load_embedded_tool user
 
         case user.role
-        when 'TA'
+        when 'TA', 'Canvas Admin'
           logger.debug "Verifying that #{user.role} UID #{user.uid} has access to the project site UI"
           @site_creation_page.click_create_project_site
           expect(@create_project_site_page.site_name_input_element.when_present Utils.short_wait).to be_truthy

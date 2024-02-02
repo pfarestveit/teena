@@ -282,6 +282,11 @@ class RipleyUtils < Utils
     end
   end
 
+  def self.course_instructor_of_role_code(course, role_code)
+    user_roles = course.sections.map(&:instructors_and_roles).flatten
+    user_roles.find { |r| r.role_code == role_code }
+  end
+
   def self.expected_instr_section_data(site, specific_sections = nil)
     instructor_data = []
     site_has_primaries = site.sections.select(&:primary).any?
@@ -501,7 +506,6 @@ class RipleyUtils < Utils
                ON student.student_profile_index.sid = student.demographics.sid
         LEFT JOIN student.visas
                ON student.student_profile_index.sid = student.visas.sid
-              AND student.visas.visa_status = 'G'
             WHERE sis_data.edo_enrollments.sis_term_id = '#{course.term.sis_id}'
               AND sis_data.edo_enrollments.sis_section_id IN (#{Utils.in_op(course.sections.map &:id)})
               AND sis_data.edo_enrollments.sis_enrollment_status = 'E'
@@ -582,6 +586,30 @@ class RipleyUtils < Utils
                last_name: r['last_name'],
                sis_id: r['sid']
     end
+  end
+
+  def self.get_project_grad_student
+    sql = "SELECT student.student_profile_index.sid,
+                  student.student_profile_index.uid,
+                  student.student_profile_index.first_name,
+                  student.student_profile_index.last_name,
+                  student.student_profile_index.email_address
+             FROM student.student_profile_index
+             JOIN sis_data.edo_basic_attributes
+               ON sis_data.edo_basic_attributes.ldap_uid = student.student_profile_index.uid
+            WHERE student.student_profile_index.level = 'GR'
+              AND academic_career_status NOT IN ('inactive', 'completed')
+              AND sis_data.edo_basic_attributes.affiliations = 'STUDENT-TYPE-REGISTERED';"
+    results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
+    grad_students = results.map do |r|
+      User.new uid: r['uid'],
+               email: r['email'],
+               first_name: r['first_name'],
+               last_name: r['last_name'],
+               role: 'TA',
+               sis_id: r['sid']
+    end
+    grad_students.first
   end
 
   # Incremental updates

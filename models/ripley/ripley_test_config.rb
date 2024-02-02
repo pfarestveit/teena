@@ -269,7 +269,7 @@ class RipleyTestConfig < TestConfig
     end
     teacher = RipleyUtils.get_primary_instructors(site).first || site.course.teachers.first
     canvas_page.set_canvas_ids([teacher] + non_teachers)
-    canvas_api_page.get_support_admin_canvas_id @canvas_admin
+    canvas_api_page.get_support_admin_canvas_id @canvas_admin if @canvas_admin
     return site, teacher
   end
 
@@ -326,8 +326,8 @@ class RipleyTestConfig < TestConfig
     @manual_teacher.role = 'Teacher'
     @staff = RipleyUtils.get_users_of_affiliations('EMPLOYEE-TYPE-STAFF', 1)[0]
     @staff.role = 'Staff'
-    @ta = RipleyUtils.get_users_of_affiliations('EMPLOYEE-TYPE-ACADEMIC,STUDENT-TYPE-REGISTERED', 1)[0]
-    @ta.role = 'TA'
+    # Repurpose TA user as a non-teaching grad student for project tests
+    @ta = RipleyUtils.get_project_grad_student
     @students = RipleyUtils.get_users_of_affiliations('STUDENT-TYPE-REGISTERED', 1)
     @students.each { |s| s.role = 'Student' }
     @canvas_admin = User.new role: 'Canvas Admin'

@@ -6,6 +6,7 @@ class RipleyGradeDistributionPage
   include RipleyPages
 
   h1(:page_heading, xpath: '//h1[contains(., "Grade Distribution")]')
+  div(:sorry_not_auth_msg, xpath: '//div[text()="Sorry, you are not authorized to use this tool."]')
   div(:no_grade_dist_msg, xpath: '//div[text()="This course does not meet the requirements necessary to generate a Grade Distribution."]')
   div(:tooltip_key, xpath: '//div[@class="chart-tooltip-key"]')
   div(:tooltip_name, xpath: '//div[@class="chart-tooltip-name"]')
@@ -45,6 +46,10 @@ class RipleyGradeDistributionPage
       wait_for_update_and_click demographics_table_toggle_element
       demographics_table_element.when_visible 2
     end
+  end
+
+  def visible_demographic_row_ct
+    demographics_table_row_elements.length
   end
 
   def expected_demographic_count(enrollments)
@@ -91,7 +96,7 @@ class RipleyGradeDistributionPage
   def visible_demographics_term_data(term)
     sleep 1
     xpath = "//tr[contains(@id, 'grade-distribution-demo-table-row')][contains(., '#{term.name}')]"
-    row_element(xpath: xpath).when_visible Utils.short_wait rescue TimeoutError
+    row_element(xpath: xpath).when_visible 10 rescue TimeoutError
     ttl_avg_el = cell_element(xpath: "#{xpath}/td[2]")
     ttl_count_el = cell_element(xpath: "#{xpath}/td[3]")
     sub_avg_el = cell_element(xpath: "#{xpath}/td[4]")

@@ -69,12 +69,11 @@ describe 'bCourses recent enrollment updates' do
 
     # Run Ripley job
     @splash_page.load_page
-    @splash_page.log_out
     @splash_page.dev_auth @test.admin.uid
     @jobs_page.run_job RipleyJob::REFRESH_INCREMENTAL
 
     # Get resulting Canvas enrollments
-    @enrollments = @canvas_page.get_users_with_sections @site.course
+    @enrollments = @canvas_page.get_users_with_sections @site
   end
 
   context 'when a PI in a primary section' do

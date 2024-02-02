@@ -23,6 +23,7 @@ class RipleySiteCreationPage
     begin
       tries ||= Utils.long_wait
       wait_until(1) { current_url.include?("#{Utils.canvas_base_url}/courses") }
+      switch_to_main_content
     rescue Selenium::WebDriver::Error::TimeoutError
       if sis_import_error?
         fail 'Site provisioning failed'

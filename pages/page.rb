@@ -248,9 +248,7 @@ module Page
   def verify_block(opts = {}, &blk)
     begin
       return true if yield
-    rescue => e
-      logger.warn e.message
-      Utils.save_screenshot(@driver, "#{Time.now.to_i}site#{opts[:screenshot_name]}") if opts[:screenshot]
+    rescue
       false
     end
   end

@@ -123,10 +123,8 @@ describe 'bCourses Mailgun mailing lists' do
       it 'creates a mailing list with a valid, unique mailing list name' do
         @mailing_lists_page.enter_custom_list_name @mailing_lists_page.default_list_name(course_site_1)[0..-6]
         expected_list_name = "#{@mailing_lists_page.default_list_name course_site_1}@bcourses-mail.berkeley.edu"
-        @mailing_lists_page.wait_until(timeout) do
-          logger.info "Expected #{expected_list_name}; actual #{@mailing_lists_page.list_address}"
-          @mailing_lists_page.list_address == expected_list_name
-        end
+        @mailing_lists_page.list_address_element.when_visible timeout
+        expect(@mailing_lists_page.list_address).to eql(expected_list_name)
       end
 
       it 'will not create a mailing list for a course site with the same course code as an existing list' do
@@ -147,10 +145,8 @@ describe 'bCourses Mailgun mailing lists' do
 
       it 'shows the mailing list email address' do
         expected_list_name = "#{@mailing_lists_page.default_list_name course_site_1}@bcourses-mail.berkeley.edu"
-        @mailing_lists_page.wait_until(timeout) do
-          logger.info "Expected #{expected_list_name}; actual #{@mailing_lists_page.list_address}"
-          @mailing_lists_page.list_address == expected_list_name
-        end
+        @mailing_lists_page.list_address_element.when_visible timeout
+        expect(@mailing_lists_page.list_address).to eql(expected_list_name)
       end
 
       it('shows the membership count') { expect(@mailing_lists_page.list_membership_count).to eql('0') }
@@ -261,10 +257,8 @@ describe 'bCourses Mailgun mailing lists' do
         @mailing_lists_page.search_for_list course_site_4.site_id
         @mailing_lists_page.enter_custom_list_name @mailing_lists_page.default_list_name(course_site_4)[0..-6]
         expected_list_name = "#{@mailing_lists_page.default_list_name course_site_4}@bcourses-mail.berkeley.edu"
-        @mailing_lists_page.wait_until(timeout) do
-          logger.info "Expected #{expected_list_name}; actual #{@mailing_lists_page.list_address}"
-          @mailing_lists_page.list_address == expected_list_name
-        end
+        @mailing_lists_page.list_address_element.when_visible timeout
+        expect(@mailing_lists_page.list_address).to eql(expected_list_name)
 
         @canvas_page.masquerade_as(course_site_4.manual_members.first, course_site_4)
         @canvas_page.stop_masquerading
@@ -326,10 +320,8 @@ describe 'bCourses Mailgun mailing lists' do
       @mailing_lists_page.search_for_list project_site.site_id
       @mailing_lists_page.enter_custom_list_name @mailing_lists_page.default_list_name(project_site)
       expected_list_name = "#{@mailing_lists_page.default_list_name project_site}@bcourses-mail.berkeley.edu"
-      @mailing_lists_page.wait_until(timeout) do
-        logger.info "Expected #{expected_list_name}; actual #{@mailing_lists_page.list_address}"
-        @mailing_lists_page.list_address == expected_list_name
-      end
+      @mailing_lists_page.list_address_element.when_visible timeout
+      expect(@mailing_lists_page.list_address).to eql(expected_list_name)
     end
 
     it 'allow an admin to update the list membership' do
