@@ -58,10 +58,6 @@ class Utils
              when 'chrome'
 
                options = Selenium::WebDriver::Chrome::Options.new binary: driver_config['chrome_binary_path']
-
-               profile_dir = profile
-               options.add_argument("user-data-dir=#{profile_dir}")
-
                options.add_argument('--headless=new') if headless?
                options.add_preference('download.prompt_for_download', false)
                options.add_preference('download.default_directory', Utils.download_dir)
@@ -106,7 +102,27 @@ class Utils
     driver.manage.timeouts.page_load = 120
     Selenium::WebDriver.logger.level = :error
     add_extensions driver
+    allow_canvas_iframe_in_chrome driver if browser == 'chrome'
     driver
+  end
+
+  def self.allow_canvas_iframe_in_chrome(driver)
+    driver.get 'chrome://settings/trackingProtection'
+    sleep click_wait
+    site_list_root = driver.find_element(css: 'settings-ui').shadow_root
+                           .find_element(css: 'settings-main').shadow_root
+                           .find_element(css: 'settings-basic-page').shadow_root
+                           .find_element(css: 'settings-privacy-page').shadow_root
+                           .find_element(css: 'settings-cookies-page').shadow_root
+                           .find_element(css: 'site-list').shadow_root
+    site_list_root.find_element(css: 'cr-button[id=addSite]').click
+    sleep click_wait
+    add_site_dialog_root = site_list_root.find_element(css: 'add-site-dialog').shadow_root
+    add_site_input_root = add_site_dialog_root.find_element(css: 'cr-input[id=site]').shadow_root
+    add_site_input_root.find_element(css: 'input[id=input]').click
+    add_site_input_root.find_element(css: 'input[id=input]').send_keys('[*.]instructure.com')
+    add_site_dialog_root.find_element(css: 'cr-button[id=add]').click
+    sleep click_wait
   end
 
   def self.add_extensions(driver)
