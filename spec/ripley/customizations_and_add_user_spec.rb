@@ -214,7 +214,7 @@ describe 'bCourses' do
     end
 
     [test.canvas_admin, test.lead_ta, test.ta].each do |user|
-      it "allows #{user.role} #{user.uid} access to the Find a Person to Add tool with limited roles" do
+      it "allows #{user.role} #{user.uid || user.canvas_id} access to the Find a Person to Add tool with limited roles" do
         @canvas.masquerade_as(user, @site)
         @canvas.load_users_page @site
         @canvas.click_find_person_to_add

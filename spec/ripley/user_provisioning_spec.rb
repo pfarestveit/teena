@@ -12,8 +12,6 @@ test_users = [
   test.students.first
 ]
 
-standalone = ENV['STANDALONE']
-
 describe 'User Provisioning' do
 
   before(:all) do

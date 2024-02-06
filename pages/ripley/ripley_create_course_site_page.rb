@@ -176,6 +176,10 @@ class RipleyCreateCourseSitePage < RipleySiteCreationPage
     wait_for_update_and_click create_site_button_element
   end
 
+  def click_cancel_site_creation
+    wait_for_update_and_click cancel_button_element
+  end
+
   def click_go_back
     logger.debug 'Clicking go-back button'
     wait_for_update_and_click go_back_button_element

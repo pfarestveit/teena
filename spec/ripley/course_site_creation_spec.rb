@@ -45,12 +45,17 @@ describe 'bCourses course site creation' do
         teacher = site.course.teachers.first
         @canvas.stop_masquerading
         @canvas.set_canvas_ids [teacher]
-        @canvas.masquerade_as teacher if site.create_site_workflow == 'self'
-        @canvas.click_manage_sites
+        # TODO remove this when the tool is configured correctly and loads as a button
+        if site.create_site_workflow == 'self'
+          @canvas.masquerade_as teacher
+          @site_creation.load_embedded_tool teacher
+        else
+          @canvas.click_ripley_create_site_settings_link
+        end
         @site_creation.click_create_course_site
 
         if site.create_site_workflow == 'self'
-          @create_course_site.click_cancel site
+          @create_course_site.click_cancel_site_creation
           cancel_works = @site_creation.verify_block { @site_creation.click_create_course_site }
           it('allows a user to cancel course site creation') { expect(cancel_works).to be true }
         end

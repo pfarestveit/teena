@@ -6,6 +6,7 @@ webdriver:
   browser: chrome
   headless: false
   chrome_binary_path: '/Applications/Google Chrome for Testing.app'
+  chrome_profile: true
 
 timeouts:
   click_wait: 0.5

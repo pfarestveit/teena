@@ -38,18 +38,7 @@ module PageObject
 
   def wait_until(timeout, msg = nil, &blk)
     wait = Selenium::WebDriver::Wait.new timeout: timeout, message: msg
-    wait.until do
-      yield
-    rescue
-      Utils.log_js_errors @driver
-      if Utils.get_js_errors(@driver).find { |m| m.include?('NETWORK') }
-        logger.error 'Network error, retrying'
-        refresh_page
-        retry
-      else
-        false
-      end
-    end
+    wait.until { yield }
   end
 
   ### ELEMENTS ###

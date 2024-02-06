@@ -332,15 +332,22 @@ describe 'bCourses Official Sections tool' do
         @add_user.add_user_by_uid(user, site.sections.first)
       end
 
-      [test.canvas_admin, test.lead_ta].each do |user|
-        edit_access = @canvas.verify_block do
-          @canvas.masquerade_as(user, site)
-          @official_sections.load_embedded_tool user
-          @official_sections.select_site_and_manage site
-          @official_sections.click_edit_sections
-        end
-        it("allow a #{user.role} full access to the tool") { expect(edit_access).to be true }
+      support_admin_access = @canvas.verify_block do
+        @canvas.masquerade_as(test.canvas_admin, site)
+        @official_sections.load_embedded_tool test.canvas_admin
+        @official_sections.enter_site_and_manage site
+        @official_sections.static_view_sections_table.when_visible Utils.medium_wait
+        @official_sections.edit_sections_button_element.when_not_visible 1
       end
+      it('allows a Support Admin read only access to the tool') { expect(support_admin_access).to be true }
+
+      edit_access = @canvas.verify_block do
+        @canvas.masquerade_as(test.lead_ta, site)
+        @official_sections.load_embedded_tool test.lead_ta
+        @official_sections.select_site_and_manage site
+        @official_sections.click_edit_sections
+      end
+      it("allow a #{test.lead_ta.role} full access to the tool") { expect(edit_access).to be true }
 
       [test.ta, test.designer].each do |user|
         no_edit_access = @canvas.verify_block do
@@ -354,15 +361,12 @@ describe 'bCourses Official Sections tool' do
       end
 
       [test.reader, test.observer, test.students.first, test.wait_list_student].each do |user|
-        no_access = @canvas.verify_block do
+        access = @canvas.verify_block do
           @canvas.masquerade_as(user, site)
           @official_sections.load_embedded_tool user
-          @official_sections.wait_until(Utils.short_wait) do
-            @official_sections.manage_sections_link?
-            @official_sections.manage_sections_link_element.disabled?
-          end
+          @official_sections.select_site_and_manage site
         end
-        it("deny a #{user.role} access to the tool") { expect(no_access).to be true }
+        it("deny a #{user.role} access to the tool") { expect(access).to be false }
       end
 
       # SECTION NAME UPDATES

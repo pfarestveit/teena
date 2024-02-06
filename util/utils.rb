@@ -58,6 +58,10 @@ class Utils
              when 'chrome'
 
                options = Selenium::WebDriver::Chrome::Options.new binary: driver_config['chrome_binary_path']
+
+               profile_dir = profile
+               options.add_argument("user-data-dir=#{profile_dir}")
+
                options.add_argument('--headless=new') if headless?
                options.add_preference('download.prompt_for_download', false)
                options.add_preference('download.default_directory', Utils.download_dir)
@@ -101,7 +105,20 @@ class Utils
     set_default_window_size driver
     driver.manage.timeouts.page_load = 120
     Selenium::WebDriver.logger.level = :error
+    add_extensions driver
     driver
+  end
+
+  def self.add_extensions(driver)
+    extensions = case driver
+                 when :chrome
+                   Chromium::Driver::EXTENSIONS
+                 when :firefox
+                   Firefox::Driver::EXTENSIONS
+                 else
+                   []
+                 end
+    extensions.each { |extension| extend extension }
   end
 
   def self.set_default_window_size(driver)

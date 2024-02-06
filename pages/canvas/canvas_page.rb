@@ -484,6 +484,7 @@ module Page
     text_area(:secret_input, id: 'sharedSecret')
     text_area(:url_input, id: 'configUrl')
     text_area(:client_id_input, name: 'client_id')
+    button(:install_button, xpath: '//button[contains(., "Install")]')
     button(:add_tool_button, id: 'continue-install')
     button(:activate_navigation_button, xpath: '//span[text()="Course Navigation"]/following-sibling::span//button')
     button(:close_placements_button, xpath: '//span[@aria-label="App Placements"]//button[contains(., "Close")]')
@@ -614,14 +615,15 @@ module Page
         course_site ? load_tools_adding_page(course_site) : load_account_apps(tool.account)
         wait_for_load_and_click add_app_link_element
         wait_for_element_and_select(config_type_element, 'By Client ID')
+        sleep 1
         wait_for_element_and_type(client_id_input_element, tool.dev_key)
         wait_for_update_and_click submit_button_element
-        wait_for_update_and_click button_element(xpath: '//button[contains(., "Install")]')
+        wait_for_update_and_click install_button_element
         begin
           wait_until(5) { add_tool_button? }
           add_tool_button_element.click
         rescue Selenium::WebDriver::Error::TimeoutError
-          logger.warn 'No install button'
+          logger.warn 'No install confirm button'
         end
         enable_tool(tool, course_site) if course_site
       end
@@ -711,6 +713,7 @@ module Page
               el = (string == user.email) ? user_result_link_by_email(user) : user_result_link_by_uid(user)
               el.when_present 10
               user.canvas_id = el.attribute('href').split('/').last
+              logger.info "Canvas ID is #{user.canvas_id}"
               break if user.canvas_id
             rescue => e
               logger.error e.message
