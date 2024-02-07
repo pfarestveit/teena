@@ -160,7 +160,7 @@ module Page
       switch_to_canvas_iframe
     end
 
-    def click_ripley_create_site_settings_link
+    def click_manage_sites_settings_link
       wait_for_update_and_click profile_link_element
       sleep 1
       wait_for_update_and_click ripley_create_site_settings_link_element

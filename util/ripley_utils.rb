@@ -597,8 +597,7 @@ class RipleyUtils < Utils
              FROM student.student_profile_index
              JOIN sis_data.edo_basic_attributes
                ON sis_data.edo_basic_attributes.ldap_uid = student.student_profile_index.uid
-            WHERE student.student_profile_index.level = 'GR'
-              AND academic_career_status NOT IN ('inactive', 'completed')
+            WHERE student.student_profile_index.level IN ('5', '6', '7', '8', 'GR', 'MAS', 'P1', 'P2', 'P3', 'P4')
               AND sis_data.edo_basic_attributes.affiliations = 'STUDENT-TYPE-REGISTERED';"
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     grad_students = results.map do |r|
@@ -609,7 +608,7 @@ class RipleyUtils < Utils
                role: 'TA',
                sis_id: r['sid']
     end
-    grad_students.first
+    grad_students.shuffle.first
   end
 
   # Incremental updates

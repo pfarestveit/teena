@@ -45,13 +45,8 @@ describe 'bCourses course site creation' do
         teacher = site.course.teachers.first
         @canvas.stop_masquerading
         @canvas.set_canvas_ids [teacher]
-        # TODO remove this when the tool is configured correctly and loads as a button
-        if site.create_site_workflow == 'self'
-          @canvas.masquerade_as teacher
-          @site_creation.load_embedded_tool teacher
-        else
-          @canvas.click_ripley_create_site_settings_link
-        end
+        (site.create_site_workflow == 'self') ? @canvas.masquerade_as(teacher) : @canvas.load_homepage
+        @canvas.click_manage_sites
         @site_creation.click_create_course_site
 
         if site.create_site_workflow == 'self'
@@ -296,8 +291,8 @@ describe 'bCourses course site creation' do
     # VERIFY ACCESS TO TOOL FOR USER ROLES
 
     @canvas.masquerade_as test.canvas_admin
-    canvas_admin_has_button = @canvas.verify_block { @canvas.create_site_link_element.when_visible Utils.short_wait }
-    @canvas.click_ripley_create_site_settings_link
+    canvas_admin_has_button = @canvas.verify_block { @canvas.ripley_manage_sites_link_element.when_visible Utils.short_wait }
+    @canvas.click_manage_sites_settings_link
     canvas_admin_access_permitted = @create_course_site.verify_block do
       @create_course_site.create_course_site_link_element.when_visible Utils.short_wait
     end
@@ -305,8 +300,8 @@ describe 'bCourses course site creation' do
     it('permits a Canvas Admin access to the tool') { expect(canvas_admin_access_permitted).to be true }
 
     @canvas.masquerade_as test.students.first
-    student_has_button = @canvas.verify_block { @canvas.create_site_link_element.when_visible Utils.short_wait }
-    @canvas.click_ripley_create_site_settings_link
+    student_has_button = @canvas.verify_block { @canvas.ripley_manage_sites_link_element.when_visible Utils.short_wait }
+    @canvas.click_manage_sites_settings_link
     student_access_blocked = @create_course_site.verify_block do
       @create_course_site.create_course_site_link_element.when_present Utils.short_wait
       @create_course_site.wait_until(1) do
@@ -317,8 +312,8 @@ describe 'bCourses course site creation' do
     it('denies a student access to the tool') { expect(student_access_blocked).to be true }
 
     @canvas.masquerade_as test.ta
-    ta_has_button = @canvas.verify_block { @canvas.create_site_link_element.when_visible Utils.short_wait }
-    @canvas.click_ripley_create_site_settings_link
+    ta_has_button = @canvas.verify_block { @canvas.ripley_manage_sites_link_element.when_visible Utils.short_wait }
+    @canvas.click_manage_sites_settings_link
     ta_access_permitted = @create_course_site.verify_block do
       @create_course_site.create_course_site_link_element.when_visible Utils.short_wait
     end
