@@ -50,7 +50,7 @@ class Utils
   # @return [Selenium::WebDriver]
   def self.launch_browser(driver = nil)
     driver_config = @config['webdriver']
-    browser = driver || driver_config['browser']
+    browser = driver || ENV['BROWSER'] || driver_config['browser']
     logger.info "Launching #{browser.capitalize}"
 
     driver = case browser
@@ -115,7 +115,7 @@ class Utils
                            .find_element(css: 'settings-privacy-page').shadow_root
                            .find_element(css: 'settings-cookies-page').shadow_root
                            .find_element(css: 'site-list').shadow_root
-    site_list_root.find_element(css: 'cr-button[id=addSite]').click
+    driver.execute_script('arguments[0].click();', site_list_root.find_element(css: 'cr-button[id=addSite]'))
     sleep click_wait
     add_site_dialog_root = site_list_root.find_element(css: 'add-site-dialog').shadow_root
     add_site_input_root = add_site_dialog_root.find_element(css: 'cr-input[id=site]').shadow_root

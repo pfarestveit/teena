@@ -18,7 +18,32 @@ echo "------------------------"; echo
 
 # ----
 
-echo 'What type of browser should pursue Ichabod Crane? Enter 1 or 2. '
+echo 'Which browser do we want to use? Enter 1 or 2. '
+
+browser_options=("chrome" "firefox")
+
+select opt in "${browser_options[@]}"; do
+  case ${opt} in
+  "chrome")
+    browser="chrome"
+    break
+    ;;
+  "firefox")
+    browser="firefox"
+    break
+    ;;
+  *)
+    echo "Answer truly, or you will browse in vain"
+    exit 1
+    ;;
+  esac
+done
+
+echo
+
+# ----
+
+echo 'Head or no head? Enter 1 or 2. '
 
 headless_options=("regular" "headless")
 
@@ -144,11 +169,11 @@ if [[ -z "${test_suite}" ]]
 then
     echo; echo "Running ALL tests of ${friendly_tool_name} v${version}"
     echo
-    rake HEADLESS="${headless}" VERSION="${summary}" USER="${username}" PASS="${password}" "${tool_being_tested}"
+    rake BROWSER="${browser}" HEADLESS="${headless}" VERSION="${summary}" USER="${username}" PASS="${password}" "${tool_being_tested}"
 else
     echo; echo "Running '${test_suite}' tests of ${friendly_tool_name} v${version}"
     echo
-    rake HEADLESS="${headless}" SCRIPTS="${test_suite}" VERSION="${summary}" USER="${username}" PASS="${password}" "${tool_being_tested}"
+    rake BROWSER="${browser}" HEADLESS="${headless}" SCRIPTS="${test_suite}" VERSION="${summary}" USER="${username}" PASS="${password}" "${tool_being_tested}"
 fi
 
 echo
