@@ -8,7 +8,7 @@ describe 'bCourses project site', order: :defined do
   project = test.projects
 
   before(:all) do
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasPage.new @driver
     @canvas_api = CanvasAPIPage.new @driver

@@ -10,7 +10,7 @@ describe 'bCourses recent enrollment updates' do
 
     @test = RipleyTestConfig.new
     @test.refresh_canvas_recent
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @splash_page = Page::JunctionPages::SplashPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @create_course_site = Page::JunctionPages::CanvasCreateCourseSitePage.new @driver

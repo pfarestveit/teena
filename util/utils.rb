@@ -48,9 +48,9 @@ class Utils
   # is false, a new profile will be used.
   # @param profile [String]
   # @return [Selenium::WebDriver]
-  def self.launch_browser(driver = nil)
+  def self.launch_browser(opts = {})
     driver_config = @config['webdriver']
-    browser = driver || ENV['BROWSER'] || driver_config['browser']
+    browser = opts[:driver] || ENV['BROWSER'] || driver_config['browser']
     logger.info "Launching #{browser.capitalize}"
 
     driver = case browser
@@ -102,7 +102,7 @@ class Utils
     driver.manage.timeouts.page_load = 120
     Selenium::WebDriver.logger.level = :error
     add_extensions driver
-    allow_canvas_iframe_in_chrome driver if browser == 'chrome'
+    allow_canvas_iframe_in_chrome driver if browser == 'chrome' && opts[:chrome_3rd_party_cookies]
     driver
   end
 

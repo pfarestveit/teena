@@ -13,7 +13,7 @@ describe 'bCourses welcome email', order: :defined do
     @site_members = [@teacher, @student1]
 
     # Browser for instructor
-    @driver1 = Utils.launch_browser
+    @driver1 = Utils.launch_browser chrome_3rd_party_cookies: true
     @canvas1 = Page::CanvasPage.new @driver1
     @cal_net1 = Page::CalNetPage.new @driver1
     @mailing_list = RipleyMailingListPage.new @driver1
@@ -22,7 +22,7 @@ describe 'bCourses welcome email', order: :defined do
     @canvas1.set_canvas_ids @site.manual_members
 
     # Browser for admin
-    @driver2 = Utils.launch_browser
+    @driver2 = Utils.launch_browser(chrome_3rd_party_cookies=true)
     @canvas2 = Page::CanvasPage.new @driver2
     @cal_net2 = Page::CalNetPage.new @driver2
     @ripley2 = RipleySplashPage.new @driver2

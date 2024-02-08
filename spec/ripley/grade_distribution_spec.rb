@@ -21,7 +21,7 @@ describe 'The Grade Distribution tool' do
       test.wait_list_student
     ]
 
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @add_user = RipleyAddUserPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @canvas = Page::CanvasPage.new @driver

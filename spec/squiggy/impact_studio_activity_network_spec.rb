@@ -5,7 +5,7 @@ describe 'Impact Studio Activity Network' do
   before(:all) do
     @test = SquiggyTestConfig.new 'studio_network'
 
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @canvas = Page::CanvasAnnounceDiscussPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library_page = SquiggyAssetLibraryDetailPage.new @driver

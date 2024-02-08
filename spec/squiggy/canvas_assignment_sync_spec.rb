@@ -7,7 +7,7 @@ describe 'Canvas assignment sync' do
   before(:all) do
     @test = SquiggyTestConfig.new 'canvas_sync'
     @test.course_site.site_id = nil
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @canvas = Page::CanvasAssignmentsPage.new @driver
     @cal_net= Page::CalNetPage.new @driver
     @asset_library = SquiggyAssetLibraryDetailPage.new @driver

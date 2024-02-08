@@ -11,7 +11,7 @@ describe 'Impact Studio' do
   test.course_site.manual_members -= students
 
   before(:all) do
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = SquiggyAssetLibraryDetailPage.new @driver

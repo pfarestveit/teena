@@ -7,7 +7,7 @@ describe 'The Asset Library bookmarklet' do
   before(:all) do
     @test = SquiggyTestConfig.new 'bizmarklet'
     @test.course_site.site_id = ENV['COURSE_ID']
-    @driver = Utils.launch_browser 'firefox'
+    @driver = Utils.launch_browser driver: 'firefox'
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @assets_list = SquiggyAssetLibraryListViewPage.new @driver

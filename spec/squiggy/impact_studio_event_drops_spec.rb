@@ -29,7 +29,7 @@ describe 'The Impact Studio' do
                                        title: "Whiteboard #{@test.id}",
                                        collaborators: [@student_2]
 
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @canvas = Page::CanvasAnnounceDiscussPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = SquiggyAssetLibraryDetailPage.new @driver

@@ -7,7 +7,7 @@ describe 'Canvas assignment submissions' do
   begin
 
     @test = SquiggyTestConfig.new 'canvas_submissions'
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @canvas = Page::CanvasAssignmentsPage.new @driver
     @cal_net= Page::CalNetPage.new @driver
     @assets_list = SquiggyAssetLibraryListViewPage.new @driver
