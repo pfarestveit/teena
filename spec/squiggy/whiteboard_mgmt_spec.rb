@@ -9,7 +9,7 @@ describe 'Whiteboard' do
     @student_2 = @test.students[1]
     @student_3 = @test.students[2]
 
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = SquiggyAssetLibraryDetailPage.new @driver

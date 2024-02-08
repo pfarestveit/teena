@@ -17,7 +17,7 @@ describe 'bCourses E-Grades Export' do
   ]
 
   before(:all) do
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @cal_net = Page::CalNetPage.new @driver
     @canvas_api = CanvasAPIPage.new @driver
     @canvas = Page::CanvasGradesPage.new @driver

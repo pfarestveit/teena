@@ -28,7 +28,7 @@ describe 'Canvas section silo-ing' do
                                                   owner: @student_3,
                                                   collaborators: [@student_1, @student_4, @student_5]
 
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @canvas = Page::CanvasAssignmentsPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @asset_library = SquiggyAssetLibraryDetailPage.new @driver

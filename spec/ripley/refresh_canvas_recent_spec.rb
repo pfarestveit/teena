@@ -5,7 +5,7 @@ describe 'bCourses recent enrollment updates' do
   include Logging
 
   before(:all) do
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @cal_net_page = Page::CalNetPage.new @driver
     @canvas_page = Page::CanvasPage.new @driver
     @canvas_api = CanvasAPIPage.new @driver

@@ -42,7 +42,7 @@ describe 'A SuiteC course' do
                                                   owner: @student_1,
                                                   collaborators: [@student_3, @student_4]
 
-    @driver = Utils.launch_browser 'firefox'
+    @driver = Utils.launch_browser driver: 'firefox'
     @cal_net = Page::CalNetPage.new @driver
     @canvas_groups_page = Page::CanvasGroupsPage.new @driver
     @canvas_discussions_page = Page::CanvasAnnounceDiscussPage.new @driver

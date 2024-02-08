@@ -19,7 +19,7 @@ describe 'bCourses course site creation' do
       test.wait_list_student
     ]
 
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @splash_page = RipleySplashPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @site_creation = RipleySiteCreationPage.new @driver

@@ -15,7 +15,7 @@ describe 'bCourses Mailgun mailing lists' do
   RipleyUtils.drop_existing_mailing_lists
 
   before(:all) do
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @canvas_page = Page::CanvasPage.new @driver
     @canvas_api_page = CanvasAPIPage.new @driver
     @cal_net_page = Page::CalNetPage.new @driver

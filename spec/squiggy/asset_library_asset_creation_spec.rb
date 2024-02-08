@@ -7,7 +7,7 @@ describe 'New asset' do
   begin
     @test = SquiggyTestConfig.new 'asset_creation'
     @test.course_site.site_id = ENV['COURSE_ID']
-    @driver = Utils.launch_browser
+    @driver = Utils.launch_browser chrome_3rd_party_cookies: true
     @canvas = Page::CanvasPage.new @driver
     @cal_net = Page::CalNetPage.new @driver
     @assets_list = SquiggyAssetLibraryListViewPage.new @driver

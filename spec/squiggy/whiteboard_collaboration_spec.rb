@@ -14,7 +14,7 @@ describe 'Whiteboard' do
 
   before(:all) do
     # Launch first browser
-    @driver_1 = Utils.launch_browser
+    @driver_1 = Utils.launch_browser chrome_3rd_party_cookies: true
     @canvas_driver_1 = Page::CanvasPage.new @driver_1
     @cal_net_driver_1 = Page::CalNetPage.new @driver_1
     @whiteboards_driver_1 = SquiggyWhiteboardPage.new @driver_1
@@ -117,7 +117,7 @@ describe 'Whiteboard' do
   describe 'collaboration members pane' do
 
     before(:all) do
-      @driver_2 = Utils.launch_browser
+      @driver_2 = Utils.launch_browser chrome_3rd_party_cookies: true
       @canvas_driver_2 = Page::CanvasPage.new @driver_2
       @cal_net_driver_2 = Page::CalNetPage.new @driver_2
       @whiteboards_driver_2 = SquiggyWhiteboardPage.new @driver_2
@@ -223,7 +223,7 @@ describe 'Whiteboard' do
       @engagement_index_driver_1.wait_for_removed_user_sync(test, [teacher, student_1])
 
       # Access to whiteboards is based on session cookie, so launch another browser to check cookie-less access
-      @driver_3 = Utils.launch_browser
+      @driver_3 = Utils.launch_browser chrome_3rd_party_cookies: true
       @canvas_driver_3 = Page::CanvasPage.new @driver_3
       @cal_net_driver_3 = Page::CalNetPage.new @driver_3
       @whiteboards_driver_3 = SquiggyWhiteboardPage.new @driver_3
