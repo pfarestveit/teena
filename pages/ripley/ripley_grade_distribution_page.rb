@@ -139,7 +139,10 @@ class RipleyGradeDistributionPage
 
   def choose_prior_enrollment_course(course_code)
     logger.info "Entering course name '#{course_code}'"
-    wait_for_textbox_and_type(prior_enrollment_course_input_element, course_code)
+    wait_for_update_and_click prior_enrollment_course_input_element
+    50.times { hit_backspace }
+    50.times { hit_delete }
+    prior_enrollment_course_input_element.send_keys course_code
     hit_tab
     wait_for_update_and_click prior_enrollment_course_add_button_element
   end
