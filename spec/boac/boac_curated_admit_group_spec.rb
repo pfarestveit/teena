@@ -22,7 +22,7 @@ unless ENV['NO_DEPS']
     pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts(test.advisor, {admits: true})
 
     before(:all) do
-      @driver = Utils.launch_browser 'firefox'
+      @driver = Utils.launch_browser driver: 'firefox'
       @homepage = BOACHomePage.new @driver
       @group_page = BOACGroupAdmitsPage.new @driver
       @cohort_page = BOACFilteredAdmitsPage.new @driver

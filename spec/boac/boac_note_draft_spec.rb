@@ -40,7 +40,7 @@ describe 'BOA draft note' do
     @curated_group = CuratedGroup.new({ :name => "Group 1 - #{@test.id}" })
     @cohort = @test.default_cohort
 
-    @driver = Utils.launch_browser 'firefox'
+    @driver = Utils.launch_browser driver: 'firefox'
     @cohort_page = BOACFilteredStudentsPage.new(@driver, @test.advisor)
     @curated_group_page = BOACGroupStudentsPage.new @driver
     @drafts_page = BOACDraftNotesPage.new @driver
