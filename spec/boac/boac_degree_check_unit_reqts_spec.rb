@@ -15,7 +15,7 @@ unless ENV['DEPS']
       @student = ENV['UIDS'] ? (test.students.find { |s| s.uid == ENV['UIDS'] }) : test.cohort_members.shuffle.first
       @degree_check = DegreeProgressChecklist.new(template, @student)
 
-      @driver = Utils.launch_browser 'firefox'
+      @driver = Utils.launch_browser driver: 'firefox'
       @homepage = BOACHomePage.new @driver
       @pax_manifest = BOACPaxManifestPage.new @driver
       @degree_templates_mgmt_page = BOACDegreeTemplateMgmtPage.new @driver

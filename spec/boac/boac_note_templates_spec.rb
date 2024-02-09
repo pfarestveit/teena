@@ -18,7 +18,7 @@ unless ENV['DEPS']
       @attachments = @test.attachments.sort_by(&:file_size).delete_if { |a| a.file_size > 20000000 }
       @attachments = @attachments.first 10
 
-      @driver = Utils.launch_browser 'firefox'
+      @driver = Utils.launch_browser driver: 'firefox'
       @homepage = BOACHomePage.new @driver
       @student_page = BOACStudentPage.new @driver
       @cohort_page = BOACFilteredStudentsPage.new(@driver, @test.advisor)
