@@ -193,65 +193,67 @@ describe 'The Grade Distribution tool' do
 
                 # PRIOR ENROLLMENT
 
-                prior_course_code = 'ECON 1'
-                term_ltr_plus_grade_enrolls = term_all_grade_enrolls.select { |e| %w(A+ A A- B+ B B- C+ C C- D+ D D- F I NP P).include? e.grade }
-                if term_ltr_plus_grade_enrolls.length >= RipleyUtils.newt_min_grade_count
+                ['ECON 1', 'SPANISH 1'].each do |prior_course_code|
+                  term_ltr_plus_grade_enrolls = term_all_grade_enrolls.select { |e| %w(A+ A A- B+ B B- C+ C C- D+ D D- F I NP P).include? e.grade }
+                  if term_ltr_plus_grade_enrolls.length >= RipleyUtils.newt_min_grade_count
 
-                  @newt.select_prior_enrollment_term course.term
-                  @newt.choose_prior_enrollment_course prior_course_code
-                  @newt.wait_until(Utils.short_wait) do
-                    @newt.no_prior_enrollments_msg(course, prior_course_code).exists? ||
-                      @newt.prior_enrollment_data_heading(course, prior_course_code).exists?
-                  end
-                  @newt.expand_prior_enrollment_table if shows_prior_enrollment
-                  prior_enrollment_terms << course.term.name
+                    @newt.select_prior_enrollment_term course.term
+                    @newt.choose_prior_enrollment_course prior_course_code
+                    @newt.wait_until(Utils.short_wait) do
+                      @newt.no_prior_enrollments_msg(course, prior_course_code).exists? ||
+                        @newt.prior_enrollment_data_heading(course, prior_course_code).exists?
+                    end
+                    @newt.expand_prior_enrollment_table if shows_prior_enrollment
+                    prior_enrollment_terms << course.term.name
 
-                  all_uids = term_ltr_plus_grade_enrolls.map { |e| e.user.uid }
-                  prior_enroll_uids = RipleyUtils.get_newt_prior_enrollment_uids(all_uids, course.term, prior_course_code)
-                  if prior_enroll_uids.empty?
-                    no_priors = @newt.no_prior_enrollments_msg(course, prior_course_code).exists?
-                    it "shows no prior enrollments for #{test_case} course code #{prior_course_code} in term #{course.term.name}" do
-                      expect(no_priors).to be true
+                    all_uids = term_ltr_plus_grade_enrolls.map { |e| e.user.uid }
+                    prior_enroll_uids = RipleyUtils.get_newt_prior_enrollment_uids(all_uids, course.term, prior_course_code)
+                    if prior_enroll_uids.empty?
+                      no_priors = @newt.no_prior_enrollments_msg(course, prior_course_code).exists?
+                      it "shows no prior enrollments for #{test_case} course code #{prior_course_code} in term #{course.term.name}" do
+                        expect(no_priors).to be true
+                      end
+
+                    else
+                      prior_enroll_enrolls = term_ltr_plus_grade_enrolls.select { |e| prior_enroll_uids.include? e.user.uid }
+
+                      all_uids_per_all_grades = RipleyUtils.newt_enrollments_per_grade term_ltr_plus_grade_enrolls
+                      prior_enroll_uids_per_all_grades = RipleyUtils.newt_enrollments_per_grade prior_enroll_enrolls
+
+                      grades = all_uids_per_all_grades.map { |g| g[:grade] }
+                      grades.each do |grade|
+
+                        overall_grade_hash = all_uids_per_all_grades.find { |g| g[:grade] == grade }
+                        overall_grade_uids = overall_grade_hash[:uids]
+                        overall_grade_pct = @newt.expected_grade_pct(overall_grade_uids.length, all_uids.length)
+
+                        prior_enroll_grade_hash = prior_enroll_uids_per_all_grades.find { |g| g[:grade] == grade }
+                        prior_enroll_grade_uids = prior_enroll_grade_hash ? prior_enroll_grade_hash[:uids].uniq : []
+                        prior_enroll_grade_pct = @newt.expected_grade_pct(prior_enroll_grade_uids.length, prior_enroll_uids.length)
+
+                        visible_grade_data = @newt.visible_prior_enroll_grade_data grade
+                        it "shows the #{grade} overall % for #{test_case} term #{course.term.name}" do
+                          expect(visible_grade_data[:ttl_pct]).to eql(overall_grade_pct)
+                        end
+                        it "shows the #{grade} overall count for #{test_case} term #{course.term.name}" do
+                          expect(visible_grade_data[:ttl_ct]).to eql(overall_grade_uids.length.to_s)
+                        end
+                        it "shows the #{grade} % with #{prior_course_code} for #{test_case} term #{course.term.name}" do
+                          expect(visible_grade_data[:sub_pct]).to eql(prior_enroll_grade_pct)
+                        end
+                        it "shows the #{grade} count with #{prior_course_code} for #{test_case} term #{course.term.name}" do
+                          expect(visible_grade_data[:sub_ct]).to eql(prior_enroll_grade_uids.length.to_s)
+                        end
+                      end
                     end
 
                   else
-                    prior_enroll_enrolls = term_ltr_plus_grade_enrolls.select { |e| prior_enroll_uids.include? e.user.uid }
-
-                    all_uids_per_all_grades = RipleyUtils.newt_enrollments_per_grade term_ltr_plus_grade_enrolls
-                    prior_enroll_uids_per_all_grades = RipleyUtils.newt_enrollments_per_grade prior_enroll_enrolls
-
-                    grades = all_uids_per_all_grades.map { |g| g[:grade] }
-                    grades.each do |grade|
-
-                      overall_grade_hash = all_uids_per_all_grades.find { |g| g[:grade] == grade }
-                      overall_grade_uids = overall_grade_hash[:uids]
-                      overall_grade_pct = @newt.expected_grade_pct(overall_grade_uids.length, all_uids.length)
-
-                      prior_enroll_grade_hash = prior_enroll_uids_per_all_grades.find { |g| g[:grade] == grade }
-                      prior_enroll_grade_uids = prior_enroll_grade_hash ? prior_enroll_grade_hash[:uids].uniq : []
-                      prior_enroll_grade_pct = @newt.expected_grade_pct(prior_enroll_grade_uids.length, prior_enroll_uids.length)
-
-                      visible_grade_data = @newt.visible_prior_enroll_grade_data grade
-                      it "shows the #{grade} overall % for #{test_case} term #{course.term.name}" do
-                        expect(visible_grade_data[:ttl_pct]).to eql(overall_grade_pct)
-                      end
-                      it "shows the #{grade} overall count for #{test_case} term #{course.term.name}" do
-                        expect(visible_grade_data[:ttl_ct]).to eql(overall_grade_uids.length.to_s)
-                      end
-                      it "shows the #{grade} % with #{prior_course_code} for #{test_case} term #{course.term.name}" do
-                        expect(visible_grade_data[:sub_pct]).to eql(prior_enroll_grade_pct)
-                      end
-                      it "shows the #{grade} count with #{prior_course_code} for #{test_case} term #{course.term.name}" do
-                        expect(visible_grade_data[:sub_ct]).to eql(prior_enroll_grade_uids.length.to_s)
-                      end
+                    opts = @newt.prior_enrollment_select_options
+                    it "shows no term option for low enrollment #{test_case} term #{course.term.name}" do
+                      expect(opts).not_to include(course.term.name)
                     end
                   end
 
-                else
-                  opts = @newt.prior_enrollment_select_options
-                  it "shows no term option for low enrollment #{test_case} term #{course.term.name}" do
-                    expect(opts).not_to include(course.term.name)
-                  end
                 end
               rescue => e
                 Utils.log_error e
