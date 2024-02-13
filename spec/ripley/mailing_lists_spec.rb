@@ -318,7 +318,7 @@ describe 'bCourses Mailgun mailing lists' do
     it 'allow an admin to create a list' do
       @mailing_lists_page.load_embedded_tool
       @mailing_lists_page.search_for_list project_site.site_id
-      @mailing_lists_page.enter_custom_list_name @mailing_lists_page.default_list_name(project_site)
+      @mailing_lists_page.enter_custom_list_name @mailing_lists_page.default_list_name(project_site).gsub('-list', '')
       expected_list_name = "#{@mailing_lists_page.default_list_name project_site}@bcourses-mail.berkeley.edu"
       @mailing_lists_page.list_address_element.when_visible timeout
       expect(@mailing_lists_page.list_address).to eql(expected_list_name)
