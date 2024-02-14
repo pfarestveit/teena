@@ -59,8 +59,6 @@ fi
 
 echo; echo "${friendly_tool_name} Selenium scripts:"; echo
 
-my_list=$(echo $my_list | xargs -n1 | sort | xargs)
-
 case "${tool}" in
     "boac")
         pattern="${tool}_*_spec.rb"
