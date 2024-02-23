@@ -22,7 +22,7 @@ describe 'bCourses welcome email', order: :defined do
     @canvas1.set_canvas_ids @site.manual_members
 
     # Browser for admin
-    @driver2 = Utils.launch_browser(chrome_3rd_party_cookies=true)
+    @driver2 = Utils.launch_browser chrome_3rd_party_cookies: true
     @canvas2 = Page::CanvasPage.new @driver2
     @cal_net2 = Page::CalNetPage.new @driver2
     @ripley2 = RipleySplashPage.new @driver2

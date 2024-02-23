@@ -137,7 +137,7 @@ module CanvasPeoplePage
 
   # ADD USER - LTI
 
-  link(:find_person_to_add_link, xpath: '//a[contains(text(), "Find a Person to Add")]')
+  link(:find_person_to_add_link, xpath: '//a[contains(., "Find a Person to Add")]')
 
   def click_find_person_to_add(url = RipleyUtils.base_url)
     logger.debug 'Clicking Find a Person to Add button'

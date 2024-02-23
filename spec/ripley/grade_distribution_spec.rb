@@ -41,8 +41,7 @@ describe 'The Grade Distribution tool' do
         test.get_existing_site_data(site, section_ids, newt = true)
         test_case = "#{site.course.term.name} #{site.course.code} site #{site.site_id}"
 
-        @canvas.add_ripley_tools(RipleyTool::TOOLS.reject(&:account), site)
-        @canvas.add_ripley_tools([RipleyTool::ADD_USER])
+        @canvas.add_ripley_tools([RipleyTool::ADD_USER, RipleyTool::NEWT])
 
         instructors = RipleyUtils.get_primary_instructors site
         instructor = instructors.first || site.course.teachers.first
@@ -276,7 +275,7 @@ describe 'The Grade Distribution tool' do
                 user_blocked = @canvas.verify_block do
                   @canvas.masquerade_as(user_role.user, site)
                   @newt.load_embedded_tool site
-                  @newt.unauthorized_msg_element.when_visible Utils.short_wait
+                  @newt.sorry_not_auth_msg_element.when_visible Utils.short_wait
                 end
                 it("denies #{user_role.role_code} #{user_role.user.uid} access to the tool") { expect(user_blocked).to be true }
               end

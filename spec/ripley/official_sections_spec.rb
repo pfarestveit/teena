@@ -241,8 +241,7 @@ describe 'bCourses Official Sections tool' do
 
       @add_user.load_embedded_tool site
       @add_user.search(Utils.oski_uid, 'CalNet UID')
-      @add_user.wait_until(Utils.medium_wait) { @add_user.course_section_options&.any? }
-      add_user_sec_count = @add_user.course_section_options.length
+      add_user_sec_count = @add_user.visible_section_options.length
       expected_sec_count = site.sections.length
       it('shows the added sections on Find a Person to Add') { expect(add_user_sec_count).to eql(expected_sec_count) }
 
@@ -298,8 +297,7 @@ describe 'bCourses Official Sections tool' do
 
       @add_user.load_embedded_tool site
       @add_user.search(Utils.oski_uid, 'CalNet UID')
-      @add_user.wait_until(Utils.medium_wait) { @add_user.course_section_options&.any? }
-      add_user_sec_count_del = @add_user.course_section_options.length
+      add_user_sec_count_del = @add_user.visible_section_options.length
       it('shows no deleted sections on Find a Person to Add') { expect(add_user_sec_count_del).to eql(site.sections.length) }
 
       # CANVAS USERS
