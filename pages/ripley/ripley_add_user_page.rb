@@ -34,6 +34,7 @@ class RipleyAddUserPage
 
   select_list(:user_role, id: 'user-role')
   select_list(:course_section, id: 'course-section')
+  elements(:course_section_opts, :div, xpath: '//select[@id="course-section"]/option')
   button(:add_user_button, id: 'add-user-btn')
   button(:start_over_button, id: 'start-over-btn')
 
@@ -99,6 +100,11 @@ class RipleyAddUserPage
   def visible_user_role_options
     user_role_element.when_visible Utils.short_wait
     user_role_options.map &:strip
+  end
+
+  def visible_section_options
+    course_section_element.when_visible Utils.short_wait
+    course_section_opts_elements.map { |el| el.text.strip }
   end
 
   def add_user_by_uid(user, section = nil)

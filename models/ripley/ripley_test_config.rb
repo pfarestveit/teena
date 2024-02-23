@@ -66,15 +66,15 @@ class RipleyTestConfig < TestConfig
                        title: "List 3 #{@id}"
       ),
       (
-        CourseSite.new abbreviation: "Old List #{@id}",
+        CourseSite.new abbreviation: "Old Site #{@id}",
                        manual_members: (test_users.select { |user| user.role == 'Teacher' }),
                        term: RipleyUtils.previous_term(@previous_term),
-                       title: "Old List 4 #{@id}"
+                       title: "Old Site 4 #{@id}"
       ),
       (
-        CourseSite.new abbreviation: "Project List #{@id}",
+        CourseSite.new abbreviation: "Project Site #{@id}",
                        manual_members: (test_users.select { |user| %w(Owner Maintainer Member).include? user.role }),
-                       title: "Project List 5 #{@id}"
+                       title: "Project Site 5 #{@id}"
       )
     ]
   end

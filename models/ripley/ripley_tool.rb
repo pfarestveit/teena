@@ -22,7 +22,7 @@ class RipleyTool
     E_GRADES = new('Download E-Grades', 'export_grade', 'course_navigation', Utils.canvas_official_courses_sub_account),
     MAILING_LIST = new('Mailing List', 'mailing_list', 'course_navigation', Utils.canvas_official_courses_sub_account),
     MAILING_LISTS = new('Mailing Lists', 'mailing_lists', 'account_navigation', Utils.canvas_admin_sub_account),
-    NEWT = new('Grade Distribution', 'grade_distribution', 'course_navigation'),
+    NEWT = new('Grade Distribution', 'grade_distribution', 'course_navigation', Utils.canvas_uc_berkeley_sub_account),
     ROSTER_PHOTOS = new('Roster Photos', 'roster_photos', 'course_navigation', Utils.canvas_official_courses_sub_account),
     USER_PROVISIONING = new('User Provisioning', 'provision_user', 'account_navigation', Utils.canvas_uc_berkeley_sub_account)
   ]

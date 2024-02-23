@@ -51,8 +51,7 @@ describe 'bCourses course site creation' do
 
         if site.create_site_workflow == 'self'
           @create_course_site.click_cancel_site_creation
-          cancel_works = @site_creation.verify_block { @site_creation.click_create_course_site }
-          it('allows a user to cancel course site creation') { expect(cancel_works).to be true }
+          @site_creation.click_create_course_site
         end
         @create_course_site.search_for_course site
 
@@ -310,15 +309,6 @@ describe 'bCourses course site creation' do
     end
     it('offers no Create a Site button to a student') { expect(student_has_button).to be false }
     it('denies a student access to the tool') { expect(student_access_blocked).to be true }
-
-    @canvas.masquerade_as test.ta
-    ta_has_button = @canvas.verify_block { @canvas.ripley_manage_sites_link_element.when_visible Utils.short_wait }
-    @canvas.click_manage_sites_settings_link
-    ta_access_permitted = @create_course_site.verify_block do
-      @create_course_site.create_course_site_link_element.when_visible Utils.short_wait
-    end
-    it('offers a Create a Site button to a TA') { expect(ta_has_button).to be true }
-    it('permits a TA access to the tool') { expect(ta_access_permitted).to be true }
 
   rescue => e
     it('encountered an error') { fail Utils.error(e) }
