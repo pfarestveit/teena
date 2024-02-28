@@ -19,12 +19,6 @@ begin
   task default: :boac
   RSpec::Core::RakeTask.new(:boac) { |t| run_specs(t, 'boac', opts) }
 
-  task default: :junction
-  RSpec::Core::RakeTask.new(:junction) do |t|
-    t.pattern = ENV['SCRIPTS'] ? "spec/junction/*#{ENV['SCRIPTS']}*" : 'spec/junction/canvas*'
-    t.rspec_opts = opts
-  end
-
   task default: :ripley
   RSpec::Core::RakeTask.new(:ripley) { |t| run_specs(t, 'ripley', opts) }
 

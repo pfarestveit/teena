@@ -72,26 +72,6 @@ canvas:
   official_courses_sub_account: secret
   qa_sub_account: secret
   enrollment_retries: 25
-  create_site_tool: secret
-  course_add_user_tool: secret
-  course_captures_tool: secret
-  official_sections_tool: secret
-  mailing_lists_tool: secret
-  mailing_list_tool: secret
-  e_grades_export_tool: secret
-  user_prov_tool: secret
-
-junction:
-  base_url: https://junction-qa.berkeley.edu
-  basic_auth_password: secret
-  admin_uid: secret
-  term_name: 'Fall 2021'
-  term: '2021-D'
-  db_host: secret
-  db_port: secret
-  db_name: secret
-  db_user: secret
-  db_password: secret
 
 nessie:
   pg_db_host: secret
