@@ -64,7 +64,7 @@ echo
 
 # ----
 
-options=("BOA" "Junction" "Ripley" "SuiteC")
+options=("BOA" "Ripley" "SuiteC")
 
 tool_being_tested=''
 
@@ -73,10 +73,6 @@ function set_tool_being_tested {
         "BOA")
             tool_being_tested='boac'
             friendly_tool_name=${options[0]}
-            ;;
-        "Junction")
-            tool_being_tested='junction'
-            friendly_tool_name=${options[1]}
             ;;
         "Ripley")
             tool_being_tested='ripley'

@@ -334,51 +334,6 @@ class Utils
     !Dir.exist?(download_dir) || (Dir.entries(download_dir).reject { |f| %w(. ..).include? f }).empty?
   end
 
-  # Creates users CSV for SIS import testing
-  # @param users [Array<User>]
-  # @return [File]
-  def self.create_sis_user_import(users)
-    logger.info 'Creating a user CSV for SIS import'
-    csv = File.join(initialize_test_output_dir, 'users.csv')
-    CSV.open(csv, 'wb') { |heading| heading << %w(user_id login_id first_name last_name email status) }
-    users.each do |user|
-      first_name = user.full_name.split(' ')[0]
-      last_name = user.full_name.split(' ')[1]
-      add_csv_row(csv, [user.sis_id, user.uid, first_name, last_name, user.email, user.status])
-    end
-    csv
-  end
-
-  # @param course [Course]
-  # @param users_with_sections [Array<Hash>]
-  # @return [CSV]
-  def self.create_sis_enrollment_import(course, users_with_sections)
-    csv = File.join(initialize_test_output_dir, "enrollments-#{course.code}.csv")
-    CSV.open(csv, 'wb') { |heading| heading << %w(course_id user_id role section_id status) }
-    users_with_sections.each do |user_with_section|
-      user = user_with_section[:user]
-      section = user_with_section[:section]
-      add_csv_row(csv, [course.sis_id, user.sis_id, user.role, section.sis_id, user.status])
-    end
-    csv
-  end
-
-  # Creates enrollments CSV for SIS import testing
-  # @param course [Course]
-  # @param section [Section]
-  # @param users [Array<User>]
-  # @return [File]
-  def self.create_sis_section_enrollment_import(course, section, users)
-    logger.info 'Creating an enrollment CSV for SIS import'
-    csv = File.join(initialize_test_output_dir, 'enrollments.csv')
-    CSV.open(csv, 'wb') { |heading| heading << %w(course_id user_id role section_id status) }
-    users.each do |user|
-      logger.debug "UID #{user.uid} will be a #{user.role} in section #{section.sis_id} with status #{user.status}"
-      add_csv_row(csv, [course.sis_id, user.sis_id, user.role, section.sis_id, user.status])
-    end
-    csv
-  end
-
   # LOGGING
 
   # Returns the path and name of a logger file
