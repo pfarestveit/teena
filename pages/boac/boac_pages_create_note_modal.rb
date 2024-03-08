@@ -7,6 +7,8 @@ module BOACPagesCreateNoteModal
   include Page
   include BOACPages
 
+  link(:best_practices_link, id: 'link-to-advising-note-best-practices')
+
   #### DRAFT NOTE ####
 
   button(:save_as_draft_button, id: 'save-as-draft-button')
@@ -337,6 +339,7 @@ module BOACPagesCreateNoteModal
   def add_students_to_batch(note_batch, students)
     students.each do |student|
       logger.debug "Find student SID '#{student.sis_id}' then add to batch note '#{note_batch.subject}'."
+      scroll_to_top
       wait_for_element_and_type(batch_note_add_student_input_element, "#{student.sis_id}")
       sleep Utils.click_wait
       wait_until(Utils.medium_wait) { auto_suggest_option_elements.any? }

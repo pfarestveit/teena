@@ -72,9 +72,15 @@ unless ENV['NO_DEPS']
 
         context 'creating a new note' do
 
+          it 'offers a link to best practices' do
+            @student_page.click_create_new_note
+            title = 'Shared Advising Notes | Advising Strategy + Training'
+            link = @student_page.external_link_valid?(@student_page.best_practices_link_element, title)
+            expect(link).to be true
+          end
+
           it 'cannot create a note without a subject' do
             note_1.subject = ''
-            @student_page.click_create_new_note
             @student_page.new_note_save_button_element.when_present 2
             @student_page.enter_new_note_subject note_1
             expect(@student_page.new_note_save_button_element.disabled?).to be true

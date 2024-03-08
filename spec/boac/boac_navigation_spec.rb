@@ -74,8 +74,9 @@ unless ENV['DEPS']
                         it("links student pages from the list view of #{class_test_case}") { expect(list_to_student).to be true }
 
                         # Back to list view
-                        @driver.navigate.back
-                        student_to_list = @class_list_page.verify_block { @class_list_page.wait_until(Utils.short_wait) { @class_list_page.course_title == course_sis_data[:title] } }
+                        @student_page.go_back
+                        @class_list_page.wait_for_spinner
+                        student_to_list = @class_list_page.verify_block { @class_list_page.wait_until(1) { @class_list_page.course_title == course_sis_data[:title] } }
                         it("returns to the list view of #{class_test_case}") { expect(student_to_list).to be true }
 
                         # CLASS PAGE - Matrix View

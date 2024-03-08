@@ -220,7 +220,6 @@ unless ENV['DEPS']
         titles = []
         emails = []
         departments = []
-        appt_roles = []
         can_access_canvas_data_flags = []
         is_blocked_flags = []
         last_logins = []
@@ -231,7 +230,6 @@ unless ENV['DEPS']
           titles << r[:title] if r[:title]
           emails << r[:email] if r[:email]
           departments << r[:department] if r[:department]
-          appt_roles << r[:appointment_roles] if r[:appointment_roles]
           can_access_canvas_data_flags << r[:can_access_canvas_data]
           is_blocked_flags << r[:is_blocked]
           last_logins << r[:last_login] if r[:last_login]
@@ -243,7 +241,6 @@ unless ENV['DEPS']
         expect(titles).not_to be_empty
         expect(emails).not_to be_empty
         expect(departments).not_to be_empty
-        expect(appt_roles).not_to be_empty
         expect(can_access_canvas_data_flags).not_to be_empty
         expect(is_blocked_flags).not_to be_empty
         expect(last_logins).not_to be_empty

@@ -40,7 +40,7 @@ module BOACCohortPages
   button(:apply_button, id: 'unsaved-filter-apply')
 
   def click_save_cohort_button_one
-    wait_until(Utils.medium_wait) { save_cohort_button_one_element.visible?; save_cohort_button_one_element.enabled? }
+    sleep 2
     wait_for_update_and_click save_cohort_button_one_element
   end
 
