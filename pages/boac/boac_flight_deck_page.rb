@@ -100,7 +100,6 @@ class BOACFlightDeckPage
   button(:topic_search_clear_button, xpath: '//button[text()="Clear"]')
   button(:topic_create_button, id: 'new-note-button')
   text_field(:topic_name_input, id: 'topic-label')
-  checkbox(:topic_in_notes_cbx, id: 'topic-available-in-notes')
   button(:topic_save_button, id: 'topic-save')
   button(:topic_cancel_button, id: 'cancel')
 
@@ -124,34 +123,21 @@ class BOACFlightDeckPage
     cell_element(xpath: "#{topic_row_xpath topic}/td[2]").text == 'Yes'
   end
 
-  def topic_in_notes(topic)
-    cell_element(xpath: "#{topic_row_xpath topic}/td[3]").text.strip
-  end
-
   def topic_in_notes_count(topic)
-    cell_element(xpath: "#{topic_row_xpath topic}/td[4]").text
-  end
-
-  def topic_edit_button(topic)
-    cell_element(xpath: "#{topic_row_xpath topic}/td[7]//button[contains(., 'Edit')]")
+    cell_element(xpath: "#{topic_row_xpath topic}/td[3]").text
   end
 
   def topic_delete_button(topic)
-    cell_element(xpath: "#{topic_row_xpath topic}/td[7]//button[contains(., 'Delete')]")
+    cell_element(xpath: "#{topic_row_xpath topic}/td[4]//button[contains(., 'Delete')]")
   end
 
   def topic_undelete_button(topic)
-    cell_element(xpath: "#{topic_row_xpath topic}/td[7]//button[contains(., 'Un-delete')]")
+    cell_element(xpath: "#{topic_row_xpath topic}/td[4]//button[contains(., 'Un-delete')]")
   end
 
   def click_create_topic
     logger.info 'Clicking the Create topic button'
     wait_for_load_and_click topic_create_button_element
-  end
-
-  def click_edit_topic(topic)
-    logger.info "Clicking the edit button for topic '#{topic.name}'"
-    wait_for_update_and_click topic_edit_button(topic)
   end
 
   def click_save_topic
@@ -184,30 +170,11 @@ class BOACFlightDeckPage
     wait_for_element_and_type(topic_name_input_element, label)
   end
 
-  def toggle_topic_in_notes
-    js_click topic_in_notes_cbx_element
-  end
-
-  def check_topic_in_notes
-    toggle_topic_in_notes unless topic_in_notes_cbx_element.selected?
-  end
-
-  def uncheck_topic_in_notes
-    toggle_topic_in_notes if topic_in_notes_cbx_element.selected?
-  end
-
   def create_topic(topic)
     click_create_topic
     enter_topic_label topic.name
-    check_topic_in_notes if topic.for_notes
     click_save_topic
     set_new_topic_id topic
-  end
-
-  def edit_topic(topic)
-    click_edit_topic topic
-    topic.for_notes ? check_topic_in_notes : uncheck_topic_in_notes
-    click_save_topic
   end
 
   def set_new_topic_id(topic)
