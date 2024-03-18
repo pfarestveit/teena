@@ -68,7 +68,11 @@ class SquiggyWhiteboardsPage
   def verify_first_whiteboard(whiteboard)
     sleep 1
     logger.debug "Verifying list view whiteboard title includes '#{whiteboard.title}'"
-    wait_until(Utils.short_wait) { visible_whiteboard_titles.first.include? whiteboard.title }
+    wait_until(Utils.short_wait) do
+      list_view_whiteboard_elements.any?
+      sleep 2
+      visible_whiteboard_titles.first.include? whiteboard.title
+    end
     logger.info "New whiteboard ID is #{whiteboard.id = get_first_whiteboard_id}"
   end
 

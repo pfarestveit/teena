@@ -7,7 +7,8 @@ class RipleyGradeDistributionPage
 
   h1(:page_heading, xpath: '//h1[contains(., "Grade Distribution")]')
   div(:sorry_not_auth_msg, xpath: '//div[text()="Sorry, you are not authorized to use this tool."]')
-  div(:no_grade_dist_msg, xpath: '//div[text()="This course does not meet the requirements necessary to generate a Grade Distribution."]')
+  elements(:no_grades_msg, :div, xpath: '//*[text()="No data available until final grades are returned."]')
+  div(:no_grade_dist_msg, xpath: '//div[text()="This course does not meet the requirements necessary to generate a Grade Distribution, or has not yet had final grades returned."]')
   div(:tooltip_key, xpath: '//div[@class="chart-tooltip-key"]')
   div(:tooltip_name, xpath: '//div[@class="chart-tooltip-name"]')
 

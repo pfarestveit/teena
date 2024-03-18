@@ -31,7 +31,7 @@ unless ENV['DEPS']
 
   ### Subcategory column requirements
   req_sub_category_1 = DegreeReqtCategory.new name: ("Subcategory 1.1 #{test.id}" * str_multiplier),
-                                              desc: ("Subcategory 1.1 Description www.teenamarieofficial.com #{test.id}" * str_multiplier),
+                                              desc: ("Subcategory 1.1 Description en.wikipedia.org/wiki/Teena_Marie #{test.id}" * str_multiplier),
                                               parent: req_category_1
   req_sub_cat_course_1 = DegreeReqtCourse.new name: "SUBCAT 1 #{test.id}",
                                               units: '4',
@@ -264,8 +264,8 @@ unless ENV['DEPS']
             it('shows the right name') { expect(@degree_template_page.visible_cat_name req_sub_category_1).to eql(req_sub_category_1.name) }
 
             it 'supports external links in descriptions' do
-              link = @degree_template_page.link_element(text: 'www.teenamarieofficial.com')
-              expect(@degree_template_page.external_link_valid?(link, 'Teena Marie: Beautiful | Official Teena Marie Website')).to be true
+              link = @degree_template_page.link_element(text: 'en.wikipedia.org/wiki/Teena_Marie')
+              expect(@degree_template_page.external_link_valid?(link, 'Teena Marie - Wikipedia')).to be true
             end
 
             it 'does not offer subcategories as parents' do

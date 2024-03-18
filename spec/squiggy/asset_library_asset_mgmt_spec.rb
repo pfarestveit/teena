@@ -261,6 +261,7 @@ describe 'Asset' do
       @asset_detail.load_asset_detail(@test, @asset)
       @asset.title = "#{@asset.title} EDITED"
       @asset_detail.edit_asset_details @asset
+      @asset_detail.wait_for_asset_detail
       @asset_detail.wait_until(Utils.short_wait) { @asset_detail.asset_title == @asset.title }
     end
 
@@ -269,6 +270,7 @@ describe 'Asset' do
       @asset_detail.load_asset_detail(@test, @asset)
       @asset.description = 'New description'
       @asset_detail.edit_asset_details @asset
+      @asset_detail.wait_for_asset_detail
       @asset_detail.wait_until(Utils.short_wait) { @asset_detail.description.strip == @asset.description }
     end
   end

@@ -97,6 +97,7 @@ describe 'Whiteboard' do
         @whiteboards_driver_1.load_page test
         @whiteboards_driver_1.wait_until(timeout) do
           @whiteboards_driver_1.list_view_whiteboard_title_elements.any?
+          sleep 2
           @whiteboards_driver_1.list_view_whiteboard_title_elements[0].text == @whiteboard_2.title
           @whiteboards_driver_1.list_view_whiteboard_title_elements[1].text == @whiteboard_1.title
         end

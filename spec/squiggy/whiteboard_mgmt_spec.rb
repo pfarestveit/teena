@@ -148,6 +148,9 @@ describe 'Whiteboard' do
       @whiteboards.wb_advanced_search(@whiteboard_delete_2.title, @student_1, true)
       @whiteboards.open_whiteboard @whiteboard_delete_2
       @whiteboards.restore_whiteboard
+    end
+
+    it 'reversal allows the whiteboard to be searched again' do
       @whiteboards.close_whiteboard
       @whiteboards.wb_advanced_search(@whiteboard_delete_2.title, @student_1, false)
       @whiteboards.wait_until(Utils.short_wait) { @whiteboards.visible_whiteboard_titles == [@whiteboard_delete_2.title] }

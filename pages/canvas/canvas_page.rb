@@ -183,6 +183,7 @@ module Page
         course_details_link_element.when_visible Utils.medium_wait
         test.course_site.title = course_title
         test.course_site.abbreviation = course_code
+        activate_squiggy_tools test
       else
         SquiggyUtils.inactivate_all_courses
         logger.info "Creating a Squiggy course site named #{test.course_site.title}"
@@ -563,7 +564,12 @@ module Page
               wait_for_element_and_type(secret_input_element, creds[:secret])
               wait_for_element_and_type(url_input_element, "#{SquiggyUtils.base_url}#{tool.xml}")
               wait_for_update_and_click submit_button_element
-              wait_for_update_and_click add_tool_button_element rescue logger.warn('No add tool button')
+              begin
+                add_tool_button_element.when_present 2
+                add_tool_button
+              rescue
+                logger.warn('No add tool button')
+              end
               link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
 
               # Enable tool placement in sidebar navigation
@@ -577,6 +583,10 @@ module Page
           end
         end
       end
+      activate_squiggy_tools test
+    end
+
+    def activate_squiggy_tools(test)
       test.course_site.engagement_index_url = click_tool_link SquiggyTool::ENGAGEMENT_INDEX
       test.course_site.impact_studio_url = click_tool_link SquiggyTool::IMPACT_STUDIO
       test.course_site.whiteboards_url = click_tool_link SquiggyTool::WHITEBOARDS

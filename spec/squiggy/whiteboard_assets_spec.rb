@@ -141,6 +141,8 @@ describe 'Whiteboard Add Asset' do
       @whiteboards.hit_escape
       @whiteboards.add_existing_assets [@student_1_file]
       @whiteboards.wait_until(Utils.short_wait) do
+        @whiteboards.open_original_asset_link?
+        sleep 2
         @whiteboards.open_original_asset_link_element.attribute('href').include? @student_1_file.id
       end
     end
@@ -148,6 +150,8 @@ describe 'Whiteboard Add Asset' do
     it 'allows the user to add a collaborator\'s assets' do
       @whiteboards.add_existing_assets [@student_2_url]
       @whiteboards.wait_until(Utils.short_wait) do
+        @whiteboards.open_original_asset_link?
+        sleep 2
         @whiteboards.open_original_asset_link_element.attribute('href').include? @student_2_url.id
       end
     end
@@ -155,6 +159,8 @@ describe 'Whiteboard Add Asset' do
     it 'allows the user to add a non-collaborator\'s assets' do
       @whiteboards.add_existing_assets [@student_3_file]
       @whiteboards.wait_until(Utils.short_wait) do
+        @whiteboards.open_original_asset_link?
+        sleep 2
         @whiteboards.open_original_asset_link_element.attribute('href').include? @student_3_file.id
       end
     end
