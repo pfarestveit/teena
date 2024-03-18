@@ -57,6 +57,8 @@ describe 'Impact Studio Activity Network' do
       @whiteboards_page.open_whiteboard @whiteboard
       @whiteboards_page.add_existing_assets [@asset]
       @whiteboards_page.wait_until(Utils.short_wait) do
+        @whiteboards_page.open_original_asset_link?
+        sleep 2
         @whiteboards_page.open_original_asset_link_element.attribute('href').include? @asset.id
       end
       @whiteboards_page.close_whiteboard

@@ -159,16 +159,13 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
     logger.info "Downloading asset ID #{asset.id}"
     Utils.prepare_download_dir
     wait_for_load_and_click download_button_element
+    sleep 2
     wait_until(Utils.medium_wait) do
       Dir.entries("#{Utils.download_dir}").length == 3
-      download_file_name = Dir.entries("#{Utils.download_dir}").find { |f| !%w(. ..).include? f }
-      logger.debug "Downloaded file name is '#{download_file_name}'"
+      download_file_name = Dir.entries("#{Utils.download_dir}").find { |f| f.length > 2 }
       download_file = File.new File.join(Utils.download_dir, download_file_name)
-      wait_until(Utils.medium_wait) do
-        logger.debug "The downloaded file size is currently #{download_file.size}, waiting for it to reach #{asset.size}"
-        download_file.size == asset.size
-      end
-      download_file_name
+      logger.debug "The downloaded file size is currently #{download_file.size}, waiting for it to reach #{asset.size}"
+      download_file.size == asset.size
     end
   end
 

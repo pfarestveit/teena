@@ -270,6 +270,8 @@ class SquiggyWhiteboardPage < SquiggyWhiteboardsPage
   end
 
   def added_asset_id
+    open_original_asset_link_element.when_present Utils.short_wait
+    sleep 2
     open_original_asset_link_element.attribute('href').split('?').first.split('/').last
   end
 

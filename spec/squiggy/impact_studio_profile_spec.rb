@@ -157,6 +157,7 @@ describe 'Impact Studio' do
 
       context 'when the user has no activity' do
         it 'shows "Never"' do
+          @impact_studio.last_activity_element.when_visible Utils.short_wait
           expect(@impact_studio.last_activity).to eql('Never')
         end
       end
@@ -170,6 +171,7 @@ describe 'Impact Studio' do
 
         it 'shows the activity date' do
           @impact_studio.load_own_profile(test, student_1)
+          @impact_studio.last_activity_element.when_visible Utils.short_wait
           expect(@impact_studio.last_activity).to eql('a few seconds ago')
         end
       end
@@ -180,7 +182,11 @@ describe 'Impact Studio' do
       it 'allows the user to edit a description' do
         desc = "My personal description #{test.id}"
         @impact_studio.edit_profile desc
-        @impact_studio.wait_until(Utils.short_wait) { @impact_studio.profile_desc == desc }
+        @impact_studio.wait_until(Utils.short_wait) do
+          @impact_studio.profile_desc?
+          sleep 2
+          @impact_studio.profile_desc == desc
+        end
       end
 
       it 'allows the user to cancel a description edit' do
@@ -188,20 +194,32 @@ describe 'Impact Studio' do
         @impact_studio.click_edit_profile
         @impact_studio.enter_profile_desc 'foo'
         @impact_studio.cancel_profile_edit
-        @impact_studio.wait_until(Utils.short_wait) { @impact_studio.profile_desc == desc }
+        @impact_studio.wait_until(Utils.short_wait) do
+          @impact_studio.profile_desc?
+          sleep 2
+          @impact_studio.profile_desc == desc
+        end
       end
 
       it 'allows the user to include a link in a description' do
         link = 'www.google.com'
         @impact_studio.edit_profile "My personal description includes a link to #{link}"
-        @impact_studio.wait_until(Utils.short_wait) { @impact_studio.profile_desc.include? 'My personal description includes a link to' }
+        @impact_studio.wait_until(Utils.short_wait) do
+          @impact_studio.profile_desc?
+          sleep 2
+          @impact_studio.profile_desc.include? 'My personal description includes a link to'
+        end
         expect(@impact_studio.external_link_valid?(@impact_studio.link_element(xpath: "//a[contains(.,'#{link}')]"), 'Google'))
       end
 
       it 'allows the user to include a hashtag in a description' do
         @impact_studio.load_page test
         @impact_studio.edit_profile 'My personal description hashtag #BitterTogether'
-        @impact_studio.wait_until(Utils.short_wait) { @impact_studio.profile_desc.include? 'My personal description hashtag' }
+        @impact_studio.wait_until(Utils.short_wait) do
+          @impact_studio.profile_desc?
+          sleep 2
+          @impact_studio.profile_desc.include? 'My personal description hashtag'
+        end
         @impact_studio.link_element(text: '#BitterTogether').click
         @asset_library.wait_until(Utils.short_wait) { @asset_library.title == 'Asset Library' }
         @asset_library.switch_to_canvas_iframe
