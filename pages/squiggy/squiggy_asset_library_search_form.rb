@@ -50,7 +50,7 @@ module SquiggyAssetLibrarySearchForm
   button(:category_clear_button, xpath: '//input[@id="adv-search-categories-select"]/../following-sibling::div//button')
 
   def click_category_search_select
-    category_select_element.when_present 2
+    category_select_element.when_present Utils.short_wait
     js_click category_select_element
     sleep Utils.click_wait
   end
@@ -62,7 +62,7 @@ module SquiggyAssetLibrarySearchForm
   button(:user_clear_button, xpath: '//input[@id="adv-search-user-select"]/../following-sibling::div//button')
 
   def click_uploader_select
-    uploader_select_element.when_present 2
+    uploader_select_element.when_present Utils.short_wait
     js_click uploader_select_element
     sleep Utils.click_wait
   end
@@ -83,7 +83,7 @@ module SquiggyAssetLibrarySearchForm
   button(:asset_type_clear_button, xpath: '//input[@id="adv-search-asset-types-select"]/../following-sibling::div//button')
 
   def click_asset_type_select
-    asset_type_select_element.when_present 2
+    asset_type_select_element.when_present Utils.short_wait
     js_click asset_type_select_element
     sleep Utils.click_wait
   end
@@ -99,7 +99,7 @@ module SquiggyAssetLibrarySearchForm
   button(:section_clear_button, xpath: '//input[@id="adv-search-section-select"]/../following-sibling::div//button')
 
   def click_section_select
-    section_select_element.when_present 2
+    section_select_element.when_present Utils.short_wait
     js_click section_select_element
     sleep Utils.click_wait
   end
@@ -130,7 +130,7 @@ module SquiggyAssetLibrarySearchForm
   div(:selected_sort, id: 'adv-search-order-by-option-selected')
 
   def click_sort_by_select
-    sort_by_select_element.when_present 2
+    sort_by_select_element.when_present Utils.short_wait
     js_click sort_by_select_element
     sleep Utils.click_wait
   end
@@ -206,7 +206,7 @@ module SquiggyAssetLibrarySearchForm
   end
 
   def wait_for_no_results
-    no_results_msg_element.when_visible 3
+    no_results_msg_element.when_visible Utils.short_wait
   end
 
   def click_cancel_advanced_search
