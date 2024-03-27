@@ -102,6 +102,16 @@ describe 'bCourses project site', order: :defined do
     end
   end
 
+  describe 'SIS ID' do
+
+    it 'is not added' do
+      @canvas.stop_masquerading
+      @canvas.load_course_settings project
+      @canvas.course_sis_id_element.when_present Utils.short_wait
+      expect(@canvas.course_sis_id_element.attribute('value')).to be_empty
+    end
+  end
+
   describe 'user role restrictions' do
 
     [test.canvas_admin, test.ta, test.staff, test.students.first].each do |user|

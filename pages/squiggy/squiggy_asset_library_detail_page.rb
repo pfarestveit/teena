@@ -36,7 +36,7 @@ class SquiggyAssetLibraryDetailPage < SquiggyAssetLibraryListViewPage
   end
 
   def wait_for_asset_detail
-    wait_for_element(asset_title_element, Utils.short_wait)
+    wait_for_element(asset_title_element, Utils.medium_wait)
     sleep 1
   end
 

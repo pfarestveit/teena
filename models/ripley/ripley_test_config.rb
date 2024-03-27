@@ -215,13 +215,19 @@ class RipleyTestConfig < TestConfig
     end
   end
 
-  def get_single_test_site(section_ids = nil)
+  def get_single_test_site(section_ids = nil, opts = {})
     course_site = if ENV['SITE']
                     CourseSite.new site_id: ENV['SITE'].to_s
                   else
                     get_multiple_test_sites
-                    @course_sites.find do |site|
-                      site.course.sections.select(&:primary).length > 1 && (site.course.sections.select { |s| !s.primary }).any?
+                    if opts[:multi_primary]
+                      @course_sites.find do |site|
+                        site.course.sections.select(&:primary).length > 1 && (site.course.sections.select { |s| !s.primary }).any?
+                      end
+                    else
+                      @course_sites.find do |site|
+                        site.course.sections.select(&:primary).length == 1 && (site.course.sections.select { |s| !s.primary }).any?
+                      end
                     end
                   end
     get_existing_site_data(course_site, section_ids) if section_ids
@@ -265,7 +271,7 @@ class RipleyTestConfig < TestConfig
     if site
       get_existing_site_data(site, section_ids)
     else
-      site = get_single_test_site section_ids
+      site = get_single_test_site(section_ids, { multi_primary: true })
     end
     teacher = RipleyUtils.get_primary_instructors(site).first || site.course.teachers.first
     canvas_page.set_canvas_ids([teacher] + non_teachers)
