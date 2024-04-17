@@ -208,6 +208,7 @@ class RipleyUtils < Utils
              FROM sis_data.edo_sections
             WHERE sis_data.edo_sections.cs_course_id = '#{cs_course_id}'
               AND sis_data.edo_sections.instructor_uid = '#{user.uid}'
+              AND sis_data.edo_sections.is_primary IS TRUE
               AND sis_data.edo_sections.sis_term_id IN (#{terms_clause});"
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     term_ids = results.map { |r| r['sis_term_id'].to_s }

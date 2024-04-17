@@ -218,10 +218,12 @@ describe 'The Grade Distribution tool' do
 
                       @newt.select_prior_enrollment_term course.term
                       @newt.choose_prior_enrollment_course prior_course_code
-                      @newt.wait_until(Utils.short_wait) do
+                      start = Time.now
+                      @newt.wait_until(Utils.medium_wait) do
                         @newt.no_prior_enrollments_msg(course, prior_course_code).exists? ||
                           @newt.prior_enrollment_data_heading(course, prior_course_code).exists?
                       end
+                      logger.warn "Took Newt #{Time.now - start} seconds for data to appear"
                       @newt.expand_prior_enrollment_table if shows_prior_enrollment
                       prior_enrollment_terms << course.term.name
 

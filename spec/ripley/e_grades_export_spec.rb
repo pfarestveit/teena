@@ -29,9 +29,10 @@ describe 'bCourses E-Grades Export' do
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     site, @teacher = test.configure_single_site(@canvas, @canvas_api, non_teachers, site)
 
-    @primary_enrollments = site.course.sections.select(&:primary).map(&:enrollments).flatten
     @primary_section = site.sections.find &:primary
     @secondary_section = site.sections.reject(&:primary).first
+    @primary_section.enrollments.keep_if { |e| e.user.sis_id }
+    @secondary_section.enrollments.keep_if { |e| e.user.sis_id }
 
     # Create an ungraded assignment to use for testing manual grading policy
     @canvas.masquerade_as @teacher
@@ -201,7 +202,7 @@ describe 'bCourses E-Grades Export' do
     end
 
     it 'has the right SIDs' do
-      expected_sids = @primary_enrollments.map(&:user).map(&:sis_id).sort
+      expected_sids = @primary_section.enrollments.map(&:user).map(&:sis_id).sort
       actual_sids = @e_grades.map { |s| s[:id] }.sort
       logger.debug "Expecting #{expected_sids} and got #{actual_sids}"
       expect(actual_sids.any? &:empty?).to be false
@@ -212,7 +213,7 @@ describe 'bCourses E-Grades Export' do
 
     it 'has the right names' do
       # Compare last names only, since preferred names can cause mismatches
-      expected_names = @primary_enrollments.map(&:user).map { |u| u.last_name.strip.downcase }.sort
+      expected_names = @primary_section.enrollments.map(&:user).map { |u| u.last_name.strip.downcase }.sort
       actual_names = @e_grades.map { |n| n[:name].split(',')[0].strip.downcase }.sort
       logger.debug "Expecting #{expected_names} and got #{actual_names}"
       expect(actual_names.any? &:empty?).to be false
@@ -251,7 +252,7 @@ describe 'bCourses E-Grades Export' do
       # Get actual grade data for one student
       test_data = nil
       students.each do |user|
-        sis_enrollment = @primary_enrollments.find { |e| e.user.uid == user.uid }
+        sis_enrollment = @primary_section.enrollments.find { |e| e.user.uid == user.uid }
         if sis_enrollment
           sis_student = sis_enrollment.user
           user.sis_id = sis_student.sis_id

@@ -58,7 +58,7 @@ describe 'bCourses' do
       end
 
       it 'include a "Data Use & Analytics" link' do
-        title = 'bCourses Data Use and Analytics | Digital Learning Services'
+        title = 'bCourses Data Use and Analytics | Research, Teaching, and Learning'
         expect(@canvas.external_link_valid?(@canvas.data_use_link_element, title)).to be true
       end
 
