@@ -89,26 +89,6 @@ class RipleyTestConfig < TestConfig
     site
   end
 
-  def refresh_canvas_recent
-    # TODO - replace the info from the test data file with Nessie + newly created course site data
-    test_data = JSON.parse(File.read(File.join(Utils.config_dir, 'test-data-bcourses.json')))['courses']
-    test_data.keep_if { |d| d['tests']['refresh_recent'] }
-    @course_sites = test_data.map do |d|
-      course = Course.new d
-      course.sections.map! { |s| Section.new s }
-      course.teachers.map! { |u| User.new u }
-      course.term = Term.new code: Utils.term_name_to_hyphenated_code(course.term),
-                             name: course.term,
-                             sis_id: Utils.term_name_to_sis_code(course.term)
-      site = CourseSite.new course: course,
-                            sections: course.sections,
-                            site_id: d['site_id']
-      set_real_test_course_users site
-      logger.info "Course site: #{site.inspect}"
-      site
-    end
-  end
-
   def rosters
     set_real_test_course_users
   end
@@ -122,12 +102,6 @@ class RipleyTestConfig < TestConfig
     CourseSite.new abbreviation: "#{@id} Welcome Email",
                    manual_members: (test_users.select { |user| %w(Teacher Student).include? user.role }),
                    title: "#{@id} Welcome"
-  end
-
-  ### GLOBAL CONFIG ###
-
-  def ripley_test_data_file
-    File.join(Utils.config_dir, 'test-data-bcourses.json')
   end
 
   # SIS COURSE DATA
