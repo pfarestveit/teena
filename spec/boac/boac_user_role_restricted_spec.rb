@@ -205,7 +205,7 @@ unless ENV['DEPS']
 
         it 'cannot post status alerts' do
           @homepage.wait_for_update_and_click @homepage.settings_link_element
-          expect(@settings_page.status_heading?).to be false
+          expect(@settings_page.edit_service_announcement?).to be false
         end
 
         it 'cannot reach the Passenger Manifest' do
@@ -401,7 +401,7 @@ unless ENV['DEPS']
 
         it 'cannot post status alerts' do
           @homepage.wait_for_update_and_click @homepage.settings_link_element
-          expect(@settings_page.status_heading?).to be false
+          expect(@settings_page.edit_service_announcement?).to be false
         end
 
         it 'cannot reach the Passenger Manifest' do

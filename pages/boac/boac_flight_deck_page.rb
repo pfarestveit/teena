@@ -9,15 +9,10 @@ class BOACFlightDeckPage
 
   h1(:my_profile_heading, xpath: '//h1[text()="Profile"]')
   checkbox(:demo_mode_toggle, id: 'toggle-demo-mode')
-  h2(:status_heading, id: 'system-status-header')
-
-  # Loads the admin page
-  def load_page
-    navigate_to "#{BOACUtils.base_url}/admin"
-  end
 
   def load_advisor_page
     navigate_to "#{BOACUtils.base_url}/profile"
+    my_profile_heading_element.when_visible Utils.short_wait
   end
 
   #### SERVICE ANNOUNCEMENTS ####
@@ -27,8 +22,11 @@ class BOACFlightDeckPage
   text_area(:update_service_announcement, xpath: '(//div[@role="textbox"])[2]')
   button(:update_service_announcement_button, id: 'button-update-service-announcement')
   span(:service_announcement_banner, id: 'service-announcement-banner')
-  span(:service_announcement_checkbox_label, id: 'checkbox-service-announcement-label')
   button(:dismiss_announcement_button, id: 'dismiss-service-announcement')
+
+  def service_announcement_checkbox_label
+    post_service_announcement_checkbox_element.attribute('aria-label')
+  end
 
   def dismiss_announcement
     logger.info 'Dismissing service alert'
@@ -36,25 +34,21 @@ class BOACFlightDeckPage
     service_announcement_banner_element.when_not_present 1
   end
 
-  # Updates service announcement without touching the 'Post' checkbox
-  # @param announcement [String]
   def update_service_announcement(announcement)
     logger.info "Entering service announcement '#{announcement}'"
     wait_for_textbox_and_type(update_service_announcement_element, announcement)
     wait_for_update_and_click update_service_announcement_button_element
   end
 
-  # Checks or un-checks the service announcement "Post" checkbox
   def toggle_service_announcement_checkbox
     logger.info 'Clicking the service announcement posting checkbox'
     (el = post_service_announcement_checkbox_element).when_present Utils.short_wait
     js_click el
   end
 
-  # Posts service announcement
   def post_service_announcement
     logger.info 'Posting a service announcement'
-    service_announcement_checkbox_label_element.when_visible Utils.short_wait
+    post_service_announcement_checkbox.when_present Utils.short_wait
     tries ||= 2
     begin
       tries -= 1
@@ -72,10 +66,9 @@ class BOACFlightDeckPage
     end
   end
 
-  # Unposts service announcement
   def unpost_service_announcement
     logger.info 'Un-posting a service announcement'
-    service_announcement_checkbox_label_element.when_visible Utils.medium_wait
+    post_service_announcement_checkbox.when_present Utils.medium_wait
     tries ||= 2
     begin
       tries -= 1
@@ -97,7 +90,7 @@ class BOACFlightDeckPage
   ### TOPICS ###
 
   text_field(:topic_search_input, id: 'filter-topics')
-  button(:topic_search_clear_button, xpath: '//button[text()="Clear"]')
+  button(:topic_search_clear_button, xpath: '//button[contains(., "Clear")]')
   button(:topic_create_button, id: 'new-note-button')
   text_field(:topic_name_input, id: 'topic-label')
   button(:topic_save_button, id: 'topic-save')
@@ -127,12 +120,8 @@ class BOACFlightDeckPage
     cell_element(xpath: "#{topic_row_xpath topic}/td[3]").text
   end
 
-  def topic_delete_button(topic)
-    cell_element(xpath: "#{topic_row_xpath topic}/td[4]//button[contains(., 'Delete')]")
-  end
-
-  def topic_undelete_button(topic)
-    cell_element(xpath: "#{topic_row_xpath topic}/td[4]//button[contains(., 'Un-delete')]")
+  def topic_deletion_toggle_button(topic)
+    cell_element(xpath: "#{topic_row_xpath topic}/td[4]/button")
   end
 
   def click_create_topic
@@ -153,16 +142,15 @@ class BOACFlightDeckPage
 
   def delete_topic(topic)
     logger.info "Clicking the delete button for topic '#{topic.name}'"
-    wait_for_update_and_click topic_delete_button(topic)
+    wait_for_update_and_click topic_deletion_toggle_button(topic)
     wait_for_update_and_click confirm_delete_or_discard_button_element
     confirm_delete_or_discard_button_element.when_not_present 1
   end
 
   def undelete_topic(topic)
     logger.info "Clicking the undelete button for topic '#{topic.name}'"
-    wait_for_update_and_click topic_undelete_button(topic)
+    wait_for_update_and_click topic_deletion_toggle_button(topic)
     sleep 1
-    topic_undelete_button(topic).when_not_present 1
   end
 
   def enter_topic_label(label)
@@ -178,41 +166,13 @@ class BOACFlightDeckPage
   end
 
   def set_new_topic_id(topic)
-    start_time = Time.now
     wait_until(Utils.short_wait) { BOACUtils.get_topic_id topic }
-    logger.warn "Topic #{topic.id} was created in #{Time.now - start_time} seconds"
-  rescue
-    logger.debug 'Timed out waiting for topic ID'
-    fail
   end
 
   def search_for_topic(topic)
     logger.info "Searching for topic '#{topic.name}'"
     wait_for_element_and_type(topic_search_input_element, topic.name)
     sleep Utils.click_wait
-  end
-
-  # EXPORTS
-
-  text_field(:alerts_from_input, id: 'alerts-log-export-from-date')
-  text_field(:alerts_to_input, id: 'alerts-log-export-to-date')
-  button(:alerts_export_button, id: 'alerts-log-export-submit')
-
-  def export_alerts(from_date, to_date)
-    Utils.prepare_download_dir
-    from_str = from_date.strftime('%m/%d/%Y')
-    to_str = to_date.strftime('%m/%d/%Y')
-    logger.info "Exporting alerts from #{from_str} to #{to_str}"
-    wait_for_element_and_type(alerts_from_input_element, from_str)
-    wait_for_element_and_type(alerts_to_input_element, to_str)
-    wait_for_update_and_click alerts_export_button_element
-    parts = from_str.split('/')
-    from_file_str = "#{parts[0]}-#{parts[1]}_#{parts[2]}"
-    parts = to_str.split('/')
-    to_file_str = "#{parts[0]}-#{parts[1]}_#{parts[2]}"
-    csv_file_path = "#{Utils.download_dir}/boa-alerts-#{from_file_str}-to-#{to_file_str}.csv"
-    wait_until(30) { Dir[csv_file_path].any? }
-    CSV.table Dir[csv_file_path].first
   end
 
 end
