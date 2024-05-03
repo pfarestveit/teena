@@ -291,11 +291,10 @@ unless ENV['NO_DEPS']
 
         it 'can toggle demo mode' do
           @settings_page.load_advisor_page
-          @settings_page.my_profile_heading_element.when_visible Utils.short_wait
           expect(@settings_page.demo_mode_toggle?).to be true
         end
 
-        it('cannot post status alerts') { expect(@settings_page.status_heading?).to be false }
+        it('cannot post status alerts') { expect(@settings_page.edit_service_announcement?).to be false }
 
         it 'cannot hit the cachejob page' do
           @api_admin_page.load_cachejob
@@ -480,11 +479,10 @@ unless ENV['NO_DEPS']
 
         it 'can toggle demo mode' do
           @settings_page.load_advisor_page
-          @settings_page.my_profile_heading_element.when_visible Utils.short_wait
           expect(@settings_page.demo_mode_toggle?).to be true
         end
 
-        it('cannot post status alerts') { expect(@settings_page.status_heading?).to be false }
+        it('cannot post status alerts') { expect(@settings_page.edit_service_announcement?).to be false }
 
         it 'cannot hit the cachejob page' do
           @api_admin_page.load_cachejob
@@ -680,14 +678,12 @@ unless ENV['NO_DEPS']
 
         it 'can toggle demo mode' do
           @settings_page.load_advisor_page
-          @settings_page.my_profile_heading_element.when_visible Utils.short_wait
           expect(@settings_page.demo_mode_toggle?).to be true
         end
 
         it('cannot post status alerts') do
           @settings_page.load_advisor_page
-          @settings_page.my_profile_heading_element.when_visible Utils.short_wait
-          expect(@settings_page.status_heading?).to be false
+          expect(@settings_page.edit_service_announcement?).to be false
         end
 
         it 'cannot hit the cachejob page' do
