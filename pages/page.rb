@@ -392,6 +392,11 @@ module Page
     @driver.action.send_keys(:down).perform
   end
 
+  def arrow_up
+    sleep Utils.click_wait
+    @driver.action.send_keys(:up).perform
+  end
+
   def hit_forward_slash
     sleep Utils.click_wait
     @driver.action.send_keys('/').perform
