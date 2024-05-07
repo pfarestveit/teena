@@ -11,7 +11,7 @@ module Page
     # COURSE LEVEL GRADEBOOK-RELATED SETTINGS
 
     link(:view_grading_scheme_link, text: 'view grading scheme')
-    select_list(:grading_scheme_select, xpath: '//div[@id="grading_scheme_selector"]//select')
+    select_list(:grading_scheme_select, xpath: '//input[@data-testid="grading-schemes-selector-dropdown"]')
     link(:select_another_scheme_link, xpath: '//a[@title="Find an Existing Grading Scheme"]')
     button(:done_button, xpath: '//button[text()="Done"]')
 
@@ -19,7 +19,7 @@ module Page
       logger.info "Making sure grading scheme is disabled for course ID #{course_site.site_id}"
       load_course_settings course_site
       scroll_to_bottom
-      grading_scheme_select? ?  toggle_grading_scheme : logger.info('Grading scheme already disabled')
+      grading_scheme_select? ? toggle_grading_scheme : logger.info('Grading scheme already disabled')
     end
 
     def enable_grading_scheme(course_site)
@@ -30,22 +30,38 @@ module Page
     end
 
     def set_grading_scheme(opts)
-      logger.info "Setting grading scheme to #{opts[:scheme]}"
-      option = case opts[:scheme]
-                  when 'letter-only'
-                    'Letter Grade Scale'
-                  when 'letter'
-                    'Letter Grades with +/-'
-                  when 'pnp'
-                    'Pass/No Pass'
-                  when 'sus'
-                    'Satisfactory/Unsatisfactory'
-                  else
-                    logger.error "Unrecognized grading scheme '#{opts[:scheme]}'"
-                    fail
-                  end
-      wait_for_element_and_select(grading_scheme_select_element, option)
+      desired_scheme = case opts[:scheme]
+                       when 'letter-only'
+                         'Letter Grade Scale'
+                       when 'letter'
+                         'Letter Grades with +/-'
+                       when 'pnp'
+                         'Pass/No Pass'
+                       when 'sus'
+                         'Satisfactory/Unsatisfactory'
+                       else
+                         logger.error "Unrecognized grading scheme '#{opts[:scheme]}'"
+                         fail
+                       end
+      visible_options = ['Letter Grade Scale', 'Letter Grades with +/-', 'Pass/No Pass', 'Satisfactory/Unsatisfactory']
+      desired_option = visible_options.find { |o| o == desired_scheme }
+      grading_scheme_select_element.when_visible Utils.short_wait
+      current_scheme = grading_scheme_select_element.attribute('value').strip
+      logger.info "The currently set grading scheme is #{current_scheme}, and setting it to #{desired_option}"
+      unless current_scheme == desired_option
+        current_idx = visible_options.index current_scheme
+        new_idx = visible_options.index desired_option
+        wait_for_update_and_click grading_scheme_select_element
+        if new_idx > current_idx
+          (new_idx - current_idx).times { arrow_down }
+        else
+          (current_idx - new_idx).times { arrow_up }
+        end
+        hit_enter
+      end
       update_course_settings
+      grading_scheme_select_element.when_visible Utils.short_wait
+      logger.info "The newly set grading scheme is #{grading_scheme_select_element.attribute('value')}"
     end
 
     def update_course_settings
