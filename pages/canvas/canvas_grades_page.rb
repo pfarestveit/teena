@@ -52,10 +52,14 @@ module Page
         current_idx = visible_options.index current_scheme
         new_idx = visible_options.index desired_option
         wait_for_update_and_click grading_scheme_select_element
-        if new_idx > current_idx
-          (new_idx - current_idx).times { arrow_down }
+        if current_idx
+          if new_idx > current_idx
+            (new_idx - current_idx).times { arrow_down }
+          else
+            (current_idx - new_idx).times { arrow_up }
+          end
         else
-          (current_idx - new_idx).times { arrow_up }
+          (new_idx + 1).times { arrow_down }
         end
         hit_enter
       end
