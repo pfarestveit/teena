@@ -661,7 +661,6 @@ module Page
 
     def grade_distribution_hidden?(course_site)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
-      wait_for_load_and_click link_element(text: 'more options')
       hide_grade_distrib_cbx_element.when_visible Utils.short_wait
       hide_grade_distrib_cbx_checked?
     end
@@ -672,7 +671,8 @@ module Page
     def selected_course_sub_account(course_site)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
       wait_until(Utils.short_wait) { course_account_link? || course_account_select? }
-      course_account_select? ? course_account_select : course_account_link_element.text
+      acct = course_account_select? ? course_account_select : course_account_link_element.text
+      acct.gsub(/\W+/, '')
     end
 
     # MESSAGES

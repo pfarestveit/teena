@@ -35,8 +35,7 @@ describe 'bCourses Official Sections tool' do
     else
       @canvas.add_ripley_tools RipleyTool::TOOLS.select(&:account)
       teacher = site.course.teachers.first
-      # TODO revert to current term when Ripley switches term
-      term_courses = RipleyUtils.get_instructor_term_courses(teacher, test.next_term)
+      term_courses = RipleyUtils.get_instructor_term_courses(teacher, site.course.term)
       site.sections = site.sections.select &:primary unless ENV['SITE']
       if site.sections == site.course.sections
         sections_to_add_delete = if site.sections.all?(&:primary) || site.sections.none?(&:primary)

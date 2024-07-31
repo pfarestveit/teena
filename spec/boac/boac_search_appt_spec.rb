@@ -38,13 +38,7 @@ unless ENV['NO_DEPS']
       @driver = Utils.launch_browser driver: 'firefox'
       @homepage = BOACHomePage.new @driver
       @search_results_page = BOACSearchResultsPage.new @driver
-      @api_admin_page = BOACApiAdminPage.new @driver
-      @homepage.dev_auth
-      @api_admin_page.reindex_appts
-      @homepage.load_page
-      @homepage.log_out
       @homepage.dev_auth test_config.advisor
-      @homepage.load_page
 
       student_searches.each do |search|
 
@@ -102,7 +96,7 @@ unless ENV['NO_DEPS']
 
             @homepage.reopen_and_reset_adv_search
 
-            all_topics = Topic::TOPICS.select(&:for_appts).map &:name
+            all_topics = Topic::TOPICS.map &:name
             appt_topics = all_topics.select { |topic_name| appt_search[:appt].topics.include? topic_name.upcase }
             non_appt_topics = all_topics - appt_topics
 

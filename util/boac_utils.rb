@@ -157,7 +157,9 @@ class BOACUtils < Utils
   def self.get_admin_users
     query = 'SELECT authorized_users.uid AS uid
               FROM authorized_users
-              WHERE authorized_users.is_admin = true;'
+              WHERE authorized_users.is_admin = true
+                AND authorized_users.deleted_at IS NULL
+                AND authorized_users.is_blocked IS FALSE;'
     results = query_pg_db(boac_db_credentials, query)
     results.map { |r| BOACUser.new({uid: r['uid']}) }
   end

@@ -12,6 +12,7 @@ class BOACDepartments
   DEPARTMENTS = [
       ADMIN = new('ADMIN', 'Admins', nil),
       ASC = new('UWASC', 'Athletic Study Center', nil),
+      CDSS = new('DSDDO', 'College of Computing, Data Science, and Society', nil),
       CHEM = new('CDCDN', 'College of Chemistry', nil),
       COE = new('COENG', 'College of Engineering', nil),
       ENV_DESIGN = new('DACED', 'College of Environmental Design', nil),

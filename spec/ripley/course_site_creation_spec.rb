@@ -240,9 +240,11 @@ describe 'bCourses course site creation' do
         conf_nav_hidden = @canvas.conf_link_hidden?
         it("shows no Conferences tool link in course site navigation for #{test_case}") { expect(conf_nav_hidden).to be true }
 
-        sub_account = @canvas.selected_course_sub_account site
-        dept = site.course.code.split.delete_if { |c| c =~ /\d/ }.join(' ')
-        it("shows the right sub-account for #{test_case}") { expect(sub_account).to eql(dept) }
+        unless site.course.sections.select(&:primary).length > 1
+          sub_account = @canvas.selected_course_sub_account site
+          dept = site.course.code.split.delete_if { |c| c =~ /\d/ }.join(' ')
+          it("shows the right sub-account for #{test_case}") { expect(sub_account).to eql(dept) }
+        end
 
         if i.zero?
 

@@ -63,7 +63,7 @@ module RipleyCourseSectionsModule
       logger.debug "Expanding available sections table for #{course.code}"
       wait_for_update_and_click available_sections_form_button(course)
       available_sections_table(course, section).when_visible Utils.short_wait
-      sleep Utils.click_wait
+      sleep 2
     end
   end
 

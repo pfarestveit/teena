@@ -22,7 +22,7 @@ unless ENV['NO_DEPS']
         (group_7 = CuratedGroup.new({:name => "Group 7 #{test.id}"})),
         (group_8 = CuratedGroup.new({:name => "Group 8 #{test.id}"}))
     ]
-    other_advisor = BOACUtils.get_admin_users.find { |u| u.uid != test.advisor.uid }
+    other_advisor = BOACUtils.get_admin_users.find { |u| u.uid != test.advisor.uid && u.active }
     pre_existing_cohorts = BOACUtils.get_user_filtered_cohorts test.advisor, default: true
     pre_existing_groups = BOACUtils.get_user_curated_groups test.advisor
 
