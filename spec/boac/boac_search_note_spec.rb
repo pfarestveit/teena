@@ -151,7 +151,7 @@ unless ENV['NO_DEPS']
 
               @homepage.reopen_and_reset_adv_search
 
-              all_topics = Topic::TOPICS.select(&:for_notes).map &:name
+              all_topics = Topic::TOPICS.map &:name
               note_topics = all_topics.select { |topic_name| note_search[:note].topics.include? topic_name.upcase }
               non_note_topics = all_topics - note_topics
 

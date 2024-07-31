@@ -121,7 +121,7 @@ class BOACFlightDeckPage
   end
 
   def topic_deletion_toggle_button(topic)
-    cell_element(xpath: "#{topic_row_xpath topic}/td[4]/button")
+    cell_element(xpath: "#{topic_row_xpath topic}/td[4]//button")
   end
 
   def click_create_topic
