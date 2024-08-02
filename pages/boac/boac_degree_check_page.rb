@@ -665,7 +665,7 @@ class BOACDegreeCheckPage < BOACDegreeTemplatePage
     logger.info "Setting color to '#{color}'"
     unless course_color_button_element.attribute('class').include? "border-color-#{color}"
       wait_for_update_and_click course_color_button_element
-      id = color ? "color-code-#{color}-option" : 'border-color-none'
+      id = color ? "color-code-option-#{color}" : 'color-code-option-none'
       wait_for_update_and_click link_element(id: id)
     end
   end
