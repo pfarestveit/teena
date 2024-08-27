@@ -69,14 +69,14 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
     id_el = cell_element(id: "template-sections-table-preview-#{section.id}-id")
     schedule_els = div_elements(xpath: "//td[contains(@id, '#{section.id}-schedule')]/*")
     location_els = div_elements(xpath: "//td[contains(@id, '#{section.id}-location')]/*")
-    instructor_els = div_elements(xpath: "//td[contains(@id, '#{section.id}-instructors')]/*")
+    instructor_el = div_element(xpath: "//td[contains(@id, '#{section.id}-instructors')]")
     {
       course: course_el&.text.to_s,
       label: label_el&.text.to_s,
       id: id_el&.text.to_s,
       schedules: (schedule_els.map { |el| el.text.strip.upcase }.delete_if(&:empty?) if schedule_els.any?),
       locations: (location_els.map { |el| el.text.strip }.delete_if(&:empty?) if location_els.any?),
-      instructors: (instructor_els.map { |el| el.text.strip }.delete_if(&:empty?) if instructor_els.any?)
+      instructors: (instructor_el.text.gsub('Instructors:', '').strip.split("\n") if instructor_el.exists?)
     }
   end
 
@@ -108,14 +108,14 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
     id_el = cell_element(id: "template-sections-table-#{section.id}-id")
     schedule_els = div_elements(xpath: "#{current_sections_table_xpath}//td[contains(@id, '#{section.id}-schedule')]/*")
     location_els = div_elements(xpath: "#{current_sections_table_xpath}//td[contains(@id, '#{section.id}-location')]/*")
-    instructor_els = div_elements(xpath: "#{current_sections_table_xpath}//td[contains(@id, '#{section.id}-instructors')]/*")
+    instructor_el = div_element(xpath: "#{current_sections_table_xpath}//td[contains(@id, '#{section.id}-instructors')]")
     {
       course: course_el&.text.to_s,
       label: label_el&.text.to_s,
       id: id_el&.text.to_s,
       schedules: (schedule_els.map { |el| el.text.strip.upcase }.delete_if(&:empty?) if schedule_els.any?),
       locations: (location_els.map { |el| el.text.strip }.delete_if(&:empty?) if location_els.any?),
-      instructors: (instructor_els.map { |el| el.text.strip }.delete_if(&:empty?) if instructor_els.any?)
+      instructors: (instructor_el.text.gsub('Instructors:', '').strip.split("\n") if instructor_el.exists?)
     }
   end
 
@@ -170,14 +170,14 @@ class RipleyOfficialSectionsPage < RipleySiteCreationPage
     id_el = cell_element(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(@id, \"#{section.id}-id\")]")
     schedule_els = div_elements(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(@id, '#{section.id}-schedule')]/*")
     location_els = div_elements(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(@id, '#{section.id}-location')]/*")
-    instructor_els = div_elements(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(@id, '#{section.id}-instructors')]/*")
+    instructor_el = div_element(xpath: "#{available_sections_table_xpath(course, section)}//td[contains(@id, '#{section.id}-instructors')]")
     {
       course: course_el&.text.to_s,
       label: label_el&.text.to_s,
       id: id_el&.text.to_s,
       schedules: (schedule_els.map { |el| el.text.strip.upcase }.delete_if(&:empty?) if schedule_els.any?),
       locations: (location_els.map { |el| el.text.strip }.delete_if(&:empty?) if location_els.any?),
-      instructors: (instructor_els.map { |el| el.text.strip }.delete_if(&:empty?) if instructor_els.any?)
+      instructors: (instructor_el.text.gsub('Instructors:', '').strip.split("\n") if instructor_el.exists?)
     }
   end
 

@@ -569,7 +569,22 @@ class RipleyUtils < Utils
   # Test users
 
   def self.get_users_of_affiliations(affiliations, count = nil)
-    sql = "SELECT ldap_uid AS uid,
+    sql = if affiliations == 'STUDENT-TYPE-REGISTERED'
+            "SELECT sis_data.edo_basic_attributes.ldap_uid AS uid,
+                    sis_data.edo_basic_attributes.sid,
+                    sis_data.edo_basic_attributes.first_name,
+                    sis_data.edo_basic_attributes.last_name,
+                    sis_data.edo_basic_attributes.email_address AS email
+               FROM sis_data.edo_basic_attributes
+               JOIN student.student_profile_index
+                 ON sis_data.edo_basic_attributes.ldap_uid = student.student_profile_index.uid
+              WHERE sis_data.edo_basic_attributes.affiliations = '#{affiliations}'
+                AND sis_data.edo_basic_attributes.email_address IS NOT NULL
+                AND student.student_profile_index.level NOT IN ('5', '6', '7', '8', 'GR', 'MAS', 'P1', 'P2', 'P3', 'P4')
+           ORDER BY sis_data.edo_basic_attributes.ldap_uid DESC
+           #{'LIMIT ' + count.to_s if count}"
+          else
+            "SELECT ldap_uid AS uid,
                   sid,
                   first_name,
                   last_name,
@@ -579,6 +594,7 @@ class RipleyUtils < Utils
               AND email_address IS NOT NULL
          ORDER BY ldap_uid DESC
          #{'LIMIT ' + count.to_s if count}"
+          end
     results = Utils.query_pg_db(NessieUtils.nessie_pg_db_credentials, sql)
     results.map do |r|
       User.new uid: r['uid'],
