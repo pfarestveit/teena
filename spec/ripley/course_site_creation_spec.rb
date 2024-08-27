@@ -253,7 +253,7 @@ describe 'bCourses course site creation' do
           @canvas.click_files_tab
           @canvas.toggle_access_links
 
-          basics_title = 'A11y Basics'
+          basics_title = 'Accessibility Basics for bCourses'
           basics_link = @canvas.external_link_valid?(@canvas.access_basics_link_element, basics_title)
           it("shows an Accessibility Basics for bCourses link for #{test_case}") { expect(basics_link).to be true }
 

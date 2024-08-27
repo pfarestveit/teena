@@ -326,7 +326,7 @@ module Page
       wait_for_element_and_type(search_course_input_element, "#{course_site.title}")
       sleep 1
       wait_for_update_and_click link_element(text: "#{course_site.title}")
-      publish_button_element.when_present Utils.short_wait
+      publish_status_element.when_visible Utils.short_wait
       current_url.sub("#{Utils.canvas_base_url}/courses/", '')
     rescue
       logger.error('Course site not found, retrying')
@@ -407,7 +407,7 @@ module Page
     button(:publish_status, xpath: '//button[@data-position-target="course_publish_menu"]')
     button(:published_status, xpath: '//button[contains(., "Published")]')
     button(:unpublished_status, xpath: '//button[contains(., "Unpublished")]')
-    button(:publish_site_button, xpath: '//button[contains(., "Publish")]')
+    button(:publish_site_button, xpath: '//ul[@aria-label="course_publish_menu"]//button[contains(., "Publish")]')
     radio_button(:activity_stream_radio, xpath: '//span[contains(.,"Course Activity Stream")]/ancestor::label')
     button(:choose_and_publish_button, xpath: '//span[contains(.,"Choose and Publish")]/ancestor::button')
 
@@ -417,8 +417,8 @@ module Page
       publish_status_element.when_visible Utils.short_wait
       if unpublished_status?
         logger.debug 'The site is unpublished, publishing'
-        js_click unpublished_status_element
-        js_click publish_site_button_element
+        click_element(unpublished_status_element, 1)
+        click_element(publish_site_button_element, 1)
         unless course_site.create_site_workflow || course_site.is_copy
           wait_for_update_and_click activity_stream_radio_element
           wait_for_update_and_click choose_and_publish_button_element
@@ -702,6 +702,7 @@ module Page
 
     def toggle_access_links
       wait_for_update_and_click access_toggle_element
+      sleep 1
     end
 
     # USER ACCOUNTS

@@ -30,7 +30,7 @@ describe 'bCourses E-Grades Export' do
         instructors = RipleyUtils.get_primary_instructors site
         instructor = instructors.first
         primary_section = site.sections.find &:primary
-        test_case = "#{site.course.term} #{site.course.code} site #{site.site_id}"
+        test_case = "#{site.course.term.name} #{site.course.code} site #{site.site_id}"
         @canvas.set_canvas_ids [instructor]
 
         # Disable existing grading scheme in case it is not default, then set default scheme
