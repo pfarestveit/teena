@@ -497,7 +497,8 @@ class RipleyUtils < Utils
                   student.student_profile_index.transfer,
                   student.demographics.gender,
                   student.demographics.minority,
-                  student.visas.visa_type
+                  student.visas.visa_type,
+                  boac_advising_asc.students.active AS athlete
              FROM sis_data.edo_enrollments
         LEFT JOIN sis_data.edo_basic_attributes
                ON sis_data.edo_basic_attributes.ldap_uid = sis_data.edo_enrollments.ldap_uid
@@ -507,6 +508,8 @@ class RipleyUtils < Utils
                ON student.student_profile_index.sid = student.demographics.sid
         LEFT JOIN student.visas
                ON student.student_profile_index.sid = student.visas.sid
+        LEFT JOIN boac_advising_asc.students
+               ON student.student_profile_index.sid = boac_advising_asc.students.sid
             WHERE sis_data.edo_enrollments.sis_term_id = '#{course.term.sis_id}'
               AND sis_data.edo_enrollments.sis_section_id IN (#{Utils.in_op(course.sections.map &:id)})
               AND sis_data.edo_enrollments.sis_enrollment_status = 'E'
@@ -519,6 +522,7 @@ class RipleyUtils < Utils
     enrollments = results.map do |r|
       student = User.new uid: r['uid'],
                          demographics: {
+                           athlete: (r['athlete'] == 't'),
                            gender: r['gender'],
                            intl: (r['visa_type'] ? true : false),
                            minority: (r['minority'] == 't'),

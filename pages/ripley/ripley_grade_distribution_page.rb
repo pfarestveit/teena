@@ -29,6 +29,7 @@ class RipleyGradeDistributionPage
 
   h2(:demographics_heading, xpath: '//h2[text()="Grade Distribution by Demographics"]')
   select_list(:demographics_select, id: 'grade-distribution-demographics-select')
+  select_list(:statistics_select, id: 'grade-distribution-statistic-select')
   button(:demographics_table_toggle, id: 'grade-distribution-demographics-show-btn')
   table(:demographics_table, id: 'grade-distribution-demo-table')
   elements(:demographics_table_row, :row, xpath: '//tr[contains(@id, "grade-distribution-demo-table-row")]')
@@ -36,6 +37,12 @@ class RipleyGradeDistributionPage
   def select_demographic(demographic)
     logger.info "Selecting demographic '#{demographic}'"
     wait_for_element_and_select(demographics_select_element, demographic)
+    sleep 2
+  end
+
+  def select_statistic(statistic)
+    logger.info "Selecting statistic '#{statistic}'"
+    wait_for_element_and_select(statistics_select_element, statistic)
     sleep 2
   end
 
@@ -54,12 +61,16 @@ class RipleyGradeDistributionPage
   end
 
   def expected_demographic_count(enrollments)
-    count = enrollments.length
-    config = RipleyUtils.newt_small_cell_suppression
-    (count >= 1 && count < config) ? 'Small sample size' : count.to_s
+    if enrollments.empty?
+      'No data'
+    else
+      count = enrollments.length
+      config = RipleyUtils.newt_small_cell_suppression
+      (count >= 1 && count < config) ? 'Small sample size' : count.to_s
+    end
   end
 
-  def expected_avg_grade_points(enrollments)
+  def grades_to_grade_points(enrollments)
     grades = enrollments.map(&:grade).select { |g| %w(A+ A A- B+ B B- C+ C C- D+ D D- F I).include? g }
     grades.map! do |g|
       case g
@@ -89,24 +100,52 @@ class RipleyGradeDistributionPage
         0
       end
     end
-    avg = (grades.inject { |ttl, g| ttl + g }.to_f / grades.length).round(1)
-    avg = (sprintf '%.1f', avg).to_f
-    ((avg.floor == avg) ? avg.floor : avg).to_s
+    grades
+  end
+
+  def expected_mean_grade_points(enrollments)
+    grades = grades_to_grade_points enrollments
+    if grades.empty?
+      'No data'
+    else
+      avg = (grades.inject { |ttl, g| ttl + g }.to_f / grades.length).round(1)
+      avg = (sprintf '%.1f', avg).to_f
+      ((avg.floor == avg) ? avg.floor : avg).to_s
+    end
+  end
+
+  def expected_median_grade_points(enrollments)
+    grades = grades_to_grade_points enrollments
+    if grades.empty?
+      'No data'
+    else
+      grades.sort!
+      count = grades.length
+      if count % 2 == 0
+        bottom = (grades[0...(count / 2)])
+        top = (grades[(count / 2)..-1])
+        med = ((bottom[-1] + top[0]).to_f / 2.to_f)
+      else
+        med = grades[(count / 2).floor]
+      end
+      med = (sprintf '%.1f', med).to_f
+      ((med.floor == med) ? med.floor : med).to_s
+    end
   end
 
   def visible_demographics_term_data(term)
     sleep 1
     xpath = "//tr[contains(@id, 'grade-distribution-demo-table-row')][contains(., '#{term.name}')]"
     row_element(xpath: xpath).when_visible 10 rescue TimeoutError
-    ttl_avg_el = cell_element(xpath: "#{xpath}/td[2]")
+    ttl_stat_el = cell_element(xpath: "#{xpath}/td[2]")
     ttl_count_el = cell_element(xpath: "#{xpath}/td[3]")
-    sub_avg_el = cell_element(xpath: "#{xpath}/td[4]")
+    sub_stat_el = cell_element(xpath: "#{xpath}/td[4]")
     sub_count_el = cell_element(xpath: "#{xpath}/td[5]")
     data = {
       term: term.name,
-      ttl_avg: (ttl_avg_el.text if ttl_avg_el.exists?).to_s,
+      ttl_stat: (ttl_stat_el.text if ttl_stat_el.exists?).to_s,
       ttl_ct: (ttl_count_el.text if ttl_count_el.exists?).to_s,
-      sub_avg: (sub_avg_el.text if sub_avg_el.exists?).to_s,
+      sub_stat: (sub_stat_el.text if sub_stat_el.exists?).to_s,
       sub_ct: (sub_count_el.text if sub_count_el.exists?).to_s
     }
     logger.debug "Visible data: #{data}"
@@ -161,7 +200,7 @@ class RipleyGradeDistributionPage
     if ttl_count.zero?
       result = 0
     else
-      result = (grade_count.to_f/ttl_count.to_f).round(3) * 100
+      result = (grade_count.to_f / ttl_count.to_f).round(3) * 100
       result = (sprintf '%.1f', result).to_f
       result = (result.floor == result) ? result.floor : result
     end

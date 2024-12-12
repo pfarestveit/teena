@@ -10,7 +10,7 @@ module Page
 
     text_field(:username, id: 'username')
     text_field(:password, id: 'password')
-    text_area(:sign_in_button, xpath: '//input[@value="Sign In"]')
+    text_area(:sign_in_button, id: 'submitBtn')
     h3(:logout_conf_heading, xpath: '//h3[text()="Logout successful"]')
     h1(:duo_notice, xpath: '//h1[text()="Check for a Duo Push"]')
     button(:duo_trust_browser_button, id: 'trust-browser-button')
@@ -19,7 +19,7 @@ module Page
 
     def enter_credentials(username, password, msg=nil)
       # If no credentials are available, then wait for manual login
-      wait_until(Utils.medium_wait) { title.include? 'Central Authentication Service' }
+      wait_until(Utils.medium_wait) { title.include? 'CAS - CalNet Authentication Service Login' }
       if username == 'secret' || password == 'secret'
         if Utils.config['webdriver']['headless']
           logger.error 'Browser is running in headless mode, manual login is not supported'
@@ -37,8 +37,8 @@ module Page
         wait_until(Utils.long_wait) do
           duo_trust_browser_button? ||
             invalid_credentials? ||
-            (!title.include?('Central Authentication Service') && !current_url.include?('duosecurity')) ||
-              logout_conf_heading_element.visible?
+            (!title.include?('CalNet Authentication Service') && !current_url.include?('duosecurity')) ||
+            logout_conf_heading_element.visible?
         end
         if duo_trust_browser_button?
           duo_trust_browser_button
