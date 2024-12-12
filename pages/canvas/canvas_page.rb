@@ -411,7 +411,7 @@ module Page
     radio_button(:activity_stream_radio, xpath: '//span[contains(.,"Course Activity Stream")]/ancestor::label')
     button(:choose_and_publish_button, xpath: '//span[contains(.,"Choose and Publish")]/ancestor::button')
 
-    def publish_course_site(course_site)
+    def publish_course_site(course_site, set_template=true)
       logger.info 'Publishing the course'
       load_course_site course_site
       publish_status_element.when_visible Utils.short_wait
@@ -419,7 +419,7 @@ module Page
         logger.debug 'The site is unpublished, publishing'
         click_element(unpublished_status_element, 1)
         click_element(publish_site_button_element, 1)
-        unless course_site.create_site_workflow || course_site.is_copy
+        unless course_site.create_site_workflow || course_site.is_copy || !set_template
           wait_for_update_and_click activity_stream_radio_element
           wait_for_update_and_click choose_and_publish_button_element
         end

@@ -57,6 +57,7 @@ describe 'The Grade Distribution tool' do
 
         @canvas.set_canvas_ids [instructor]
         @canvas.masquerade_as(instructor, site)
+        @canvas.publish_course_site(site, set_template=false)
         @newt.load_embedded_tool site
         @newt.wait_until(Utils.medium_wait) { @newt.demographics_table_toggle? || @newt.no_grade_dist_msg? || @newt.no_grades_msg_elements.any? }
 
@@ -106,107 +107,191 @@ describe 'The Grade Distribution tool' do
                   # DEMOGRAPHICS
 
                   term_ltr_grade_enrolls = term_all_grade_enrolls.select { |e| %w(A+ A A- B+ B B- C+ C C- D+ D D- F).include? e.grade }
-                  term_avg = @newt.expected_avg_grade_points term_ltr_grade_enrolls
+                  term_mean = @newt.expected_mean_grade_points term_ltr_grade_enrolls
                   @newt.select_demographic 'Select Demographic'
-                  visible_default_term_data = @newt.visible_demographics_term_data course.term
+                  @newt.select_statistic 'Mean Grade Values'
+                  visible_mean_term_data = @newt.visible_demographics_term_data course.term
 
                   if term_ltr_grade_enrolls.length < RipleyUtils.newt_min_grade_count
-                    it "shows no average grade points for #{test_case} term #{course.term.name}" do
-                      expect(visible_default_term_data[:ttl_avg]).to be_empty
+                    it "shows no mean grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_mean_term_data[:ttl_stat]).to be_empty
                     end
                     it "shows no student count for #{test_case} term #{course.term.name}" do
-                      expect(visible_default_term_data[:ttl_ct]).to be_empty
+                      expect(visible_mean_term_data[:ttl_ct]).to be_empty
                     end
 
                   else
                     demographics_terms << course.term.name
-                    it "shows the average grade points for #{test_case} term #{course.term.name}" do
-                      expect(visible_default_term_data[:ttl_avg]).to eql(term_avg)
+                    it "shows the mean grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_mean_term_data[:ttl_stat]).to eql(term_mean)
                     end
                     it "shows the student count for #{test_case} term #{course.term.name}" do
-                      expect(visible_default_term_data[:ttl_ct]).to eql(term_ltr_grade_enrolls.length.to_s)
+                      expect(visible_mean_term_data[:ttl_ct]).to eql(term_ltr_grade_enrolls.length.to_s)
                     end
-                    it "shows no demographic average grade points for #{test_case} term #{course.term.name}" do
-                      expect(visible_default_term_data[:sub_avg]).to be_empty
+                    it "shows no demographic mean grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_mean_term_data[:sub_stat]).to be_empty
                     end
                     it "shows no demographic student count for #{test_case} term #{course.term.name}" do
-                      expect(visible_default_term_data[:sub_ttl]).to be_nil
+                      expect(visible_mean_term_data[:sub_ttl]).to be_nil
+                    end
+                    @newt.select_statistic 'Median Grade Values'
+                    term_median = @newt.expected_median_grade_points term_ltr_grade_enrolls
+                    visible_median_term_data = @newt.visible_demographics_term_data course.term
+                    it "shows the median grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_median_term_data[:ttl_stat]).to eql(term_median)
+                    end
+                    it "shows the student count for #{test_case} term #{course.term.name}" do
+                      expect(visible_median_term_data[:ttl_ct]).to eql(term_ltr_grade_enrolls.length.to_s)
                     end
 
                     # Female
                     logger.info "Checking female view of #{course.term.name} #{course.code}"
                     female_ltr_grade_enrolls = term_ltr_grade_enrolls.select { |e| e.user.demographics[:gender] == 'Female' }
-                    @newt.select_demographic 'Female'
+                    @newt.select_demographic 'Female Students'
+                    @newt.select_statistic 'Mean Grade Values'
                     female_ct = @newt.expected_demographic_count female_ltr_grade_enrolls
-                    female_avg = @newt.expected_avg_grade_points female_ltr_grade_enrolls
-                    visible_female_term_data = @newt.visible_demographics_term_data course.term
-                    it "shows the average grade points for #{test_case} term #{course.term.name}" do
-                      expect(visible_female_term_data[:ttl_avg]).to eql(term_avg)
+                    female_mean = @newt.expected_mean_grade_points female_ltr_grade_enrolls
+                    visible_female_mean_data = @newt.visible_demographics_term_data course.term
+                    it "shows the mean grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_female_mean_data[:ttl_stat]).to eql(term_mean)
                     end
                     it "shows the student count for #{test_case} term #{course.term.name}" do
-                      expect(visible_female_term_data[:ttl_ct]).to eql(term_ltr_grade_enrolls.length.to_s)
+                      expect(visible_female_mean_data[:ttl_ct]).to eql(term_ltr_grade_enrolls.length.to_s)
                     end
-                    it "shows the female average grade points for #{test_case} term #{course.term.name}" do
-                      expect(visible_female_term_data[:sub_avg]).to eql(female_avg)
+                    it "shows the female mean grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_female_mean_data[:sub_stat]).to eql(female_mean)
                     end
                     it "shows the female student count for #{test_case} term #{course.term.name}" do
-                      expect(visible_female_term_data[:sub_ct]).to eql(female_ct)
+                      expect(visible_female_mean_data[:sub_ct]).to eql(female_ct)
+                    end
+                    @newt.select_statistic 'Median Grade Values'
+                    female_median = @newt.expected_median_grade_points female_ltr_grade_enrolls
+                    visible_female_median_data = @newt.visible_demographics_term_data course.term
+                    it "shows the female median grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_female_median_data[:sub_stat]).to eql(female_median)
+                    end
+                    it "shows the female student count for #{test_case} term #{course.term.name}" do
+                      expect(visible_female_median_data[:sub_ct]).to eql(female_ct)
                     end
 
                     # Male
                     logger.info "Checking male view of #{course.term.name} #{course.code}"
                     male_ltr_grade_enrolls = term_ltr_grade_enrolls.select { |e| e.user.demographics[:gender] == 'Male' }
-                    @newt.select_demographic 'Male'
+                    @newt.select_demographic 'Male Students'
+                    @newt.select_statistic 'Mean Grade Values'
                     male_ct = @newt.expected_demographic_count male_ltr_grade_enrolls
-                    male_avg = @newt.expected_avg_grade_points male_ltr_grade_enrolls
-                    visible_male_term_data = @newt.visible_demographics_term_data course.term
-                    it "shows the male average grade points for #{test_case} term #{course.term.name}" do
-                      expect(visible_male_term_data[:sub_avg]).to eql(male_avg)
+                    male_mean = @newt.expected_mean_grade_points male_ltr_grade_enrolls
+                    visible_male_mean_data = @newt.visible_demographics_term_data course.term
+                    it "shows the male mean grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_male_mean_data[:sub_stat]).to eql(male_mean)
                     end
                     it "shows the male student count for #{test_case} term #{course.term.name}" do
-                      expect(visible_male_term_data[:sub_ct]).to eql(male_ct)
+                      expect(visible_male_mean_data[:sub_ct]).to eql(male_ct)
+                    end
+                    @newt.select_statistic 'Median Grade Values'
+                    male_median = @newt.expected_median_grade_points male_ltr_grade_enrolls
+                    visible_male_median_data = @newt.visible_demographics_term_data course.term
+                    it "shows the male median grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_male_median_data[:sub_stat]).to eql(male_median)
+                    end
+                    it "shows the male student count for #{test_case} term #{course.term.name}" do
+                      expect(visible_male_median_data[:sub_ct]).to eql(male_ct)
                     end
 
                     # Underrepresented Minority
                     logger.info "Checking minority view of #{course.term.name} #{course.code}"
                     minority_ltr_grade_enrolls = term_ltr_grade_enrolls.select { |e| e.user.demographics[:minority] }
-                    @newt.select_demographic 'Underrepresented Minority'
+                    @newt.select_demographic 'Underrepresented Minority Students'
+                    @newt.select_statistic 'Mean Grade Values'
                     minority_ct = @newt.expected_demographic_count minority_ltr_grade_enrolls
-                    minority_avg = @newt.expected_avg_grade_points minority_ltr_grade_enrolls
+                    minority_mean = @newt.expected_mean_grade_points minority_ltr_grade_enrolls
                     visible_minority_term_data = @newt.visible_demographics_term_data course.term
-                    it "shows the underrepresented minority average grade points for #{test_case} term #{course.term.name}" do
-                      expect(visible_minority_term_data[:sub_avg]).to eql(minority_avg)
+                    it "shows the underrepresented minority mean grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_minority_term_data[:sub_stat]).to eql(minority_mean)
                     end
                     it "shows the underrepresented minority student count for #{test_case} term #{course.term.name}" do
                       expect(visible_minority_term_data[:sub_ct]).to eql(minority_ct)
                     end
+                    @newt.select_statistic 'Median Grade Values'
+                    minority_median = @newt.expected_median_grade_points minority_ltr_grade_enrolls
+                    visible_minority_median_data = @newt.visible_demographics_term_data course.term
+                    it "shows the underrepresented minority median grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_minority_median_data[:sub_stat]).to eql(minority_median)
+                    end
+                    it "shows the underrepresented minority student count for #{test_case} term #{course.term.name}" do
+                      expect(visible_minority_median_data[:sub_ct]).to eql(minority_ct)
+                    end
 
-                    # International Students
+                      # International Students
                     logger.info "Checking international student view of #{course.term.name} #{course.code}"
                     intl_ltr_grade_enrolls = term_ltr_grade_enrolls.select { |e| e.user.demographics[:intl] }
                     @newt.select_demographic 'International Students'
+                    @newt.select_statistic 'Mean Grade Values'
                     intl_ct = @newt.expected_demographic_count intl_ltr_grade_enrolls
-                    intl_avg = @newt.expected_avg_grade_points intl_ltr_grade_enrolls
+                    intl_mean = @newt.expected_mean_grade_points intl_ltr_grade_enrolls
                     visible_intl_term_data = @newt.visible_demographics_term_data course.term
-                    it "shows the international student average grade points for #{test_case} term #{course.term.name}" do
-                      expect(visible_intl_term_data[:sub_avg]).to eql(intl_avg)
+                    it "shows the international student mean grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_intl_term_data[:sub_stat]).to eql(intl_mean)
                     end
                     it "shows the international student count for #{test_case} term #{course.term.name}" do
                       expect(visible_intl_term_data[:sub_ct]).to eql(intl_ct)
                     end
+                    @newt.select_statistic 'Median Grade Values'
+                    intl_median = @newt.expected_median_grade_points intl_ltr_grade_enrolls
+                    visible_intl_median_data = @newt.visible_demographics_term_data course.term
+                    it "shows the international student median grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_intl_median_data[:sub_stat]).to eql(intl_median)
+                    end
+                    it "shows the international student count for #{test_case} term #{course.term.name}" do
+                      expect(visible_intl_median_data[:sub_ct]).to eql(intl_ct)
+                    end
 
-                    # Transfer Students
+                      # Transfer Students
                     logger.info "Checking transfer student view of #{course.term.name} #{course.code}"
                     transfer_ltr_grade_enrolls = term_ltr_grade_enrolls.select { |e| e.user.demographics[:transfer] }
                     @newt.select_demographic 'Transfer Students'
+                    @newt.select_statistic 'Mean Grade Values'
                     transfer_ct = @newt.expected_demographic_count transfer_ltr_grade_enrolls
-                    transfer_avg = @newt.expected_avg_grade_points transfer_ltr_grade_enrolls
+                    transfer_mean = @newt.expected_mean_grade_points transfer_ltr_grade_enrolls
                     visible_transfer_term_data = @newt.visible_demographics_term_data course.term
-                    it "shows the transfer student average grade points for #{test_case} term #{course.term.name}" do
-                      expect(visible_transfer_term_data[:sub_avg]).to eql(transfer_avg)
+                    it "shows the transfer student mean grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_transfer_term_data[:sub_stat]).to eql(transfer_mean)
                     end
                     it "shows the transfer student count for #{test_case} term #{course.term.name}" do
                       expect(visible_transfer_term_data[:sub_ct]).to eql(transfer_ct)
+                    end
+                    @newt.select_statistic 'Median Grade Values'
+                    transfer_median = @newt.expected_median_grade_points transfer_ltr_grade_enrolls
+                    visible_transfer_median_data = @newt.visible_demographics_term_data course.term
+                    it "shows the transfer median grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_transfer_median_data[:sub_stat]).to eql(transfer_median)
+                    end
+                    it "shows the transfer student count for #{test_case} term #{course.term.name}" do
+                      expect(visible_transfer_median_data[:sub_ct]).to eql(transfer_ct)
+                    end
+
+                    # Student Athletes
+                    logger.info "Checking student athlete view of #{course.term.name} #{course.code}"
+                    athlete_ltr_grade_enrolls = term_ltr_grade_enrolls.select { |e| e.user.demographics[:athlete] }
+                    @newt.select_demographic 'Student Athletes'
+                    @newt.select_statistic 'Mean Grade Values'
+                    athlete_ct = @newt.expected_demographic_count athlete_ltr_grade_enrolls
+                    athlete_mean = @newt.expected_mean_grade_points athlete_ltr_grade_enrolls
+                    visible_athlete_term_data = @newt.visible_demographics_term_data course.term
+                    it "shows the athlete student mean grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_athlete_term_data[:sub_stat]).to eql(athlete_mean)
+                    end
+                    it "shows the athlete student count for #{test_case} term #{course.term.name}" do
+                      expect(visible_athlete_term_data[:sub_ct]).to eql(athlete_ct)
+                    end
+                    @newt.select_statistic 'Median Grade Values'
+                    athlete_median = @newt.expected_median_grade_points athlete_ltr_grade_enrolls
+                    visible_athlete_median_data = @newt.visible_demographics_term_data course.term
+                    it "shows the athlete student median grade points for #{test_case} term #{course.term.name}" do
+                      expect(visible_athlete_median_data[:sub_stat]).to eql(athlete_median)
+                    end
+                    it "shows the athlete student count for #{test_case} term #{course.term.name}" do
+                      expect(visible_athlete_median_data[:sub_ct]).to eql(athlete_ct)
                     end
                   end
 
