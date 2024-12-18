@@ -98,7 +98,8 @@ ripley:
   term_code: '2023-B'
   term_sis_id: '2232'
   recent_refresh_days_past: 180
-  course_prefixes: ['ECON C', 'CHEM 1A', 'LEGALST']
+  course_template_dept: 'LAW'
+  course_prefixes: ['ECON C', 'CHEM 1A', 'LAW']
   e_grades_site_ids: ['123', '456', '789']
   e_grades_student_count: 10
   newt_site_ids: ['987', '654', '321']

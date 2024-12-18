@@ -258,7 +258,7 @@ describe 'bCourses E-Grades Export' do
           user.sis_id = sis_student.sis_id
           user.full_name = "#{sis_student.first_name} #{sis_student.last_name}"
           score = user.sis_id.nil? ? nil : @canvas.student_score(user)
-          if score.instance_of? Hash
+          if score.instance_of? Hash && !score[:un_posted]
             test_data = score
             break
           end

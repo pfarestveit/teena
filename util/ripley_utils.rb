@@ -46,6 +46,10 @@ class RipleyUtils < Utils
     @config['newt_site_ids']
   end
 
+  def self.course_template_dept
+    @config['course_template_dept']
+  end
+
   def self.mailing_list_suffix
     base_url.include?('-qa') ? '-cc-ets-qa' : '-cc-ets-dev'
   end

@@ -8,6 +8,7 @@ class CourseSite
                 :manual_members,
                 :sections,
                 :site_id,
+                :has_template,
                 :term,
                 :tests,
                 :title

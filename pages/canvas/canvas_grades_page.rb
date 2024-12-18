@@ -144,6 +144,7 @@ module Page
     elements(:gradebook_student_link, :link, xpath: '//a[contains(@class, "student-grades-link")]')
     elements(:gradebook_total, :span, xpath: '//div[contains(@class, "total_grade")]//span[@class="percentage"]')
     elements(:gradebook_grade, :span, xpath: '//div[contains(@class, "total_grade")]//span[@class="letter-grade-points"]')
+    elements(:gradebook_un_posted_msg, :div, xpath: '//div[contains(@class, "total_grade")]//div[contains(text(), "not yet posted")]')
 
     def load_gradebook(course_site)
       navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/gradebook"
@@ -237,7 +238,8 @@ module Page
         grade = gradebook_grade_elements.first.text
         {
             student: user,
-            grade: grade&.gsub('−', '-')
+            grade: grade&.gsub('−', '-'),
+            un_posted: gradebook_un_posted_msg_elements.any?
         }
       rescue => e
         Utils.log_error e

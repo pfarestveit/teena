@@ -43,7 +43,7 @@ describe 'bCourses' do
 
       it 'include an "About" link' do
         @canvas.scroll_to_bottom
-        title = 'bCourses | Research, Teaching, and Learning'
+        title = 'bCourses | Research, Teaching, & Learning'
         expect(@canvas.external_link_valid?(@canvas.about_link_element, title)).to be true
       end
 
@@ -58,7 +58,7 @@ describe 'bCourses' do
       end
 
       it 'include a "Data Use & Analytics" link' do
-        title = 'bCourses Data Use and Analytics | Research, Teaching, and Learning'
+        title = 'bCourses Data Use and Analytics | Research, Teaching, & Learning'
         expect(@canvas.external_link_valid?(@canvas.data_use_link_element, title)).to be true
       end
 
@@ -73,7 +73,7 @@ describe 'bCourses' do
       end
 
       it 'include an "Accessibility" link' do
-        title = 'bCourses Accessibility | Research, Teaching, and Learning'
+        title = 'bCourses Accessibility | Research, Teaching, & Learning'
         expect(@canvas.external_link_valid?(@canvas.accessibility_link_element, title)).to be true
       end
 

@@ -153,6 +153,7 @@ class RipleyTestConfig < TestConfig
     courses = set_sis_courses
     @course_sites = courses.map do |c|
       primaries = c.sections.select &:primary
+      has_template = c.code.include? RipleyUtils.course_template_dept
       workflow = if (primaries.length > 1 || primaries.empty?) && !c.multi_course
                    'uid'
                  else
@@ -161,6 +162,7 @@ class RipleyTestConfig < TestConfig
       CourseSite.new abbreviation: "#{@id} #{c.term.name} #{c.code}",
                      course: c,
                      create_site_workflow: workflow,
+                     has_template: has_template,
                      sections: c.sections,
                      title: "#{@id} #{c.term.name} #{c.code}"
     end

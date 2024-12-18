@@ -46,8 +46,7 @@ class CanvasAPIPage
   def get_tool_id(tool, site = nil)
     tries ||= Utils.short_wait
     @parsed = get_external_tools(tool.account, site)
-    tool_name = tool.dev_key_name || tool.name
-    tool.tool_id = (@parsed.find { |i| i['name'] == tool_name })['id']
+    tool.tool_id = (@parsed.find { |i| i['name'] == tool.name })['id']
     logger.info "#{tool.name} tool id is #{tool.tool_id}"
   rescue => e
     logger.error e.message
