@@ -35,7 +35,7 @@ describe 'bCourses project site', order: :defined do
     end
 
     it 'shows a link to project site help' do
-      title = 'bCourses Project Sites | Research, Teaching, and Learning'
+      title = 'bCourses Project Sites | Research, Teaching, & Learning'
       expect(@site_creation_page.external_link_valid?(@site_creation_page.project_help_link_element, title)).to be true
     end
 
@@ -116,7 +116,7 @@ describe 'bCourses project site', order: :defined do
 
     [test.canvas_admin, test.ta, test.staff, test.students.first].each do |user|
 
-      it "allows #{user.role} UID #{user.uid} to see a Create a Site button if permitted to do so" do
+      it "allows #{user.role} UID #{user.uid} Canvas ID #{user.canvas_id} to see a Create a Site button if permitted to do so" do
         @canvas.masquerade_as user
         @canvas.load_homepage
         has_create_site_button = @canvas.verify_block { @canvas.ripley_manage_sites_link_element.when_visible(Utils.short_wait) }

@@ -181,6 +181,15 @@ describe 'bCourses course site creation' do
         @canvas.masquerade_as teacher
         @canvas.publish_course_site site
 
+        # -- Verify no template override if site should use a template
+
+        recent_activity = @canvas.recent_activity_heading?
+        if site.has_template
+          it("does not override the dept site template in #{test_case}") { expect(recent_activity).to be false }
+        else
+          it("defaults to the Recent Activity stream in #{test_case}") { expect(recent_activity).to be true }
+        end
+
         # -- Verify course site membership matches expectations --
 
         @canvas.load_users_page site

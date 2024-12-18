@@ -155,16 +155,18 @@ module CanvasPeoplePage
     wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[contains(@class,'al-trigger')]")
   end
 
+  def remove_user_from_course(course_site, user)
+    logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course_site.site_id}"
+    click_edit_user user
+    alert { wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
+    remove_user_success_element.when_present Utils.short_wait
+  end
+
   def remove_users_from_course(course_site, users)
     load_users_page course_site
     hide_canvas_footer_and_popup
     wait_for_users users
-    users.each do |user|
-      logger.info "Removing #{user.role} UID #{user.uid} from course site ID #{course_site.site_id}"
-      click_edit_user user
-      alert { wait_for_update_and_click link_element(xpath: "//tr[@id='user_#{user.canvas_id}']//a[@data-event='removeFromCourse']") }
-      remove_user_success_element.when_present Utils.short_wait
-    end
+    users.each { |user| remove_user_from_course(course_site, user) }
   end
 
   def remove_user_section(course_site, user, section)

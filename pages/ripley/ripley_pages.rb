@@ -45,7 +45,7 @@ module RipleyPages
   div(:auth_check_failed_msg, xpath: '//div[contains(text(), "Authorization check failed.")]')
   div(:no_access_msg, id: 'TBD "This feature is only available to faculty and staff."')
   div(:error_message, id: 'error-message')
-  div(:unauthorized_msg, xpath: '//div[contains(text(), "Unauthorized") or contains(text(), "not authorized")]')
+  div(:unauthorized_msg, xpath: '//div[@class="v-alert__content"][contains(., "Unauthorized") or contains(., "not authorized")]')
   div(:sis_import_error, xpath: '//div[text()="An error has occurred with your request. Please try again or contact bCourses support."]')
 
   div(:progress_bar, id: 'TBD')

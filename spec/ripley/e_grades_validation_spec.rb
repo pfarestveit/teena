@@ -48,7 +48,8 @@ describe 'bCourses E-Grades Export' do
           logger.info "Grades are final is #{grades_are_final}"
           @canvas.hit_escape
           gradebook_grades = students.first(RipleyUtils.e_grades_student_count).map do |stud|
-            @canvas.student_score stud if stud.sis_id
+            score = @canvas.student_score stud if stud.sis_id
+            score unless score[:un_posted]
           end
           gradebook_grades.compact!
 

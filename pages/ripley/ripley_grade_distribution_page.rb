@@ -37,13 +37,13 @@ class RipleyGradeDistributionPage
   def select_demographic(demographic)
     logger.info "Selecting demographic '#{demographic}'"
     wait_for_element_and_select(demographics_select_element, demographic)
-    sleep 2
+    sleep Utils.click_wait
   end
 
   def select_statistic(statistic)
     logger.info "Selecting statistic '#{statistic}'"
     wait_for_element_and_select(statistics_select_element, statistic)
-    sleep 2
+    sleep Utils.click_wait
   end
 
   def expand_demographics_table
@@ -134,7 +134,7 @@ class RipleyGradeDistributionPage
   end
 
   def visible_demographics_term_data(term)
-    sleep 1
+    sleep Utils.click_wait
     xpath = "//tr[contains(@id, 'grade-distribution-demo-table-row')][contains(., '#{term.name}')]"
     row_element(xpath: xpath).when_visible 10 rescue TimeoutError
     ttl_stat_el = cell_element(xpath: "#{xpath}/td[2]")
@@ -164,7 +164,7 @@ class RipleyGradeDistributionPage
   def select_prior_enrollment_term(term)
     logger.info "Selecting prior enrollment '#{term.name}'"
     wait_for_element_and_select(prior_enrollment_select_element, term.name)
-    sleep 2
+    sleep Utils.click_wait
   end
 
   def expand_prior_enrollment_table
@@ -210,7 +210,7 @@ class RipleyGradeDistributionPage
   end
 
   def visible_prior_enroll_grade_data(grade)
-    sleep 1
+    sleep Utils.click_wait
     logger.info "Checking grade '#{grade}'"
     xpath = "//td[text()='#{grade}']"
     cell_element(xpath: xpath).when_visible Utils.short_wait
