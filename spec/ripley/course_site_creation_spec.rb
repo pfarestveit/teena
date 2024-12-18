@@ -33,7 +33,6 @@ describe 'bCourses course site creation' do
     @canvas.log_in(@cal_net, test.admin.username, Utils.super_admin_password)
     @canvas.add_ripley_tools RipleyTool::TOOLS.select(&:account)
     @canvas.set_canvas_ids non_teachers
-    @canvas_api.get_support_admin_canvas_id test.canvas_admin
 
     test.course_sites.reverse.each do |site|
 
@@ -300,6 +299,7 @@ describe 'bCourses course site creation' do
 
     # VERIFY ACCESS TO TOOL FOR USER ROLES
 
+    @canvas_api.get_support_admin_canvas_id test.canvas_admin
     @canvas.masquerade_as test.canvas_admin
     canvas_admin_has_button = @canvas.verify_block { @canvas.ripley_manage_sites_link_element.when_visible Utils.short_wait }
     @canvas.click_manage_sites_settings_link
@@ -308,6 +308,17 @@ describe 'bCourses course site creation' do
     end
     it('offers a Create a Site button to a Canvas Admin') { expect(canvas_admin_has_button).to be true }
     it('permits a Canvas Admin access to the tool') { expect(canvas_admin_access_permitted).to be true }
+
+    @canvas.stop_masquerading
+    @canvas_api.get_sub_account_admin_canvas_id test.canvas_admin
+    @canvas.masquerade_as test.canvas_admin
+    @canvas.click_manage_sites_settings_link
+    canvas_acct_admin_access_permitted = @create_course_site.verify_block do
+      @site_creation.click_create_course_site
+      @create_course_site.switch_to_instructor_element.when_present Utils.short_wait
+      @create_course_site.switch_to_ccn_element.when_present Utils.short_wait
+    end
+    it('permits a Canvas Sub-account Admin access to the tool') { expect(canvas_acct_admin_access_permitted).to be true }
 
     @canvas.masquerade_as test.students.first
     student_has_button = @canvas.verify_block { @canvas.ripley_manage_sites_link_element.when_visible Utils.short_wait }
