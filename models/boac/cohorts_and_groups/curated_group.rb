@@ -1,3 +1,0 @@
-class CuratedGroup < Cohort
-
-end

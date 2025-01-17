@@ -64,23 +64,19 @@ echo
 
 # ----
 
-options=("BOA" "Ripley" "SuiteC")
+options=("Ripley" "SuiteC")
 
 tool_being_tested=''
 
 function set_tool_being_tested {
     case "${1}" in
-        "BOA")
-            tool_being_tested='boac'
-            friendly_tool_name=${options[0]}
-            ;;
         "Ripley")
             tool_being_tested='ripley'
-            friendly_tool_name=${options[2]}
+            friendly_tool_name=${options[0]}
             ;;
         "SuiteC")
             tool_being_tested='squiggy'
-            friendly_tool_name=${options[3]}
+            friendly_tool_name=${options[1]}
             ;;
         *)
             echo "[ERROR] Invalid option: ${REPLY}"
@@ -122,7 +118,7 @@ fi
 if [ -z "${test_suite}" ]
 then
     echo
-    echo "Enter snippet (e.g., 'user_role' or 'user_role_coe') to match the ${tool_being_tested} Selenium script(s) you want to run."
+    echo "Enter snippet (e.g., 'e_grades_export' or 'roster') to match the ${tool_being_tested} Selenium script(s) you want to run."
     echo "Blank input will run all tests."; echo
     echo -n "    > "
 

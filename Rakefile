@@ -16,9 +16,6 @@ begin
     task.rspec_opts = opts
   end
 
-  task default: :boac
-  RSpec::Core::RakeTask.new(:boac) { |t| run_specs(t, 'boac', opts) }
-
   task default: :ripley
   RSpec::Core::RakeTask.new(:ripley) { |t| run_specs(t, 'ripley', opts) }
 
