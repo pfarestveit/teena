@@ -80,15 +80,6 @@ nessie:
   pg_db_user: secret
   pg_db_password: secret
 
-oec:
-  term: 2018-C
-  blue_project_title: 'Summer 2018 Evaluations'
-  first_name: secret
-  last_name: secret
-  uid: secret
-  sis_id: secret
-  email: secret
-
 ripley:
   base_url: https://ripley-qa.ets.berkeley.edu
   base_url_prod: https://ripley.ets.berkeley.edu
