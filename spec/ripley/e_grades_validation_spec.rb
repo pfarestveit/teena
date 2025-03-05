@@ -36,6 +36,7 @@ describe 'bCourses E-Grades Export' do
         # Disable existing grading scheme in case it is not default, then set default scheme
         @canvas.masquerade_as(instructor, site)
         students = @canvas.get_students(site, { enrollments: true, section: primary_section })
+        students.reject! { |s| !s.full_name || s.full_name.empty? }
 
         %w(letter letter-only pnp sus).each do |scheme|
 

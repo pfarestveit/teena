@@ -11,7 +11,7 @@ module Page
     # COURSE LEVEL GRADEBOOK-RELATED SETTINGS
 
     link(:view_grading_scheme_link, text: 'view grading scheme')
-    select_list(:grading_scheme_select, xpath: '//input[@data-testid="grading-schemes-selector-dropdown"]')
+    select_list(:grading_scheme_select, id: 'grading-schemes-selector-dropdown')
     link(:select_another_scheme_link, xpath: '//a[@title="Find an Existing Grading Scheme"]')
     button(:done_button, xpath: '//button[text()="Done"]')
 
@@ -19,14 +19,26 @@ module Page
       logger.info "Making sure grading scheme is disabled for course ID #{course_site.site_id}"
       load_course_settings course_site
       scroll_to_bottom
-      grading_scheme_select? ? toggle_grading_scheme : logger.info('Grading scheme already disabled')
+      if grading_scheme_select?
+        wait_for_update_and_click set_grading_scheme_cbx_element
+        grading_scheme_select_element.when_not_present(2)
+        update_course_settings
+      else
+        logger.info('Grading scheme already disabled')
+      end
     end
 
     def enable_grading_scheme(course_site)
       logger.info "Making sure grading scheme is enabled for course ID #{course_site.site_id}"
       load_course_settings course_site
       scroll_to_bottom
-      grading_scheme_select? ? logger.info('Grading scheme already enabled') : toggle_grading_scheme
+      if grading_scheme_select?
+        logger.info('Grading scheme already enabled')
+      else
+        wait_for_update_and_click set_grading_scheme_cbx_element
+        grading_scheme_select_element.when_present(5)
+        update_course_settings
+      end
     end
 
     def set_grading_scheme(opts)
@@ -69,17 +81,11 @@ module Page
     end
 
     def update_course_settings
+      hide_canvas_footer_and_popup
+      scroll_to_bottom
       wait_for_update_and_click update_course_button_element
       sleep 2
       update_course_success_element.when_visible Utils.medium_wait
-    end
-
-    def toggle_grading_scheme
-      wait_for_update_and_click set_grading_scheme_cbx_element
-      update_course_settings
-    rescue => e
-      logger.error e.message
-      update_course_settings
     end
 
     button(:gradebook_settings_button, xpath: '//button[@data-testid="gradebook-settings-button"]')
@@ -123,7 +129,6 @@ module Page
         wait_for_flash_msg('Gradebook Settings updated', Utils.medium_wait)
       end
     end
-
 
     # GRADEBOOK UI
 

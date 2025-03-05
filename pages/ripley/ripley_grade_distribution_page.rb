@@ -185,6 +185,7 @@ class RipleyGradeDistributionPage
     prior_enrollment_course_input_element.send_keys course_code
     hit_tab
     wait_for_update_and_click prior_enrollment_course_add_button_element
+    span_element(xpath: "//span[contains(., 'Students Who Have Taken #{course_code} to Overall Class')]").when_present(Utils.medium_wait)
   end
 
   def no_prior_enrollments_msg(course, prior_course_code)

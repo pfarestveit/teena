@@ -65,6 +65,9 @@ class RipleyAdminPage
 
   def run_job(job)
     logger.info "Running #{job.name}"
+    sleep 3
+    cas_btn = button_element(id: 'cas-auth-submit-button')
+    cas_btn.click if cas_btn.exists?
     wait_for_update_and_click run_job_button(job)
     wait_for_job_to_finish job
   end

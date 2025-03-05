@@ -1,8 +1,10 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    base64 (0.2.0)
     diff-lcs (1.5.0)
     hash-deep-merge (0.1.1)
+    logger (1.6.6)
     mini_portile2 (2.8.1)
     nokogiri (1.14.1)
       mini_portile2 (~> 2.8.0)
@@ -11,7 +13,7 @@ GEM
     pg (1.4.5)
     racc (1.6.2)
     rake (13.0.6)
-    rexml (3.2.6)
+    rexml (3.4.1)
     rspec (3.12.0)
       rspec-core (~> 3.12.0)
       rspec-expectations (~> 3.12.0)
@@ -25,12 +27,14 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.12.0)
     rspec-support (3.12.0)
-    rubyzip (2.3.2)
-    selenium-webdriver (4.16.0)
+    rubyzip (2.4.1)
+    selenium-webdriver (4.26.0)
+      base64 (~> 0.2)
+      logger (~> 1.4)
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 3.0)
       websocket (~> 1.0)
-    websocket (1.2.10)
+    websocket (1.2.11)
 
 PLATFORMS
   ruby
@@ -42,7 +46,7 @@ DEPENDENCIES
   pg (= 1.4.5)
   rake (= 13.0.6)
   rspec (= 3.12.0)
-  selenium-webdriver (= 4.16.0)
+  selenium-webdriver (= 4.26.0)
 
 BUNDLED WITH
    2.4.17

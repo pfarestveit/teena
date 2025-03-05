@@ -7,7 +7,7 @@ class SectionEnrollment
                 :status,
                 :term
 
-    def initialize(test_data)
+  def initialize(test_data)
     test_data.each { |k, v| public_send("#{k}=", v) }
   end
 

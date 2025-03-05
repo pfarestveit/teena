@@ -184,10 +184,10 @@ module CanvasPeoplePage
   # EDIT USER (SINGLE USER VIEW)
 
   link(:edit_user_link, xpath: '//a[@class="edit_user_link"]')
-  button(:update_details_button, xpath: '//button[text()="Update Details"]')
+  button(:update_details_button, xpath: '//button[contains(., "Update Details")]')
 
   td(:default_email, xpath: '//th[text()="Default Email:"]/following-sibling::td')
-  text_area(:user_email, id: 'user_email')
+  text_area(:user_email, name: 'email')
 
   cell(:user_login, xpath: '//b[@class="unique_id"]')
   link(:edit_user_login_link, xpath: '//a[@class="edit_pseudonym_link"]')
