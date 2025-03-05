@@ -147,7 +147,9 @@ describe 'bCourses Roster Photos' do
       it "denies #{user.role} #{user.uid} access to the tool" do
         @canvas.masquerade_as(user, @site)
         @roster_photos_page.load_embedded_tool @site
-        @roster_photos_page.no_access_msg_element.when_visible Utils.short_wait
+        @roster_photos_page.wait_until(Utils.short_wait) do
+          @roster_photos_page.no_access_msg? || @roster_photos_page.unauthorized_msg?
+        end
       end
 
       it "offers #{user.role} #{user.uid} no link to the tool in course navigation" do
@@ -175,7 +177,7 @@ describe 'bCourses Roster Photos' do
       it "denies #{user.role} #{user.uid} #{user.canvas_id} access to the tool" do
         @canvas.masquerade_as user
         @roster_photos_page.hit_embedded_tool_url @site
-        @canvas.wait_for_error(@canvas.access_denied_msg_element, @roster_photos_page.no_access_msg_element)
+        @canvas.wait_for_error(@canvas.access_denied_msg_element, @roster_photos_page.unauthorized_msg_element)
       end
 
       it "offers #{user.role} #{user.uid} #{user.canvas_id} no link to the tool in course navigation" do

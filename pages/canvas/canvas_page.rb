@@ -461,6 +461,7 @@ module Page
       logger.info "Loading settings page for course ID #{course_site.site_id}"
       navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings#tab-details"
       set_grading_scheme_cbx_element.when_present Utils.medium_wait
+      sleep 3
     end
 
     button(:official_sections_notice, xpath: '//button[contains(., "Need Help Adding a Section/Roster?")]')

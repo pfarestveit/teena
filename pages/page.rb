@@ -88,10 +88,11 @@ module Page
     if (msg = div_element(xpath: '//div[contains(@class, "flash-message-container")]')).exists?
       msg.when_not_present Utils.short_wait
     end
-    if (footer = div_element(id: 'element_toggler_0')).exists? && footer.visible?
+    footer = div_element(xpath: '//div[@class="warning_message"][contains(., "This Canvas installation is only for testing")]/button')
+    if footer.exists? && footer.visible?
       tries ||= 2
       begin
-        execute_script('document.getElementById("element_toggler_0").style.display="none";')
+        footer.click
       rescue => e
         Utils.log_error e
         (tries -= 1).zero? ? fail : (sleep 2; retry)
@@ -173,8 +174,6 @@ module Page
   # Awaits an element for a short time then clicks it using WebDriver. Intended for DOM updates rather than page loads.
   # @param element [PageObject::Elements::Element]
   def wait_for_update_and_click(element, click_wait=nil)
-    # When clicking Canvas elements, the footer might be in the way. Hide it if it exists.
-    execute_script('arguments[0].style.hidden="hidden";', canvas_footer_element) if canvas_footer?
     click_element(element, Utils.short_wait, click_wait)
   end
 

@@ -258,7 +258,7 @@ describe 'bCourses E-Grades Export' do
           user.sis_id = sis_student.sis_id
           user.full_name = "#{sis_student.first_name} #{sis_student.last_name}"
           score = user.sis_id.nil? ? nil : @canvas.student_score(user)
-          if score.instance_of? Hash && !score[:un_posted]
+          if score.instance_of?(Hash) && !score[:un_posted]
             test_data = score
             break
           end
@@ -343,7 +343,7 @@ describe 'bCourses E-Grades Export' do
       it "denies #{user.role} #{user.uid} access to the tool" do
         @canvas.masquerade_as(user, site)
         @e_grades_export_page.load_embedded_tool site
-        @e_grades_export_page.non_teacher_msg_element.when_visible Utils.medium_wait
+        @e_grades_export_page.unauthorized_msg_element.when_visible Utils.medium_wait
       end
     end
   end
