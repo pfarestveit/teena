@@ -11,7 +11,6 @@ echo "  Teena welcomes you."; echo;
 echo "------------------------"; echo
 echo "  You can skip prompts by setting the proper environment variables:"; echo
 echo "  For example,"
-echo "    export TEENA__TOOL=\"SuiteC\""
 echo "    export TEENA__TOOL_VERSION=\"3.4\""
 echo "    export TEENA__TEST_SUITE_KEYWORD=\"whiteboard\""
 echo "------------------------"; echo
@@ -62,46 +61,10 @@ done
 
 echo
 
-# ----
-
-options=("Ripley" "SuiteC")
-
-tool_being_tested=''
-
-function set_tool_being_tested {
-    case "${1}" in
-        "Ripley")
-            tool_being_tested='ripley'
-            friendly_tool_name=${options[0]}
-            ;;
-        "SuiteC")
-            tool_being_tested='squiggy'
-            friendly_tool_name=${options[1]}
-            ;;
-        *)
-            echo "[ERROR] Invalid option: ${REPLY}"
-            exit 1
-            ;;
-    esac
-}
-
-tool="${TEENA__TOOL}"
+tool_being_tested='ripley'
+tool="Ripley"
 version="${TEENA__TOOL_VERSION}"
 test_suite="${TEENA__TEST_SUITE_KEYWORD}"
-
-# ----
-
-if [ -z "${tool}" ]
-then
-    PS3=$'\nWhich tool are you testing? '
-
-    select opt in "${options[@]}"; do
-        set_tool_being_tested "${opt}"
-        break
-    done
-else
-    set_tool_being_tested "${tool}"
-fi
 
 # ----
 

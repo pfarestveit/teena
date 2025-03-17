@@ -34,10 +34,6 @@ class TestConfig
     @test_course_data = parse_test_data(file)['courses']
   end
 
-  def set_test_user_data(file)
-    @test_user_data = parse_test_data(file)['users']
-  end
-
   def test_specific_user_data(test)
     @test_user_data.select { |u| u['tests'][test] }
   end
