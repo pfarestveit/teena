@@ -4,7 +4,6 @@ class User
                 :sis_id,
                 :canvas_id,
                 :demographics,
-                :squiggy_id,
                 :role,
                 :role_code,
                 :sections,
@@ -14,7 +13,6 @@ class User
                 :last_name,
                 :full_name,
                 :email,
-                :assets,
                 :tests
 
   def initialize(test_data)

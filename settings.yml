@@ -13,7 +13,6 @@ timeouts:
   medium: 30
   long: 120
   canvas_poller: 60
-  boac_poller: 12
 
 #### Test user accounts ####
 
@@ -22,45 +21,9 @@ users:
   super_admin_password: secret
   super_admin_uid: secret
   super_admin_canvas_id: secret
-  ets_qa_username: secret
-  ets_qa_password: secret
-  test_user_password: secret
   oski_uid: secret
 
 #### Test environment configs ####
-
-# If BOAC is running on your workstation (e.g., you are a developer doing DevOps)
-# then set 'api_base_url: http://localhost:5000'. Otherwise, keep 'api_base_url' and 'base_url' equal.
-boac:
-  api_base_url: https://boa-qa.berkeley.edu
-  base_url: https://boa-qa.berkeley.edu
-  password: secret
-  term: Summer 2018
-  term_code: 2185
-  term_start_date: 2019-01-21
-  db_host: secret
-  db_port: secret
-  db_name: secret
-  db_user: secret
-  db_password: secret
-
-  test_default_cohort_major: [History BA]
-  test_degree_progress_major: [Bioengineering BS]
-  test_add_edit_uid: secret
-
-  class_page_max_users: 1
-  class_page_max_classmates: 3
-  class_page_max_size: 200
-  group_bulk_sids_max: 200
-  notes_batch_curated_group_count: 2
-  notes_batch_students_count: 3
-  notes_max_notes: 2
-  notes_max_users: 1
-  search_max_searches: 2
-  search_max_users: 1
-  search_word_count: 4
-  sis_data_max_users: 10
-  service_announcement: 'A service announcement'
 
 cal_net:
   base_url: https://auth-test.berkeley.edu
@@ -132,20 +95,3 @@ ripley:
       email: 'catherine-p@email.com'
       full_name: 'Catherine Parr'
       role: 'Member'
-
-squiggy:
-  base_url: tbd
-  password: secret
-  dev_auth_user_id: secret
-  dev_auth_password: secret
-  lti_key: secret
-  lti_secret: secret
-  db_host: secret
-  db_port: secret
-  db_name: secret
-  db_user: secret
-  db_password: secret
-  poller_retries: 10
-  load_test_reps: 10
-  template_course_id: null
-  whiteboards: [123, 456, 789]

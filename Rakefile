@@ -19,7 +19,4 @@ begin
   task default: :ripley
   RSpec::Core::RakeTask.new(:ripley) { |t| run_specs(t, 'ripley', opts) }
 
-  task default: :squiggy
-  RSpec::Core::RakeTask.new(:squiggy) { |t| run_specs(t, 'squiggy', opts) }
-
 end

@@ -176,79 +176,6 @@ module Page
       add_course_success_element.when_visible Utils.medium_wait
     end
 
-    def create_squiggy_course_site(test)
-      add_ripley_tools([RipleyTool::ADD_USER])
-      if test.course_site.site_id
-        navigate_to "#{Utils.canvas_base_url}/courses/#{test.course_site.site_id}/settings"
-        course_details_link_element.when_visible Utils.medium_wait
-        test.course_site.title = course_title
-        test.course_site.abbreviation = course_code
-        activate_squiggy_tools test
-      else
-        SquiggyUtils.inactivate_all_courses
-        logger.info "Creating a Squiggy course site named #{test.course_site.title}"
-        if SquiggyUtils.template_course_id
-          begin
-            template_site = SquiggySite.new site_id: SquiggyUtils.template_course_id
-            load_course_settings template_site
-            wait_for_load_and_click copy_course_link_element
-            wait_for_element_and_type(course_title_element, test.course_site.title)
-            wait_for_element_and_type(course_code_element, test.course_site.abbreviation)
-            wait_for_update_and_click copy_course_create_button_element
-            copy_course_success_msg_element.when_present Utils.medium_wait
-            test.course_site.is_copy = true
-          rescue => e
-            logger.error e.message
-            load_sub_account Utils.canvas_qa_sub_account
-            create_site test.course_site
-          end
-        else
-          load_sub_account Utils.canvas_qa_sub_account
-          create_site test.course_site
-        end
-        test.course_site.site_id = search_for_site(test.course_site, Utils.canvas_qa_sub_account)
-        logger.info "Course site ID is #{test.course_site.site_id}"
-        if test.course_site.sections&.any?
-          add_sections(test.course_site, test.course_site.sections)
-          add_users_by_section(test.course_site, test.course_site.manual_members)
-        else
-          add_users(test.course_site, test.course_site.manual_members)
-        end
-        publish_course_site test.course_site
-        add_squiggy_tools test
-      end
-    end
-
-    def create_generic_course_site(sub_account, course_site, test_users, test_id)
-      if course_site.site_id.nil?
-        load_sub_account sub_account
-        wait_for_load_and_click add_new_course_button_element
-        course_name_input_element.when_visible Utils.short_wait
-        course_site.title = "QA Test - #{Time.at test_id.to_i}" if course_site.title.nil?
-        course_site.abbreviation = "QA #{Time.at test_id.to_i} LEC001" if course_site.abbreviation.nil?
-        wait_for_element_and_type(course_name_input_element, "#{course_site.title}")
-        wait_for_element_and_type(ref_code_input_element, "#{course_site.abbreviation}")
-        logger.info "Creating a course site named #{course_site.title} in #{course_site.term} semester"
-        wait_for_update_and_click create_course_button_element
-        add_course_success_element.when_visible Utils.medium_wait
-        course_site.site_id = search_for_site(course_site, sub_account)
-        unless course_site.term.nil?
-          navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
-          wait_for_element_and_select(term_element, course_site.term)
-          wait_for_update_and_click update_course_button_element
-          update_course_success_element.when_visible Utils.medium_wait
-        end
-      else
-        navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
-        course_details_link_element.when_visible Utils.medium_wait
-        course_site.title = course_title
-        course_site.abbreviation = course_code
-      end
-      publish_course_site course_site
-      logger.info "Course ID is #{course_site.site_id}"
-      add_users(course_site, test_users)
-    end
-
     def create_ripley_mailing_list_site(course_site, members = [])
       if course_site.site_id
         navigate_to "#{Utils.canvas_base_url}/courses/#{course_site.site_id}/settings"
@@ -485,10 +412,6 @@ module Page
     link(:view_apps_link, text: 'View App Configurations')
     link(:add_app_link, xpath: '//button[contains(., "Add App")]')
     select_list(:config_type, id: 'configuration_type_selector')
-    text_area(:app_name_input, id: 'name')
-    text_area(:key_input, id: 'consumerKey')
-    text_area(:secret_input, id: 'sharedSecret')
-    text_area(:url_input, id: 'configUrl')
     text_area(:client_id_input, name: 'client_id')
     button(:install_button, xpath: '//button[contains(., "Install")]')
     button(:add_tool_button, id: 'continue-install')
@@ -520,86 +443,6 @@ module Page
       list_item_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
       wait_for_update_and_click save_button_element
       tool_nav_link(tool).when_visible Utils.medium_wait
-    end
-
-    def disable_tool(course_site, tool)
-      logger.info "Disabling #{tool.name}"
-      load_navigation_page course_site
-      if verify_block { link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a").when_present 2 }
-        logger.debug "#{tool.name} is already installed but disabled, skipping"
-      else
-        if link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a").exists?
-          logger.debug "#{tool.name} is installed and enabled, disabling"
-          wait_for_update_and_click link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a")
-          wait_for_update_and_click link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a[@title='Disable this item']")
-          list_item_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]").when_visible Utils.medium_wait
-          save_button
-          tool_nav_link(tool).when_not_visible Utils.medium_wait
-          pause_for_poller
-        else
-          logger.debug "#{tool.name} is not installed, skipping"
-        end
-      end
-    end
-
-    def add_squiggy_tools(test)
-      unless test.course_site.is_copy
-        creds = SquiggyUtils.lti_credentials
-        test.course_site.lti_tools.each do |tool|
-          logger.info "Adding and/or enabling #{tool.name}"
-          load_tools_config_page test.course_site
-          wait_for_update_and_click navigation_link_element
-          hide_canvas_footer_and_popup
-          if verify_block { link_element(xpath: "//ul[@id='nav_enabled_list']/li[contains(.,'#{tool.name}')]//a").when_present 2 }
-            logger.debug "#{tool.name} is already installed and enabled, skipping"
-          else
-            if link_element(xpath: "//ul[@id='nav_disabled_list']/li[contains(.,'#{tool.name}')]//a").exists?
-              fail "#{tool.name} is already installed but it shouldn't be"
-            else
-              logger.debug "#{tool.name} is not installed, installing and enabling"
-
-              # Configure tool
-              load_tools_adding_page test.course_site
-              wait_for_update_and_click apps_link_element
-              wait_for_update_and_click add_app_link_element
-              wait_for_element_and_select(config_type_element, 'By URL')
-              sleep 1
-              wait_for_element_and_type(app_name_input_element, "#{tool.name}")
-              wait_for_element_and_type(key_input_element, creds[:key])
-              wait_for_element_and_type(secret_input_element, creds[:secret])
-              wait_for_element_and_type(url_input_element, "#{SquiggyUtils.base_url}#{tool.xml}")
-              wait_for_update_and_click submit_button_element
-              begin
-                add_tool_button_element.when_present 2
-                add_tool_button
-              rescue
-                logger.warn('No add tool button')
-              end
-              link_element(xpath: "//td[@title='#{tool.name}']").when_present Utils.medium_wait
-
-              # Enable tool placement in sidebar navigation
-              wait_for_update_and_click button_element(xpath: "//tr[contains(., '#{tool.name}')]//button")
-              wait_for_update_and_click link_element(xpath: "//tr[contains(., '#{tool.name}')]//a[text()='Placements']")
-              wait_for_update_and_click activate_navigation_button_element
-              wait_for_update_and_click close_placements_button_element
-              sleep 1
-              enable_tool(tool, test.course_site)
-            end
-          end
-        end
-      end
-      activate_squiggy_tools test
-    end
-
-    def activate_squiggy_tools(test)
-      test.course_site.engagement_index_url = click_tool_link SquiggyTool::ENGAGEMENT_INDEX
-      test.course_site.impact_studio_url = click_tool_link SquiggyTool::IMPACT_STUDIO
-      test.course_site.whiteboards_url = click_tool_link SquiggyTool::WHITEBOARDS
-      test.course_site.asset_library_url = click_tool_link SquiggyTool::ASSET_LIBRARY
-      asset_library = SquiggyAssetLibraryListViewPage.new @driver
-      canvas_assigns_page = CanvasAssignmentsPage.new @driver
-      switch_to_canvas_iframe
-      asset_library.ensure_canvas_sync(test, canvas_assigns_page)
     end
 
     def load_account_apps(account)
